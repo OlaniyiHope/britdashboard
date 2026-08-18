@@ -51,7 +51,7 @@ const Login = () => {
             British Transatlantic Polytechnic
             </CardTitle>
             <CardDescription className="mt-1 text-sm">
-              School Management System
+             Login to your portal
             </CardDescription>
           </div>
         </CardHeader>
