@@ -83,11 +83,29 @@ import ParentMaterials from "./app/views/parentdashboard/views/Materials";
 import ParentHomework from "./app/views/parentdashboard/views/Homework";
 import BulkPrintReports from "./app/views/admindashboard/views/student/BulkPrintReports";
 
+// const DashboardWrapper = () => {
+//   const { user } = useAuth();
+//   if (user?.role === "teacher") return <TeacherDashboard />;
+//   if (user?.role === "student") return <StudentDashboard />;
+//   if (user?.role === "parent") return <ParentDashboard />;
+//   return <Dashboard />;
+// };
+
 const DashboardWrapper = () => {
   const { user } = useAuth();
-  if (user?.role === "teacher") return <TeacherDashboard />;
-  if (user?.role === "student") return <StudentDashboard />;
-  if (user?.role === "parent") return <ParentDashboard />;
+
+  if (user?.role === "admin") {
+    return <Dashboard />;
+  }
+
+  if (user?.role === "staff") {
+    return <TeacherDashboard />;
+  }
+
+  if (user?.role === "student") {
+    return <StudentDashboard />;
+  }
+
   return <Dashboard />;
 };
 

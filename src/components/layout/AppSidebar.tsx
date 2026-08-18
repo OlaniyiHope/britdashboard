@@ -48,336 +48,484 @@ function buildAdminNav(classes: any[]) {
 
   return [
     {
-      label: "Main",
+  label: "Dashboard",
+  url: "/curriculum",
+  icon: BookOpen,
+  key: "curriculum",
+},
+
+
+  {
+      label: "Admission",
       items: [
         {
-          title: "Dashboard",
+          title: "Application Portal",
           url: "/dashboard",
           icon: LayoutDashboard,
           key: "dashboard",
         },
-        { title: "Admin", url: "/admin", icon: User2, key: "admin" },
+        { title: "Application Review", url: "/admin", icon: User2, key: "admin" },
+        { title: "Admission Batches", url: "/admin", icon: User2, key: "admin" },
+        { title: "Academics & Credentials", url: "/admin", icon: User2, key: "admin" },
       ],
     },
-    {
+      {
+      label: "Programmes",
+      items: [
+        {
+          title: "Programmes by Department",
+          icon: BookOpen,
+          key: "programmes",
+          // subItems: programmeSubItems,
+        },
+        { title: "Curriculum", url: "/admin/curriculum", icon: BookCopy, key: "curriculum" },
+      ],
+    },
+ {
       label: "Student",
       items: [
         {
-          title: "Admit Student",
-          url: "/student/admit",
-          icon: User,
-          key: "admit-student",
+          title: "Student Registry",
+          url: "/dashboard",
+          icon: LayoutDashboard,
+          key: "dashboard",
         },
-        {
-          title: "Bulk Upload",
-          url: "/student/bulk-upload",
-          icon: Upload,
-          key: "bulk-student-upload",
-        },
-        {
-          title: "Student Information",
-          icon: NotebookPen,
-          key: "student-info",
-          subItems: classSubItems,
-        },
-        {
-          title: "Student Promotion",
-          url: "/student/promotion",
-          icon: BookCopy,
-          key: "student-promotion",
-        },
+        { title: "Student Registration", url: "/admin", icon: User2, key: "admin" },
+        { title: "Course Registration Printout", url: "/admin", icon: User2, key: "admin" },
+        { title: "Registration Printout", url: "/admin", icon: User2, key: "admin" },
+        { title: "Result Approval Panel", url: "/admin", icon: User2, key: "admin" },
+        { title: "SIWES & Industrial Training Tracker", url: "/admin", icon: User2, key: "admin" },
       ],
     },
-    {
-      label: "Affective Psychomotor",
+ {
+      label: "Staff",
       items: [
         {
-          title: "Manage Category",
-          url: "/psycho/category",
-          icon: ListChecks,
-          key: "psycho-category",
+          title: "Staff Management",
+          url: "/dashboard",
+          icon: LayoutDashboard,
+          key: "dashboard",
         },
-        {
-          title: "Student Report",
-          url: "/psycho/stu-report",
-          icon: ListCheck,
-          key: "psycho-report",
-        },
+        { title: "Staff Registration", url: "/admin", icon: User2, key: "admin" },
+   
       ],
     },
-    {
-      label: "Teacher",
-      items: [
-        { title: "Teachers", url: "/teacher", icon: User, key: "teacher" },
-      ],
-    },
-    {
-      label: "Parents",
-      items: [
-        { title: "Parents", url: "/parents", icon: User, key: "parents" },
-      ],
-    },
-    {
-      label: "Notice Board",
-      items: [
-        { title: "Noticeboard", url: "/notices", icon: Info, key: "notice" },
-      ],
-    },
-    {
-      label: "Class",
+ {
+      label: "Graduation & Alumni",
       items: [
         {
-          title: "Manage Class",
-          url: "/class/manage",
-          icon: GraduationCap,
-          key: "class",
+          title: "Graduation Management",
+          url: "/dashboard",
+          icon: LayoutDashboard,
+          key: "dashboard",
         },
-        {
-          title: "Academic Syllabus",
-          url: "/class/syllabus",
-          icon: GraduationCap,
-          key: "class",
-        },
+        { title: "Alumni Directory", url: "/admin", icon: User2, key: "admin" },
+   
       ],
     },
-    {
-      label: "Subjects",
+ {
+      label: "Finance",
       items: [
         {
-          title: "Subject by Class",
-          icon: BookOpen,
-          key: "subject",
-          subItems: subjectSubItems,
+          title: "Bursary & Finance Control",
+          url: "/dashboard",
+          icon: LayoutDashboard,
+          key: "dashboard",
         },
+        { title: "Scholarship Opportunities", url: "/admin", icon: User2, key: "admin" },
+   
       ],
     },
-    {
-      label: "Exam",
-      items: [
-        {
-          title: "Exam List",
-          url: "/exam/list",
-          icon: ListChecks,
-          key: "exam-list",
-        },
-        {
-          title: "Exam Grades",
-          url: "/exam/grades",
-          icon: GraduationCap,
-          key: "exam-grades",
-        },
-        {
-          title: "Manage Marks",
-          url: "/exam/manage-marks",
-          icon: FileEdit,
-          key: "manage-marks",
-        },
-        {
-          title: "Tabulation Sheet",
-          url: "/exam/tabulation",
-          icon: TableProperties,
-          key: "tabulation",
-        },
-        {
-          title: "On Screen Marking",
-          url: "/exam/onscreenmarking",
-          icon: CheckCheck,
-          key: "onscreen-marking",
-        },
-      ],
-    },
-    {
-      label: "Online Exam",
-      items: [
-        {
-          title: "Create Online Exam",
-          url: "/onlineexam/create",
-          icon: Laptop,
-          key: "onlinexam",
-        },
-        {
-          title: "Manage Online Exam",
-          url: "/onlineexam/manage",
-          icon: Laptop2,
-          key: "onlinexam",
-        },
-      ],
-    },
-    {
-      label: "AI Tools",
-      items: [
-        {
-          title: "Curriculum Generator",
-          url: "/curriculum",
-          icon: Disc3,
-          key: "curriculum",
-        },
-        {
-          title: "Generate Questions",
-          url: "/gen-questions",
-          icon: Disc3,
-          key: "gen-questions",
-        },
-      ],
-    },
-    {
-      label: "Past Questions",
-      items: [
-        {
-          title: "UTME",
-          url: "https://cbt.edupro.com.ng/login",
-          icon: Disc3,
-          key: "past-questions",
-        },
-        {
-          title: "WAEC",
-          url: "https://cbt.edupro.com.ng/login",
-          icon: Disc3,
-          key: "past-questions",
-        },
-      ],
-    },
-    {
-      label: "Accounting",
-      items: [
-        {
-          title: "Student Receipt",
-          url: "/stu-receipt",
-          icon: ReceiptText,
-          key: "studentAccounting",
-        },
-        {
-          title: "Student Payments",
-          url: "/stu-payments",
-          icon: ReceiptText,
-          key: "studentAccounting",
-        },
-      ],
-    },
-    {
-      label: "Study Material",
-      items: [
-        {
-          title: "Study Material",
-          url: "/studymaterial",
-          icon: Disc3,
-          key: "studymaterial",
-        },
-      ],
-    },
-    {
-      label: "Daily Attendance",
-      items: [
-        {
-          title: "Daily Attendance",
-          url: "/dailyattend",
-          icon: AlarmClock,
-          key: "dailyattend",
-        },
-      ],
-    },
-    {
+ {
       label: "System",
       items: [
-        { title: "Profile", url: "/profile", icon: User2, key: "settings" },
         {
-          title: "Settings",
-          url: "/settings",
-          icon: Settings,
-          key: "settings",
+          title: "System Settings",
+          url: "/dashboard",
+          icon: LayoutDashboard,
+          key: "dashboard",
         },
-        { title: "Account", url: "/account", icon: Pencil, key: "settings" },
+        { title: "User Access Control", url: "/admin", icon: User2, key: "admin" },
+        { title: "User Records Management", url: "/admin", icon: User2, key: "admin" },
+        { title: "Account", url: "/admin", icon: User2, key: "admin" },
+   
       ],
     },
+        {
+  label: "Profile",
+  url: "/curriculum",
+  icon: BookOpen,
+  key: "curriculum",
+},
+
+    // {
+    //   label: "Marksheet",
+    //   items: [
+    //     { title: "Teachers", url: "/teacher", icon: User, key: "teacher" },
+    //   ],
+    // },
+    // {
+    //   label: "Parents",
+    //   items: [
+    //     { title: "Parents", url: "/parents", icon: User, key: "parents" },
+    //   ],
+    // },
+    // {
+    //   label: "Notice Board",
+    //   items: [
+    //     { title: "Noticeboard", url: "/notices", icon: Info, key: "notice" },
+    //   ],
+    // },
+    // {
+    //   label: "Class",
+    //   items: [
+    //     {
+    //       title: "Manage Class",
+    //       url: "/class/manage",
+    //       icon: GraduationCap,
+    //       key: "class",
+    //     },
+    //     {
+    //       title: "Academic Syllabus",
+    //       url: "/class/syllabus",
+    //       icon: GraduationCap,
+    //       key: "class",
+    //     },
+    //   ],
+    // },
+    // {
+    //   label: "Subjects",
+    //   items: [
+    //     {
+    //       title: "Subject by Class",
+    //       icon: BookOpen,
+    //       key: "subject",
+    //       subItems: subjectSubItems,
+    //     },
+    //   ],
+    // },
+    // {
+    //   label: "Exam",
+    //   items: [
+    //     {
+    //       title: "Exam List",
+    //       url: "/exam/list",
+    //       icon: ListChecks,
+    //       key: "exam-list",
+    //     },
+    //     {
+    //       title: "Exam Grades",
+    //       url: "/exam/grades",
+    //       icon: GraduationCap,
+    //       key: "exam-grades",
+    //     },
+    //     {
+    //       title: "Manage Marks",
+    //       url: "/exam/manage-marks",
+    //       icon: FileEdit,
+    //       key: "manage-marks",
+    //     },
+    //     {
+    //       title: "Tabulation Sheet",
+    //       url: "/exam/tabulation",
+    //       icon: TableProperties,
+    //       key: "tabulation",
+    //     },
+    //     {
+    //       title: "On Screen Marking",
+    //       url: "/exam/onscreenmarking",
+    //       icon: CheckCheck,
+    //       key: "onscreen-marking",
+    //     },
+    //   ],
+    // },
+    // {
+    //   label: "Online Exam",
+    //   items: [
+    //     {
+    //       title: "Create Online Exam",
+    //       url: "/onlineexam/create",
+    //       icon: Laptop,
+    //       key: "onlinexam",
+    //     },
+    //     {
+    //       title: "Manage Online Exam",
+    //       url: "/onlineexam/manage",
+    //       icon: Laptop2,
+    //       key: "onlinexam",
+    //     },
+    //   ],
+    // },
+    // {
+    //   label: "AI Tools",
+    //   items: [
+    //     {
+    //       title: "Curriculum Generator",
+    //       url: "/curriculum",
+    //       icon: Disc3,
+    //       key: "curriculum",
+    //     },
+    //     {
+    //       title: "Generate Questions",
+    //       url: "/gen-questions",
+    //       icon: Disc3,
+    //       key: "gen-questions",
+    //     },
+    //   ],
+    // },
+    // {
+    //   label: "Past Questions",
+    //   items: [
+    //     {
+    //       title: "UTME",
+    //       url: "https://cbt.edupro.com.ng/login",
+    //       icon: Disc3,
+    //       key: "past-questions",
+    //     },
+    //     {
+    //       title: "WAEC",
+    //       url: "https://cbt.edupro.com.ng/login",
+    //       icon: Disc3,
+    //       key: "past-questions",
+    //     },
+    //   ],
+    // },
+    // {
+    //   label: "Accounting",
+    //   items: [
+    //     {
+    //       title: "Student Receipt",
+    //       url: "/stu-receipt",
+    //       icon: ReceiptText,
+    //       key: "studentAccounting",
+    //     },
+    //     {
+    //       title: "Student Payments",
+    //       url: "/stu-payments",
+    //       icon: ReceiptText,
+    //       key: "studentAccounting",
+    //     },
+    //   ],
+    // },
+    // {
+    //   label: "Study Material",
+    //   items: [
+    //     {
+    //       title: "Study Material",
+    //       url: "/studymaterial",
+    //       icon: Disc3,
+    //       key: "studymaterial",
+    //     },
+    //   ],
+    // },
+    // {
+    //   label: "Daily Attendance",
+    //   items: [
+    //     {
+    //       title: "Daily Attendance",
+    //       url: "/dailyattend",
+    //       icon: AlarmClock,
+    //       key: "dailyattend",
+    //     },
+    //   ],
+    // },
+    // {
+    //   label: "System",
+    //   items: [
+    //     { title: "Profile", url: "/profile", icon: User2, key: "settings" },
+    //     {
+    //       title: "Settings",
+    //       url: "/settings",
+    //       icon: Settings,
+    //       key: "settings",
+    //     },
+    //     { title: "Account", url: "/account", icon: Pencil, key: "settings" },
+    //   ],
+    // },
   ];
 }
 
-function buildTeacherNav(classes: any[]) {
-  const classSubItems = classes.length > 0
-    ? classes.map((c) => ({ title: className(c), url: `/teacher/dashboard/student-information/${classId(c)}` }))
-    : [
-        { title: "Class J.S.1", url: "/teacher/dashboard/student-information/js1" },
-        { title: "Class J.S.2", url: "/teacher/dashboard/student-information/js2" },
-        { title: "Class J.S.3", url: "/teacher/dashboard/student-information/js3" },
-        { title: "Class S.S.1", url: "/teacher/dashboard/student-information/ss1" },
-        { title: "Class S.S.2", url: "/teacher/dashboard/student-information/ss2" },
-        { title: "Class S.S.3", url: "/teacher/dashboard/student-information/ss3" },
-      ];
+// function buildTeacherNav(classes: any[]) {
+//   const classSubItems = classes.length > 0
+//     ? classes.map((c) => ({ title: className(c), url: `/teacher/dashboard/student-information/${classId(c)}` }))
+//     : [
+//         { title: "Class J.S.1", url: "/teacher/dashboard/student-information/js1" },
+//         { title: "Class J.S.2", url: "/teacher/dashboard/student-information/js2" },
+//         { title: "Class J.S.3", url: "/teacher/dashboard/student-information/js3" },
+//         { title: "Class S.S.1", url: "/teacher/dashboard/student-information/ss1" },
+//         { title: "Class S.S.2", url: "/teacher/dashboard/student-information/ss2" },
+//         { title: "Class S.S.3", url: "/teacher/dashboard/student-information/ss3" },
+//       ];
 
-  const subjectSubItems = classes.length > 0
-    ? classes.map((c) => ({ title: className(c), url: `/teacher/dashboard/subject/${classId(c)}` }))
-    : [
-        { title: "Class J.S.1", url: "/teacher/dashboard/subject/js1" },
-        { title: "Class J.S.2", url: "/teacher/dashboard/subject/js2" },
-        { title: "Class J.S.3", url: "/teacher/dashboard/subject/js3" },
-        { title: "Class S.S.1", url: "/teacher/dashboard/subject/ss1" },
-        { title: "Class S.S.2", url: "/teacher/dashboard/subject/ss2" },
-        { title: "Class S.S.3", url: "/teacher/dashboard/subject/ss3" },
-      ];
+//   const subjectSubItems = classes.length > 0
+//     ? classes.map((c) => ({ title: className(c), url: `/teacher/dashboard/subject/${classId(c)}` }))
+//     : [
+//         { title: "Class J.S.1", url: "/teacher/dashboard/subject/js1" },
+//         { title: "Class J.S.2", url: "/teacher/dashboard/subject/js2" },
+//         { title: "Class J.S.3", url: "/teacher/dashboard/subject/js3" },
+//         { title: "Class S.S.1", url: "/teacher/dashboard/subject/ss1" },
+//         { title: "Class S.S.2", url: "/teacher/dashboard/subject/ss2" },
+//         { title: "Class S.S.3", url: "/teacher/dashboard/subject/ss3" },
+//       ];
+
+//   return [
+//     {
+//       label: "Teacher Menu",
+//       items: [
+//         { title: "Dashboard", url: "/teacher/dashboard", icon: LayoutDashboard, key: "teacher-dashboard" },
+//       ],
+//     },
+//     {
+//       label: "Students",
+//       items: [
+//         { title: "Student Information", icon: NotebookPen, key: "teacher-student-info", subItems: classSubItems },
+//       ],
+//     },
+//     {
+//       label: "Subjects",
+//       items: [
+//         { title: "Subject by Class", icon: BookOpen, key: "teacher-subjects", subItems: subjectSubItems },
+//       ],
+//     },
+//     {
+//       label: "Affective Psychomotor",
+//       items: [
+//         { title: "Student Report", url: "/psycho/stu-report", icon: ListCheck, key: "psycho-report" },
+//       ],
+//     },
+//     {
+//       label: "Exam",
+//       items: [
+//         { title: "Manage Marks", url: "/teacher/dashboard/manage-mark-view", icon: FileEdit, key: "manage-marks" },
+//         { title: "Tabulation Sheet", url: "/dashboard/tabulation-sheet", icon: TableProperties, key: "tabulation" },
+//         { title: "On Screen Marking", url: "/exam/onscreenmarking", icon: CheckCheck, key: "onscreen-marking" },
+//       ],
+//     },
+//     {
+//       label: "Online Exam",
+//       items: [
+//         { title: "Create Online Exam", url: "/dashboard/online-exam", icon: Laptop, key: "onlinexam" },
+//         { title: "Manage Online Exam", url: "/dashboard/manage-online-exam", icon: Laptop2, key: "onlinexam" },
+//       ],
+//     },
+//     {
+//       label: "AI Tools",
+//       items: [
+//         { title: "Homework Review", url: "/teacher/dashboard/homework", icon: MessageSquareText, key: "homework" },
+//           { title: "Curriculum Generator", url: "/curriculum", icon: Disc3, key: "curriculum" },
+//         { title: "Generate Questions", url: "/gen-questions", icon: Disc3, key: "gen-questions" },
+//       ],
+//     },
+//     {
+//       label: "Notice Board",
+//       items: [{ title: "Noticeboard", url: "/notices", icon: Info, key: "notice" }],
+//     },
+//     {
+//       label: "Material & Attendance",
+//       items: [
+//         { title: "Study Material", url: "/studymaterial", icon: Disc3, key: "studymaterial" },
+//         { title: "Daily Attendance", url: "/dailyattend", icon: AlarmClock, key: "dailyattend" },
+//       ],
+//     },
+//     {
+//       label: "System",
+//       items: [
+//         { title: "Profile", url: "/dashboard/profile", icon: User2, key: "settings" },
+//       ],
+//     },
+//   ];
+// }
+
+
+function buildTeacherNav(classes: any[]) {
+  // "classes" = courses/programmes assigned to this staff member
+  const courseSubItems =
+    classes.length > 0
+      ? classes.map((c) => ({
+          title: className(c),
+          url: `/staff/dashboard/course-allocation/${classId(c)}`,
+        }))
+      : [{ title: "No courses assigned yet", url: "/staff/dashboard/course-allocation" }];
 
   return [
     {
-      label: "Teacher Menu",
+      label: "Staff Menu",
       items: [
-        { title: "Dashboard", url: "/teacher/dashboard", icon: LayoutDashboard, key: "teacher-dashboard" },
+        { title: "Dashboard", url: "/staff/dashboard", icon: LayoutDashboard, key: "staff-dashboard" },
       ],
     },
+
+    // ── Courses ──────────────────────────────────────────────────────────
+    {
+      label: "Courses",
+      items: [
+        { title: "Course Allocation", icon: BookOpen, key: "staff-course-allocation", subItems: courseSubItems },
+        { title: "AI Homework Review & Curriculum", url: "/staff/dashboard/homework-curriculum", icon: MessageSquareText, key: "homework-curriculum" },
+      ],
+    },
+
+    // ── Students ─────────────────────────────────────────────────────────
     {
       label: "Students",
       items: [
-        { title: "Student Information", icon: NotebookPen, key: "teacher-student-info", subItems: classSubItems },
+        { title: "Student Advisory & Mentorship", url: "/staff/dashboard/advisory-mentorship", key: "advisory-mentorship" },
+        { title: "Student Roster & Attendance", url: "/staff/dashboard/roster-attendance", icon: ListChecks, key: "roster-attendance" },
       ],
     },
+
+    // ── Assessment & Exams ───────────────────────────────────────────────
     {
-      label: "Subjects",
+      label: "Assessment & Exams",
       items: [
-        { title: "Subject by Class", icon: BookOpen, key: "teacher-subjects", subItems: subjectSubItems },
+        { title: "Continuous Assessment Logger", url: "/staff/dashboard/continuous-assessment", icon: FileEdit, key: "continuous-assessment" },
+        { title: "Exam Mark Entry Sheet", url: "/staff/dashboard/exam-mark-entry", icon: TableProperties, key: "exam-mark-entry" },
+        { title: "Online Exam Manager", url: "/staff/dashboard/online-exam-manager", icon: Laptop2, key: "online-exam-manager" },
       ],
     },
+
+    // ── E-Learning & Live Classes ────────────────────────────────────────
     {
-      label: "Affective Psychomotor",
+      label: "E-Learning & Live Classes",
       items: [
-        { title: "Student Report", url: "/psycho/stu-report", icon: ListCheck, key: "psycho-report" },
+        { title: "E-Learning", url: "/staff/dashboard/e-learning", icon: Laptop, key: "e-learning" },
+        { title: "Go Live / Live Classes", url: "/staff/dashboard/live",  key: "live-classes" },
       ],
     },
+
+    // ── SIWES ────────────────────────────────────────────────────────────
     {
-      label: "Exam",
+      label: "SIWES",
       items: [
-        { title: "Manage Marks", url: "/teacher/dashboard/manage-mark-view", icon: FileEdit, key: "manage-marks" },
-        { title: "Tabulation Sheet", url: "/dashboard/tabulation-sheet", icon: TableProperties, key: "tabulation" },
-        { title: "On Screen Marking", url: "/exam/onscreenmarking", icon: CheckCheck, key: "onscreen-marking" },
+        { title: "IT Supervisor SIWES Dashboard", url: "/staff/dashboard/siwes", icon: TableProperties, key: "siwes-supervisor" },
       ],
     },
+
+    // ── HR & Payroll ─────────────────────────────────────────────────────
     {
-      label: "Online Exam",
+      label: "HR & Payroll",
       items: [
-        { title: "Create Online Exam", url: "/dashboard/online-exam", icon: Laptop, key: "onlinexam" },
-        { title: "Manage Online Exam", url: "/dashboard/manage-online-exam", icon: Laptop2, key: "onlinexam" },
+        { title: "Personal HR", url: "/staff/dashboard/hr", icon: User, key: "personal-hr" },
+        { title: "Pay Slip", url: "/staff/dashboard/payslip",  key: "pay-slip" },
+        { title: "Approval & Promotion Tracker", url: "/staff/dashboard/promotion-tracker", key: "promotion-tracker" },
+        { title: "Leave & Absence Request", url: "/staff/dashboard/leave-request",  key: "leave-request" },
       ],
     },
+
+    // ── Profile ──────────────────────────────────────────────────────────
     {
-      label: "AI Tools",
+      label: "Profile",
       items: [
-        { title: "Homework Review", url: "/teacher/dashboard/homework", icon: MessageSquareText, key: "homework" },
-          { title: "Curriculum Generator", url: "/curriculum", icon: Disc3, key: "curriculum" },
-        { title: "Generate Questions", url: "/gen-questions", icon: Disc3, key: "gen-questions" },
+        { title: "Profile System", url: "/staff/dashboard/profile", icon: User2, key: "profile-system" },
+        { title: "Profile & Biodata", url: "/staff/dashboard/biodata", key: "profile-biodata" },
       ],
     },
+
+    // ── Communication ────────────────────────────────────────────────────
     {
-      label: "Notice Board",
-      items: [{ title: "Noticeboard", url: "/notices", icon: Info, key: "notice" }],
-    },
-    {
-      label: "Material & Attendance",
+      label: "Communication",
       items: [
-        { title: "Study Material", url: "/studymaterial", icon: Disc3, key: "studymaterial" },
-        { title: "Daily Attendance", url: "/dailyattend", icon: AlarmClock, key: "dailyattend" },
-      ],
-    },
-    {
-      label: "System",
-      items: [
-        { title: "Profile", url: "/dashboard/profile", icon: User2, key: "settings" },
+        { title: "Notice Board", url: "/staff/dashboard/notices", icon: Info, key: "notice" },
+        { title: "Notification Center", url: "/staff/dashboard/notifications", key: "notifications" },
       ],
     },
   ];
@@ -388,53 +536,78 @@ function buildStudentNav(_classes: any[]) {
     {
       label: "Student Menu",
       items: [
-        { title: "Dashboard", url: "/student/dashboard/default", icon: LayoutDashboard, key: "student-dashboard" },
-        { title: "Teachers", url: "/student/dashboard/teacher", icon: User, key: "teacher" },
-        { title: "Subjects", url: "/student/dashboard/subject", icon: BookOpen, key: "subject" },
+        { title: "Dashboard", url: "/student/dashboard", icon: LayoutDashboard, key: "student-dashboard" },
       ],
     },
+
+    // ── Academics ────────────────────────────────────────────────────────
     {
-      label: "Class Information",
+      label: "Academics",
       items: [
-        { title: "My Class", url: "/student/dashboard/my-class", icon: NotebookPen, key: "student-info" },
+        { title: "Class Information", url: "/student/dashboard/class-information", icon: NotebookPen, key: "class-information" },
+        { title: "Course Registration", url: "/student/dashboard/course-registration", icon: ListChecks, key: "course-registration" },
+        { title: "Lecture & Exam Timetable", url: "/student/dashboard/timetable", icon: TableProperties, key: "timetable" },
+        { title: "Assignment & Project Submission", url: "/student/dashboard/assignments", icon: FileEdit, key: "assignments" },
+        { title: "Final Year Project Hub", url: "/student/dashboard/final-year-project",  key: "final-year-project" },
       ],
     },
+
+    // ── E-Learning & Live Classes ────────────────────────────────────────
     {
-      label: "Exam & Results",
+      label: "E-Learning & Live Classes",
       items: [
-        { title: "Exam List", url: "/student/dashboard/examlist", icon: ListChecks, key: "exam-list" },
-        { title: "My Results", url: "/student/dashboard/student_mark_sheet", icon: GraduationCap, key: "student-dashboard" },
+        { title: "E-Learning", url: "/student/dashboard/e-learning", icon: Laptop, key: "e-learning" },
+        { title: "Live Classes", url: "/student/dashboard/live",  key: "live-classes" },
       ],
     },
+
+    // ── Results ──────────────────────────────────────────────────────────
     {
-      label: "Online Exam",
+      label: "Results",
       items: [
-        { title: "Take Online Exam", url: "/student/dashboard/manage-online-exam", icon: Laptop, key: "onlinexam" },
+        { title: "Transcript & My Result", url: "/student/dashboard/transcript", icon: GraduationCap, key: "transcript" },
       ],
     },
+
+    // ── Library ──────────────────────────────────────────────────────────
     {
-      label: "AI Tools",
+      label: "Library",
       items: [
-        { title: "Homework", url: "/student/dashboard/homework", icon: MessageSquareText, key: "homework" },
-        { title: "Past Questions (JAMB)", url: "https://cbt.edupro.com.ng", icon: Disc3, key: "onlinexam" },
+        { title: "Library Portal", url: "/student/dashboard/library", icon: BookCopy, key: "library-portal" },
       ],
     },
+
+    // ── Hostel & Accommodation ───────────────────────────────────────────
     {
-      label: "Payments & Materials",
+      label: "Hostel & Accommodation",
       items: [
-        { title: "Payment History", url: "/student/dashboard/student-payment", icon: ReceiptText, key: "studentAccounting" },
-        { title: "Study Material", url: "/student/dashboard/student-material", icon: BookCopy, key: "studymaterial" },
+        { title: "Hostel & Accommodation", url: "/student/dashboard/hostel",  key: "hostel-accommodation" },
       ],
     },
+
+    // ── ID & Profile ─────────────────────────────────────────────────────
+    {
+      label: "ID & Profile",
+      items: [
+        { title: "Digital ID Card", url: "/student/dashboard/digital-id", key: "digital-id" },
+        { title: "Profile & Biodata", url: "/student/dashboard/biodata", icon: User2, key: "profile-biodata" },
+        { title: "System Profile", url: "/student/dashboard/profile", icon: User2, key: "system-profile" },
+      ],
+    },
+
+    // ── Finance ──────────────────────────────────────────────────────────
+    {
+      label: "Finance",
+      items: [
+        { title: "Fees Payment Portal", url: "/student/dashboard/fees-payment", icon: ReceiptText, key: "fees-payment" },
+        { title: "Payment History & Receipts", url: "/student/dashboard/payment-history", icon: ReceiptText, key: "payment-history" },
+      ],
+    },
+
+    // ── Notice Board ─────────────────────────────────────────────────────
     {
       label: "Notice Board",
       items: [{ title: "Noticeboard", url: "/student/dashboard/notices", icon: Info, key: "notice" }],
-    },
-    {
-      label: "System",
-      items: [
-        { title: "Profile", url: "/student/dashboard/profile", icon: User2, key: "settings" },
-      ],
     },
   ];
 }
@@ -499,10 +672,10 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground leading-tight">
-                EDANA Schools
+              British Transatlantic Poly
               </span>
               <span className="text-[10px] text-white">
-                edanamonteschools@gmail.com
+             info@britcampus.com
               </span>
             </div>
           )}
@@ -510,73 +683,149 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="bg-[#004aaa] py-2 text-white [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/40 hover:[&::-webkit-scrollbar-thumb]:bg-white/60">
-        {nav.map((group) => (
-          <SidebarGroup key={group.label}>
-            <Collapsible open={collapsed ? false : isGroupOpen(group.label)} onOpenChange={() => toggleGroup(group.label)}>
-              <SidebarGroupLabel asChild className="px-2">
-                <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-2 text-[10px] uppercase tracking-wider text-white/70 hover:bg-white/12 hover:text-white">
-                  <span>{group.label}</span>
-                  <ChevronDown className="h-3.5 w-3.5 transition-transform data-[state=open]:rotate-180" />
-                </CollapsibleTrigger>
-              </SidebarGroupLabel>
-              <CollapsibleContent>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {group.items.map((item) => {
-                      if ("subItems" in item && item.subItems) {
-                        return (
-                          <Collapsible key={item.title} asChild className="group/collapsible">
-                            <SidebarMenuItem>
-                              <CollapsibleTrigger asChild>
-                                <SidebarMenuButton tooltip={item.title} className="text-white hover:bg-white/12 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#004aaa]">
-                                  <item.icon className="mr-2 h-4 w-4 shrink-0" />
-                                  <span>{item.title}</span>
-                                  <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                                </SidebarMenuButton>
-                              </CollapsibleTrigger>
-                              <CollapsibleContent>
-                                <SidebarMenuSub>
-                                  {item.subItems.map((sub) => (
-                                    <SidebarMenuSubItem key={sub.title}>
-                                      <SidebarMenuSubButton asChild isActive={currentPath === sub.url} className="text-white/80 hover:bg-white/10 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#004aaa]">
-                                        <NavLink to={sub.url}>{sub.title}</NavLink>
-                                      </SidebarMenuSubButton>
-                                    </SidebarMenuSubItem>
-                                  ))}
-                                </SidebarMenuSub>
-                              </CollapsibleContent>
-                            </SidebarMenuItem>
-                          </Collapsible>
-                        );
-                      }
+    {nav.map((group) => {
+  // Standalone navigation item such as Curriculum
+  if ("url" in group && group.url) {
+    const isExternal = group.url.startsWith("http");
 
-                      const url = (item as any).url as string;
-                      const isExternal = url?.startsWith("http");
+    return (
+      <SidebarGroup key={group.label}>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={currentPath === group.url}
+              className="text-white hover:bg-white/12 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#004aaa]"
+            >
+              {isExternal ? (
+                <a
+                  href={group.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center rounded-md px-2 py-2 hover:bg-white/12"
+                >
+                  <group.icon className="mr-2 h-4 w-4 shrink-0" />
+                  {!collapsed && <span>{group.label}</span>}
+                </a>
+              ) : (
+                <NavLink
+                  to={group.url}
+                  end
+                  activeClassName="bg-white text-[#004aaa] font-semibold"
+                  className="rounded-md px-2 py-2 hover:bg-white/12"
+                >
+                  <group.icon className="mr-2 h-4 w-4 shrink-0" />
+                  {!collapsed && <span>{group.label}</span>}
+                </NavLink>
+              )}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroup>
+    );
+  }
 
-                      return (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton asChild isActive={currentPath === url} className="text-white hover:bg-white/12 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#004aaa]">
-                            {isExternal ? (
-                              <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center rounded-md px-2 py-2 hover:bg-white/12">
-                                <item.icon className="mr-2 h-4 w-4 shrink-0" />
-                                {!collapsed && <span>{item.title}</span>}
-                              </a>
-                            ) : (
-                              <NavLink to={url} end activeClassName="bg-white text-[#004aaa] font-semibold" className="rounded-md px-2 py-2 hover:bg-white/12">
-                                <item.icon className="mr-2 h-4 w-4 shrink-0" />
-                                {!collapsed && <span>{item.title}</span>}
-                              </NavLink>
-                            )}
+  // Normal collapsible groups
+  return (
+    <SidebarGroup key={group.label}>
+      <Collapsible
+        open={collapsed ? false : isGroupOpen(group.label)}
+        onOpenChange={() => toggleGroup(group.label)}
+      >
+        <SidebarGroupLabel asChild className="px-2">
+          <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-2 text-[10px] uppercase tracking-wider text-white/70 hover:bg-white/12 hover:text-white">
+            <span>{group.label}</span>
+            <ChevronDown className="h-3.5 w-3.5 transition-transform data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+        </SidebarGroupLabel>
+
+        <CollapsibleContent>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {group.items.map((item) => {
+                if ("subItems" in item && item.subItems) {
+                  return (
+                    <Collapsible
+                      key={item.title}
+                      asChild
+                      className="group/collapsible"
+                    >
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton
+                            tooltip={item.title}
+                            className="text-white hover:bg-white/12 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#004aaa]"
+                          >
+                            <item.icon className="mr-2 h-4 w-4 shrink-0" />
+                            <span>{item.title}</span>
+                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                           </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </CollapsibleContent>
-            </Collapsible>
-          </SidebarGroup>
-        ))}
+                        </CollapsibleTrigger>
+
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.subItems.map((sub) => (
+                              <SidebarMenuSubItem key={sub.title}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={currentPath === sub.url}
+                                  className="text-white/80 hover:bg-white/10 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#004aaa]"
+                                >
+                                  <NavLink to={sub.url}>
+                                    {sub.title}
+                                  </NavLink>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  );
+                }
+
+                const url = (item as any).url as string;
+                const isExternal = url?.startsWith("http");
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={currentPath === url}
+                      className="text-white hover:bg-white/12 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#004aaa]"
+                    >
+                      {isExternal ? (
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center rounded-md px-2 py-2 hover:bg-white/12"
+                        >
+                          <item.icon className="mr-2 h-4 w-4 shrink-0" />
+                          {!collapsed && <span>{item.title}</span>}
+                        </a>
+                      ) : (
+                        <NavLink
+                          to={url}
+                          end
+                          activeClassName="bg-white text-[#004aaa] font-semibold"
+                          className="rounded-md px-2 py-2 hover:bg-white/12"
+                        >
+                          <item.icon className="mr-2 h-4 w-4 shrink-0" />
+                          {!collapsed && <span>{item.title}</span>}
+                        </NavLink>
+                      )}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </SidebarGroup>
+  );
+})}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border bg-[#004aaa] p-3">
