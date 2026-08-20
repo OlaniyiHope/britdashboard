@@ -78,7 +78,7 @@ export default function UserProfilePage({ roleLabel = "User" }: Props) {
         <Button
           variant="ghost"
           onClick={() => setView("profile")}
-          className="text-slate-500 hover:text-[#004aaa] gap-2"
+          className="text-slate-500 hover:text-[#081022] gap-2"
         >
           <ArrowLeft size={16} /> Back to Profile
         </Button>
@@ -194,13 +194,13 @@ export default function UserProfilePage({ roleLabel = "User" }: Props) {
     <div className="p-8 space-y-8 bg-slate-50 min-h-screen">
       <div className="flex justify-between items-end border-b border-slate-200 pb-2">
         <div className="flex gap-8">
-          <button className="text-[#004aaa] font-bold pb-2 px-2 transition-all">
+          <button className="text-[#081022] font-bold pb-2 px-2 transition-all">
             About
           </button>
         </div>
         <Button
           onClick={() => setView("edit")}
-          className="bg-[#004aaa] hover:bg-[#004aaa]/90 gap-2 mb-2 px-6 shadow-md transition-all active:scale-95"
+          className="bg-[#081022] hover:bg-[#081022]/90 gap-2 mb-2 px-6 shadow-md transition-all active:scale-95"
         >
           <UserPen size={16} />
           Edit Profile
@@ -209,7 +209,7 @@ export default function UserProfilePage({ roleLabel = "User" }: Props) {
 
       <div className="max-w-4xl space-y-6">
         <header>
-          <h2 className="text-[#004aaa] text-2xl font-extrabold tracking-tight">
+          <h2 className="text-[#081022] text-2xl font-extrabold tracking-tight">
             {roleLabel} Profile
           </h2>
           <p className="text-slate-500 text-sm">
@@ -219,7 +219,7 @@ export default function UserProfilePage({ roleLabel = "User" }: Props) {
 
         <Card className="border-none shadow-sm ring-1 ring-slate-200">
           <CardHeader className="pb-4 border-b border-slate-50 bg-slate-50/50">
-            <CardTitle className="text-[#004aaa] text-lg font-bold">
+            <CardTitle className="text-[#081022] text-lg font-bold">
               Personal Information
             </CardTitle>
           </CardHeader>
@@ -233,7 +233,7 @@ export default function UserProfilePage({ roleLabel = "User" }: Props) {
                   <span className="text-slate-500 font-semibold text-sm uppercase tracking-wider">
                     {item.label}
                   </span>
-                  <span className="text-[#004aaa] font-medium text-base">
+                  <span className="text-[#081022] font-medium text-base">
                     {item.value || "Not provided"}
                   </span>
                 </div>

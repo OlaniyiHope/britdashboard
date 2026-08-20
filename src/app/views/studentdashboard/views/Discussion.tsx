@@ -146,7 +146,7 @@ const Discussion = () => {
             items-center
             justify-center
             gap-2
-            bg-[#004aaa]
+            bg-[#081022]
             hover:bg-[#003b88]
             text-white
             px-5
@@ -170,7 +170,7 @@ const Discussion = () => {
 
           <Link
             to="/student/dashboard"
-            className="hover:text-[#004aaa] transition"
+            className="hover:text-[#081022] transition"
           >
             Dashboard
           </Link>
@@ -181,7 +181,7 @@ const Discussion = () => {
 
           <ChevronRight size={14} />
 
-          <span className="text-[#004aaa] font-medium">
+          <span className="text-[#081022] font-medium">
             Discussion
           </span>
 
@@ -205,7 +205,7 @@ const Discussion = () => {
               </h3>
             </div>
 
-            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-[#004aaa]">
+            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-[#081022]">
               <MessageSquare size={20} />
             </div>
 
@@ -285,9 +285,9 @@ const Discussion = () => {
                   rounded-md
                   text-sm
                   outline-none
-                  focus:border-[#004aaa]
+                  focus:border-[#081022]
                   focus:ring-1
-                  focus:ring-[#004aaa]
+                  focus:ring-[#081022]
                 "
               />
 
@@ -306,7 +306,7 @@ const Discussion = () => {
                 text-sm
                 text-slate-600
                 outline-none
-                focus:border-[#004aaa]
+                focus:border-[#081022]
                 bg-white
               "
             >
@@ -378,7 +378,7 @@ const Discussion = () => {
                       h-11
                       rounded-full
                       bg-blue-50
-                      text-[#004aaa]
+                      text-[#081022]
                       items-center
                       justify-center
                     ">
@@ -392,7 +392,7 @@ const Discussion = () => {
                         {discussion.isPinned && (
                           <Pin
                             size={14}
-                            className="text-[#004aaa] flex-shrink-0"
+                            className="text-[#081022] flex-shrink-0"
                           />
                         )}
 
@@ -400,7 +400,7 @@ const Discussion = () => {
                           font-semibold
                           text-[#333]
                           text-sm
-                          hover:text-[#004aaa]
+                          hover:text-[#081022]
                           transition
                         ">
                           {discussion.title}
@@ -425,7 +425,7 @@ const Discussion = () => {
                           items-center
                           gap-1.5
                           text-[11px]
-                          text-[#004aaa]
+                          text-[#081022]
                           bg-blue-50
                           px-2.5
                           py-1

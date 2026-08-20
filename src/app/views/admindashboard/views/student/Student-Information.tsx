@@ -273,8 +273,8 @@ const StudentInformation = () => {
                           <DropdownMenuItem onClick={() => navigate(`/student/id-card/${student._id}`)} className="gap-2">
                             <CreditCard size={14} /> ID Card
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEditClick(student)} className="gap-2 text-[#004aaa] focus:bg-[#004aaa]/10 focus:text-[#004aaa]">
-                            <Pencil size={14} className="text-[#004aaa]" /> Edit
+                          <DropdownMenuItem onClick={() => handleEditClick(student)} className="gap-2 text-[#081022] focus:bg-[#081022]/10 focus:text-[#081022]">
+                            <Pencil size={14} className="text-[#081022]" /> Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {

@@ -155,13 +155,13 @@ export default function MarkingWorkspace({
           <div
             className={`h-2 w-2 rounded-full ${mode === "online" ? "bg-green-500" : "bg-orange-500"} animate-pulse`}
           />
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#004aaa]">
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#081022]">
             {mode}
           </span>
         </div>
 
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 overflow-x-auto py-1 sm:flex-nowrap lg:gap-2">
-          <div className="flex h-10 min-w-[140px] max-w-full shrink-0 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-[#004aaa]">
+          <div className="flex h-10 min-w-[140px] max-w-full shrink-0 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-[#081022]">
             <span className="truncate">
               {currentSession?.name || "Session"}
             </span>
@@ -225,7 +225,7 @@ export default function MarkingWorkspace({
               <UploadCloud size={16} /> Upload
             </Button>
           )}
-          <Button className="h-10 flex-1 gap-2 bg-[#004aaa] font-bold shadow-lg hover:bg-[#004aaa]/90 sm:flex-initial sm:px-6">
+          <Button className="h-10 flex-1 gap-2 bg-[#081022] font-bold shadow-lg hover:bg-[#081022]/90 sm:flex-initial sm:px-6">
             <Save size={16} /> Save Marks
           </Button>
         </div>
@@ -323,7 +323,7 @@ export default function MarkingWorkspace({
                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
                   Final Result
                 </p>
-                <h2 className="text-4xl font-black text-[#004aaa]">
+                <h2 className="text-4xl font-black text-[#081022]">
                   {totalScore}{" "}
                   <span className="text-sm text-slate-300">
                     / {totalPossible}
@@ -351,7 +351,7 @@ export default function MarkingWorkspace({
                   key={q.id}
                   className="p-4 border border-slate-100 rounded-2xl bg-white shadow-sm hover:border-blue-300 group">
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-[10px] font-black text-[#004aaa] uppercase tracking-tighter">
+                    <span className="text-[10px] font-black text-[#081022] uppercase tracking-tighter">
                       Question {i + 1}
                     </span>
                     <button
@@ -419,7 +419,7 @@ export default function MarkingWorkspace({
           </ScrollArea>
 
           <div className="p-4 bg-slate-50 border-t">
-            <Button className="w-full bg-[#004aaa] h-12 font-bold shadow-lg shadow-blue-900/10">
+            <Button className="w-full bg-[#081022] h-12 font-bold shadow-lg shadow-blue-900/10">
               Finalize & Lock Marks
             </Button>
           </div>

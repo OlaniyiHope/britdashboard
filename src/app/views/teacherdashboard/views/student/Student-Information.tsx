@@ -131,7 +131,7 @@ const StudentInformation = () => {
         <Button
           variant="ghost"
           onClick={() => setView("list")}
-          className="text-slate-500 hover:text-[#004aaa] gap-2">
+          className="text-slate-500 hover:text-[#081022] gap-2">
           <ArrowLeft size={16} /> Back to Student List
         </Button>
 
@@ -220,12 +220,12 @@ const StudentInformation = () => {
               <Input
                 type={showPassword ? "text" : "password"}
                 placeholder="********"
-                className="pr-10 border-slate-200 focus:border-[#004aaa]"
+                className="pr-10 border-slate-200 focus:border-[#081022]"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#004aaa] transition-colors">
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#081022] transition-colors">
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
@@ -240,7 +240,7 @@ const StudentInformation = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-end print:hidden">
         <div>
-          <h2 className="text-2xl font-bold text-[#004aaa]">
+          <h2 className="text-2xl font-bold text-[#081022]">
             Student Information - {resolvedClassName || "-"}
           </h2>
           <p className="text-sm text-slate-500">
@@ -250,7 +250,7 @@ const StudentInformation = () => {
         <div className="flex gap-3">
           <Button
             onClick={() => navigate("/student/admit")}
-            className="bg-[#004aaa] gap-2">
+            className="bg-[#081022] gap-2">
             <Plus size={16} /> Add Student
           </Button>
           <Button
@@ -267,17 +267,17 @@ const StudentInformation = () => {
           <Table>
             <TableHeader className="bg-[#E8EBF3] print:bg-slate-100">
               <TableRow>
-                <TableHead className="pl-6 font-bold text-[#004aaa]">
+                <TableHead className="pl-6 font-bold text-[#081022]">
                   S/N
                 </TableHead>
-                <TableHead className="font-bold text-[#004aaa]">
+                <TableHead className="font-bold text-[#081022]">
                   Adm No
                 </TableHead>
-                <TableHead className="font-bold text-[#004aaa]">Name</TableHead>
-                <TableHead className="font-bold text-[#004aaa] print:hidden">
+                <TableHead className="font-bold text-[#081022]">Name</TableHead>
+                <TableHead className="font-bold text-[#081022] print:hidden">
                   Email
                 </TableHead>
-                <TableHead className="text-right pr-6 font-bold text-[#004aaa] print:hidden">
+                <TableHead className="text-right pr-6 font-bold text-[#081022] print:hidden">
                   Action
                 </TableHead>
               </TableRow>
@@ -287,7 +287,7 @@ const StudentInformation = () => {
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-10">
                     <div className="flex justify-center items-center gap-2">
-                      <div className="animate-spin h-4 w-4 border-2 border-[#004aaa] border-t-transparent rounded-full" />
+                      <div className="animate-spin h-4 w-4 border-2 border-[#081022] border-t-transparent rounded-full" />
                       Loading students...
                     </div>
                   </TableCell>

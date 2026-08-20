@@ -458,8 +458,8 @@ export default function ManageOnlineExams() {
                           <DropdownMenuItem className="gap-2" onClick={() => fetchResults(exam)}>
                             <Eye size={16} /> View Result
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="gap-2 text-[#004aaa] focus:bg-[#004aaa]/10 focus:text-[#004aaa]" onClick={() => openForm("edit", exam)}>
-                            <Edit3 size={16} className="text-[#004aaa]" /> Edit
+                          <DropdownMenuItem className="gap-2 text-[#081022] focus:bg-[#081022]/10 focus:text-[#081022]" onClick={() => openForm("edit", exam)}>
+                            <Edit3 size={16} className="text-[#081022]" /> Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="gap-2 text-red-600 focus:bg-red-50 focus:text-red-600"

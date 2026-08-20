@@ -279,10 +279,10 @@ export default function Parents() {
   return (
     <div className="space-y-6 p-4">
       <div className="flex flex-row gap-4 justify-between items-center">
-        <h2 className="text-2xl font-bold text-[#004aaa]">Parent Board</h2>
+        <h2 className="text-2xl font-bold text-[#081022]">Parent Board</h2>
         <Button
           onClick={() => { setForm({ name: "", email: "", phone: "", address: "", password: "", linkedStudentIds: [] }); setSelectedParent(null); setView("add"); }}
-          className="w-fit gap-2 bg-[#004aaa] hover:bg-[#004aaa]/90">
+          className="w-fit gap-2 bg-[#081022] hover:bg-[#081022]/90">
           <Plus className="h-4 w-4" />
           Add New Parent
         </Button>
@@ -296,22 +296,22 @@ export default function Parents() {
                 <TableHead className="w-[50px] pl-4">
                   <Checkbox className="border-slate-300" />
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-center w-[100px]">
+                <TableHead className="text-[#081022] font-bold text-center w-[100px]">
                   S/N
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-center">
+                <TableHead className="text-[#081022] font-bold text-center">
                   Name
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-center">
+                <TableHead className="text-[#081022] font-bold text-center">
                   Email
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-center">
+                <TableHead className="text-[#081022] font-bold text-center">
                   Phone
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-center">
+                <TableHead className="text-[#081022] font-bold text-center">
                   Address
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-right pr-4">
+                <TableHead className="text-[#081022] font-bold text-right pr-4">
                   Action
                 </TableHead>
               </TableRow>
@@ -340,7 +340,7 @@ export default function Parents() {
                     <TableCell className="text-center font-medium text-slate-500">
                       {indexOfFirstItem + index + 1}
                     </TableCell>
-                    <TableCell className="text-[#004aaa] max-w-[400px] font-medium">
+                    <TableCell className="text-[#081022] max-w-[400px] font-medium">
                       <p className="line-clamp-1">
                         {(item.parentsName as string) ||
                           (item.name as string) ||
@@ -384,7 +384,7 @@ export default function Parents() {
                 <TableRow>
                   <TableCell
                     colSpan={7}
-                    className="h-24 text-center text-[#004aaa] font-medium py-12">
+                    className="h-24 text-center text-[#081022] font-medium py-12">
                     No Parent to display.
                   </TableCell>
                 </TableRow>

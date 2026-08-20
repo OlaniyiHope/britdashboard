@@ -226,7 +226,7 @@ export default function Meetings() {
                     ) : (
                       <Button
                         size="sm"
-                        className="h-9 min-w-[105px] bg-[#004aaa] text-xs text-white hover:bg-[#004aaa]/90"
+                        className="h-9 min-w-[105px] bg-[#081022] text-xs text-white hover:bg-[#081022]/90"
                         onClick={() => {
                           if (meeting.meetingUrl) {
                             window.open(

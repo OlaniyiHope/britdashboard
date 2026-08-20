@@ -90,7 +90,7 @@ const TeacherDashboard = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold text-[#004aaa]">Teacher Dashboard</h1>
+        <h1 className="text-2xl font-bold text-[#081022]">Teacher Dashboard</h1>
         <p className="text-sm text-slate-500 font-medium">
           {currentSession?.name
             ? `Current Session: ${currentSession.name}`
@@ -112,10 +112,10 @@ const TeacherDashboard = () => {
                   <card.icon className="h-7 w-7" />
                 </div>
                 <div className="flex flex-col justify-center px-4 py-4 sm:px-6">
-                  <p className="text-sm font-semibold text-[#004aaa]">
+                  <p className="text-sm font-semibold text-[#081022]">
                     {card.title}
                   </p>
-                  <p className="text-3xl font-black text-[#004aaa] mt-1">
+                  <p className="text-3xl font-black text-[#081022] mt-1">
                     {loadingCounts ? "..." : card.value}
                   </p>
                 </div>
@@ -160,7 +160,7 @@ const TeacherDashboard = () => {
     
             <Card className="lg:col-span-3">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base text-[#004aaa]">
+                <CardTitle className="text-base text-[#081022]">
                   Notice Board
                 </CardTitle>
               </CardHeader>
@@ -172,11 +172,11 @@ const TeacherDashboard = () => {
                         key={notice._id || notice.id}
                         className="flex items-start gap-3 border-b border-slate-50 pb-3 last:border-0 last:pb-0">
                         <div className="mt-0.5 h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-                          <Megaphone className="h-4 w-4 text-[#004aaa]" />
+                          <Megaphone className="h-4 w-4 text-[#081022]" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex justify-between items-start gap-2">
-                            <p className="text-xs font-bold text-[#004aaa] truncate line-clamp-2">
+                            <p className="text-xs font-bold text-[#081022] truncate line-clamp-2">
                               {notice.notice || "—"}
                             </p>
                             <p className="text-[10px] text-muted-foreground whitespace-nowrap">

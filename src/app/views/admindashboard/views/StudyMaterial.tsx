@@ -179,7 +179,7 @@ export default function ManageStudyMaterial() {
             setView("list");
             resetForm();
           }}
-          className="text-slate-500 hover:text-[#004aaa] gap-2">
+          className="text-slate-500 hover:text-[#081022] gap-2">
           <ArrowLeft size={16} /> Back to Study Material
         </Button>
 
@@ -291,7 +291,7 @@ export default function ManageStudyMaterial() {
   return (
     <div className="space-y-6 p-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <h2 className="text-2xl font-bold text-[#004aaa]">
+        <h2 className="text-2xl font-bold text-[#081022]">
           Manage Study Material
         </h2>
         <Button
@@ -299,7 +299,7 @@ export default function ManageStudyMaterial() {
             resetForm();
             setView("add");
           }}
-          className="bg-[#004aaa] hover:bg-[#004aaa]/90 gap-2 font-semibold">
+          className="bg-[#081022] hover:bg-[#081022]/90 gap-2 font-semibold">
           <Plus size={16} /> Add Study Material
         </Button>
       </div>
@@ -309,26 +309,26 @@ export default function ManageStudyMaterial() {
           <Table>
             <TableHeader className="bg-[#E8EBF3]">
               <TableRow>
-                <TableHead className="w-[60px] text-[#004aaa] font-bold pl-6">
+                <TableHead className="w-[60px] text-[#081022] font-bold pl-6">
                   S/N
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold">Date</TableHead>
-                <TableHead className="text-[#004aaa] font-bold">
+                <TableHead className="text-[#081022] font-bold">Date</TableHead>
+                <TableHead className="text-[#081022] font-bold">
                   Title
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold">
+                <TableHead className="text-[#081022] font-bold">
                   Description
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold">
+                <TableHead className="text-[#081022] font-bold">
                   Class
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold">
+                <TableHead className="text-[#081022] font-bold">
                   Subject
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-center">
+                <TableHead className="text-[#081022] font-bold text-center">
                   Download
                 </TableHead>
-                <TableHead className="text-right text-[#004aaa] font-bold pr-6">
+                <TableHead className="text-right text-[#081022] font-bold pr-6">
                   Action
                 </TableHead>
               </TableRow>
@@ -372,7 +372,7 @@ export default function ManageStudyMaterial() {
                           : "—"}
                       </div>
                     </TableCell>
-                    <TableCell className="font-bold text-[#004aaa]">
+                    <TableCell className="font-bold text-[#081022]">
                       {item.title ?? "—"}
                     </TableCell>
                     <TableCell className="text-slate-500 text-sm">
@@ -391,7 +391,7 @@ export default function ManageStudyMaterial() {
                         <Button
                           size="sm"
                           asChild
-                          className="bg-[#004aaa] hover:bg-[#004aaa]/90 gap-2 h-8 px-4">
+                          className="bg-[#081022] hover:bg-[#081022]/90 gap-2 h-8 px-4">
                           <a
                             href={item.Downloads}
                             target="_blank"

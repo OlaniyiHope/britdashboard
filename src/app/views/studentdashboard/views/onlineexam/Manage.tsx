@@ -96,7 +96,7 @@ export default function ActivityStream() {
     <div className="space-y-4">
       <Card className="border-none shadow-sm ring-1 ring-slate-200">
         <CardContent className="flex items-center gap-2 p-4 text-sm font-semibold text-slate-700">
-          <Zap className="h-4 w-4 text-[#004aaa]" />
+          <Zap className="h-4 w-4 text-[#081022]" />
           Activity Stream
         </CardContent>
       </Card>

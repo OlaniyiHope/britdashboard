@@ -227,7 +227,7 @@ const Admin = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#004aaa]">
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#081022]">
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
@@ -241,10 +241,10 @@ const Admin = () => {
     <div className="space-y-6 p-4 sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-[#004aaa]">Admin Management</h2>
+          <h2 className="text-2xl font-bold text-[#081022]">Admin Management</h2>
           <p className="text-sm text-slate-500">View and manage system administrators.</p>
         </div>
-        <Button onClick={handleAdd} className="w-full bg-[#004aaa] gap-2 hover:bg-[#004aaa]/90 sm:w-fit">
+        <Button onClick={handleAdd} className="w-full bg-[#081022] gap-2 hover:bg-[#081022]/90 sm:w-fit">
           <Plus size={16} /> Add Admin
         </Button>
       </div>
@@ -255,11 +255,11 @@ const Admin = () => {
           <Table>
             <TableHeader className="bg-[#E8EBF3]">
               <TableRow>
-                <TableHead className="w-[60px] pl-6 text-[#004aaa] font-bold uppercase text-xs">S/N</TableHead>
-                <TableHead className="text-[#004aaa] font-bold uppercase text-xs">Name</TableHead>
-                <TableHead className="text-[#004aaa] font-bold uppercase text-xs">Email</TableHead>
-                <TableHead className="text-[#004aaa] font-bold uppercase text-xs">Phone</TableHead>
-                <TableHead className="text-right pr-6 text-[#004aaa] font-bold uppercase text-xs">Action</TableHead>
+                <TableHead className="w-[60px] pl-6 text-[#081022] font-bold uppercase text-xs">S/N</TableHead>
+                <TableHead className="text-[#081022] font-bold uppercase text-xs">Name</TableHead>
+                <TableHead className="text-[#081022] font-bold uppercase text-xs">Email</TableHead>
+                <TableHead className="text-[#081022] font-bold uppercase text-xs">Phone</TableHead>
+                <TableHead className="text-right pr-6 text-[#081022] font-bold uppercase text-xs">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -279,7 +279,7 @@ const Admin = () => {
                 currentAdmins.map((admin, index) => (
                   <TableRow key={String(admin._id || index)} className="hover:bg-slate-50/50">
                     <TableCell className="pl-6 text-slate-400">{indexOfFirstItem + index + 1}</TableCell>
-                    <TableCell className="font-bold text-[#004aaa]">
+                    <TableCell className="font-bold text-[#081022]">
                       {(admin.username as string) || (admin.name as string) || "—"}
                     </TableCell>
                     <TableCell className="text-slate-600">{(admin.email as string) || "—"}</TableCell>

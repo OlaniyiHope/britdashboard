@@ -43,7 +43,7 @@ export const FormShell = ({
             {children}
           </div>
           <div className="flex flex-col-reverse gap-3 border-t border-black pt-4 sm:flex-row sm:justify-end">
-            <Button type="button" variant="outline" className="w-full border-black text-black hover:bg-[#004aaa]/10 hover:text-black sm:w-auto" onClick={() => handleOpenChange(false)}>
+            <Button type="button" variant="outline" className="w-full border-black text-black hover:bg-[#081022]/10 hover:text-black sm:w-auto" onClick={() => handleOpenChange(false)}>
               Close
             </Button>
             <Button type="submit" loading={loading} className="w-full px-8 bg-primary text-white hover:bg-primary/90 hover:text-white active:bg-primary active:text-white focus-visible:text-white sm:w-auto">

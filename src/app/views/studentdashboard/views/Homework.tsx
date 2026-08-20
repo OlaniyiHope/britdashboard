@@ -163,7 +163,7 @@ export default function Assignments() {
             <select
               value={entries}
               onChange={(e) => setEntries(e.target.value)}
-              className="h-9 w-[65px] rounded border border-slate-300 bg-white px-2 text-sm outline-none focus:border-[#004aaa]"
+              className="h-9 w-[65px] rounded border border-slate-300 bg-white px-2 text-sm outline-none focus:border-[#081022]"
             >
               <option value="10">10</option>
               <option value="25">25</option>
@@ -186,7 +186,7 @@ export default function Assignments() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-9 w-[220px] border-b border-slate-400 bg-transparent px-2 pr-8 text-sm outline-none focus:border-[#004aaa]"
+                className="h-9 w-[220px] border-b border-slate-400 bg-transparent px-2 pr-8 text-sm outline-none focus:border-[#081022]"
               />
 
               <Search className="absolute right-1 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
@@ -301,7 +301,7 @@ export default function Assignments() {
                     <button
                       type="button"
                       title="Download assignment file"
-                      className="text-slate-500 hover:text-[#004aaa]"
+                      className="text-slate-500 hover:text-[#081022]"
                     >
                       <Download className="h-5 w-5" />
                     </button>
@@ -339,7 +339,7 @@ export default function Assignments() {
 
             <button
               type="button"
-              className="border border-[#004aaa] bg-[#004aaa] px-3 py-2 text-white"
+              className="border border-[#081022] bg-[#081022] px-3 py-2 text-white"
             >
               1
             </button>

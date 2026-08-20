@@ -138,7 +138,7 @@ export default function CourseForumThread() {
     <div className="space-y-4">
       <p className="text-sm text-slate-500">
         Course Forum <span className="mx-1">/</span>
-        <span className="font-semibold text-[#004aaa]">{thread.threadCode}</span>
+        <span className="font-semibold text-[#081022]">{thread.threadCode}</span>
       </p>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
@@ -160,7 +160,7 @@ export default function CourseForumThread() {
                 </div>
                 <span
                   className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold text-white ${
-                    thread.graded ? "bg-emerald-600" : "bg-[#004aaa]"
+                    thread.graded ? "bg-emerald-600" : "bg-[#081022]"
                   }`}
                 >
                   {loadingThread ? "…" : thread.graded ? "Graded" : "Not yet graded"}
@@ -287,7 +287,7 @@ export default function CourseForumThread() {
         {/* Side greeting panel */}
         <Card className="h-fit border-none shadow-sm ring-1 ring-slate-200">
           <CardContent className="p-4 text-sm text-slate-600">
-            Hi, <span className="font-semibold text-[#004aaa]">{displayName}</span>
+            Hi, <span className="font-semibold text-[#081022]">{displayName}</span>
           </CardContent>
         </Card>
       </div>

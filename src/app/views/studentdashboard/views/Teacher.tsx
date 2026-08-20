@@ -137,7 +137,7 @@ export default function LearnersList() {
                       onClick={() => setSelectedId(id)}
                       className={`flex items-center gap-2 rounded-md border px-3 py-2 text-left text-sm font-medium transition-colors ${
                         isSelected
-                          ? "border-[#004aaa] bg-blue-50 text-[#004aaa]"
+                          ? "border-[#081022] bg-blue-50 text-[#081022]"
                           : "border-slate-200 text-slate-600 hover:bg-slate-50"
                       }`}
                     >

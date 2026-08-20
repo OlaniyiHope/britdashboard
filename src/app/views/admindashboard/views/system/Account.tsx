@@ -92,34 +92,34 @@ export default function Account() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-2">
-        <Pencil className="text-[#004aaa]" size={20} />
-        <h1 className="text-[#004aaa] font-bold text-xl">Profile Setting</h1>
+        <Pencil className="text-[#081022]" size={20} />
+        <h1 className="text-[#081022] font-bold text-xl">Profile Setting</h1>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base text-[#004aaa]">Principal &amp; Report Settings</CardTitle>
+          <CardTitle className="text-base text-[#081022]">Principal &amp; Report Settings</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5">
             <div className="space-y-5">
               <div className="space-y-1">
-                <Label className="text-[#004aaa] font-medium">Name of School</Label>
+                <Label className="text-[#081022] font-medium">Name of School</Label>
                 <Input name="name" placeholder="Enter school name" value={formData.name} onChange={handleChange} className="h-10" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[#004aaa] font-medium">Principal Name</Label>
+                <Label className="text-[#081022] font-medium">Principal Name</Label>
                 <Input name="principalName" placeholder="Enter principal name" value={formData.principalName} onChange={handleChange} className="h-10" />
               </div>
             </div>
 
             <div className="space-y-5">
               <div className="space-y-1">
-                <Label className="text-[#004aaa] font-medium">Resumption Date</Label>
+                <Label className="text-[#081022] font-medium">Resumption Date</Label>
                 <Input name="resumptionDate" type="date" value={formData.resumptionDate} onChange={handleChange} className="h-10" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[#004aaa] font-medium">Select Exam</Label>
+                <Label className="text-[#081022] font-medium">Select Exam</Label>
                 <Select value={selectedExam} onValueChange={setSelectedExam}>
                   <SelectTrigger className="h-10">
                     <SelectValue placeholder="Select an exam" />
@@ -132,13 +132,13 @@ export default function Account() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[#004aaa] font-medium">Principal Signature</Label>
+                <Label className="text-[#081022] font-medium">Principal Signature</Label>
                 <Input name="signature" type="file" accept="image/*" onChange={handleChange} className="h-10 cursor-pointer text-sm" />
               </div>
             </div>
 
             <div className="col-span-full pt-2">
-              <Button type="submit" disabled={loading} className="bg-[#004aaa] hover:bg-[#004aaa]/90 gap-2 h-10 px-8">
+              <Button type="submit" disabled={loading} className="bg-[#081022] hover:bg-[#081022]/90 gap-2 h-10 px-8">
                 <SendHorizontal size={16} />
                 {loading ? "Saving..." : "Save Profile Settings"}
               </Button>

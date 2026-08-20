@@ -118,7 +118,7 @@ export default function QuestionsGenerator() {
     <Card className="w-full border-slate-200 shadow-sm">
       <CardHeader className="border-b bg-slate-50/50 py-4">
         <div className="flex items-center gap-2">
-          <BrainCircuit size={18} className="text-[#004aaa]" />
+          <BrainCircuit size={18} className="text-[#081022]" />
           <CardTitle className="text-lg font-bold text-black">
             Questions Generator
           </CardTitle>

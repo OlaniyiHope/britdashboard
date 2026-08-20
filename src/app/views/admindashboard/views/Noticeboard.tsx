@@ -151,10 +151,10 @@ export default function NoticeBoard() {
   return (
     <div className="space-y-6 p-4">
       <div className="flex flex-row gap-4 justify-between items-center">
-        <h2 className="text-2xl font-bold text-[#004aaa]">Notice Board</h2>
+        <h2 className="text-2xl font-bold text-[#081022]">Notice Board</h2>
         <Button
           onClick={() => { setForm({ postedBy: "", date: "", message: "" }); setSelectedNotice(null); setView("add"); }}
-          className="bg-[#004aaa] gap-2 hover:bg-[#004aaa]/90">
+          className="bg-[#081022] gap-2 hover:bg-[#081022]/90">
           <Plus className="h-4 w-4" />
           Add New Notice
         </Button>
@@ -168,10 +168,10 @@ export default function NoticeBoard() {
                 <TableHead className="w-[50px] pl-6">
                   <Checkbox className="border-slate-300" />
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-center w-[80px]">S/N</TableHead>
-                <TableHead className="text-[#004aaa] font-bold">Notice Content</TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-center">Posted By</TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-right pr-6">Action</TableHead>
+                <TableHead className="text-[#081022] font-bold text-center w-[80px]">S/N</TableHead>
+                <TableHead className="text-[#081022] font-bold">Notice Content</TableHead>
+                <TableHead className="text-[#081022] font-bold text-center">Posted By</TableHead>
+                <TableHead className="text-[#081022] font-bold text-right pr-6">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -196,7 +196,7 @@ export default function NoticeBoard() {
                     <TableCell className="text-center font-medium text-slate-500">
                       {indexOfFirstItem + index + 1}
                     </TableCell>
-                    <TableCell className="text-[#004aaa] max-w-[400px]">
+                    <TableCell className="text-[#081022] max-w-[400px]">
                       <p className="line-clamp-1 font-medium">
                         {(item.notice as string) || (item.message as string) || "—"}
                       </p>

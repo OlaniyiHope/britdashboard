@@ -198,7 +198,7 @@ export default function ManageQuestions({ exam, onBack: _onBack }: Props) {
         type="button"
         variant="ghost"
         onClick={_onBack}
-        className="gap-2 border border-black text-black hover:bg-[#004aaa] hover:text-white"
+        className="gap-2 border border-black text-black hover:bg-[#081022] hover:text-white"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Manage Online Exams
@@ -207,7 +207,7 @@ export default function ManageQuestions({ exam, onBack: _onBack }: Props) {
       <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
         <Card className="border-none shadow-sm ring-1 ring-slate-200 overflow-hidden">
           <CardHeader className="bg-slate-50/50 border-b">
-            <CardTitle className="text-[#004aaa] text-lg font-bold">
+            <CardTitle className="text-[#081022] text-lg font-bold">
               Question List ({questions.length})
             </CardTitle>
           </CardHeader>
@@ -215,11 +215,11 @@ export default function ManageQuestions({ exam, onBack: _onBack }: Props) {
             <Table>
               <TableHeader className="bg-[#E8EBF3]">
                 <TableRow>
-                  <TableHead className="pl-6 text-[#004aaa] font-bold">#</TableHead>
-                  <TableHead className="text-[#004aaa] font-bold">Type</TableHead>
-                  <TableHead className="text-[#004aaa] font-bold">Question</TableHead>
-                  <TableHead className="text-[#004aaa] font-bold text-center">Mark</TableHead>
-                  <TableHead className="text-[#004aaa] font-bold text-right pr-6">Actions</TableHead>
+                  <TableHead className="pl-6 text-[#081022] font-bold">#</TableHead>
+                  <TableHead className="text-[#081022] font-bold">Type</TableHead>
+                  <TableHead className="text-[#081022] font-bold">Question</TableHead>
+                  <TableHead className="text-[#081022] font-bold text-center">Mark</TableHead>
+                  <TableHead className="text-[#081022] font-bold text-right pr-6">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -236,7 +236,7 @@ export default function ManageQuestions({ exam, onBack: _onBack }: Props) {
                     <TableRow key={q._id} className="hover:bg-slate-50/50">
                       <TableCell className="pl-6 text-slate-500 font-medium">{index + 1}</TableCell>
                       <TableCell className="text-slate-600 font-medium">{TYPE_LABELS[q.questionType] ?? q.questionType}</TableCell>
-                      <TableCell className="text-[#004aaa] font-medium">
+                      <TableCell className="text-[#081022] font-medium">
                         <div className="space-y-1">
                           <p className="line-clamp-2">{q.questionTitle}</p>
                           {getDisplayAnswer(q) ? (
@@ -247,8 +247,8 @@ export default function ManageQuestions({ exam, onBack: _onBack }: Props) {
                       <TableCell className="text-center text-slate-500 font-medium">{q.mark}</TableCell>
                       <TableCell className="pr-6">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(q)} className="h-8 w-8 text-[#004aaa] hover:bg-[#004aaa]/10 hover:text-[#004aaa]">
-                            <Pencil className="h-4 w-4 text-[#004aaa]" />
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(q)} className="h-8 w-8 text-[#081022] hover:bg-[#081022]/10 hover:text-[#081022]">
+                            <Pencil className="h-4 w-4 text-[#081022]" />
                           </Button>
                           <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(q)} className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-600">
                             <Trash2 className="h-4 w-4 text-red-600" />
@@ -266,7 +266,7 @@ export default function ManageQuestions({ exam, onBack: _onBack }: Props) {
         <div className="space-y-6">
           <Card className="border-none shadow-sm ring-1 ring-slate-200">
             <CardHeader className="bg-slate-50/50 border-b">
-              <CardTitle className="text-[#004aaa] text-lg font-bold">Exam Details</CardTitle>
+              <CardTitle className="text-[#081022] text-lg font-bold">Exam Details</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="grid grid-cols-2">
@@ -282,7 +282,7 @@ export default function ManageQuestions({ exam, onBack: _onBack }: Props) {
                 ].map(([label, value]) => (
                   <div key={label} className="border-b border-r border-slate-200 p-4 odd:bg-slate-50/40">
                     <p className="text-xs font-bold uppercase text-slate-400">{label}</p>
-                    <p className="mt-1 text-sm font-semibold text-[#004aaa] line-clamp-2">{value || "—"}</p>
+                    <p className="mt-1 text-sm font-semibold text-[#081022] line-clamp-2">{value || "—"}</p>
                   </div>
                 ))}
               </div>
@@ -291,7 +291,7 @@ export default function ManageQuestions({ exam, onBack: _onBack }: Props) {
 
           <Card className="border-none shadow-sm ring-1 ring-slate-200">
             <CardHeader className="bg-slate-50/50 border-b">
-              <CardTitle className="text-[#004aaa] text-lg font-bold">
+              <CardTitle className="text-[#081022] text-lg font-bold">
                 {editingId ? "Edit Question" : "Add Question"}
               </CardTitle>
             </CardHeader>
@@ -397,7 +397,7 @@ export default function ManageQuestions({ exam, onBack: _onBack }: Props) {
                   <Button type="button" variant="outline" onClick={resetForm}>
                     {editingId ? "Cancel Edit" : "Reset"}
                   </Button>
-                  <Button type="submit" disabled={!canSubmit || saving} className="bg-[#004aaa] hover:bg-[#004aaa]/90">
+                  <Button type="submit" disabled={!canSubmit || saving} className="bg-[#081022] hover:bg-[#081022]/90">
                     {saving ? "Saving…" : editingId ? "Save Changes" : "Add Question"}
                   </Button>
                 </div>

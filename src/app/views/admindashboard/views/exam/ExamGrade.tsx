@@ -147,7 +147,7 @@ export default function ExamGrades() {
             setSelectedGrade(null);
             setForm(emptyForm);
           }}
-          className="text-slate-500 hover:text-[#004aaa] gap-2">
+          className="text-slate-500 hover:text-[#081022] gap-2">
           <ArrowLeft size={16} /> Back to Exam Grades
         </Button>
 
@@ -233,7 +233,7 @@ export default function ExamGrades() {
     <div className="space-y-6 p-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-[#004aaa]">Exam Grades</h2>
+          <h2 className="text-2xl font-bold text-[#081022]">Exam Grades</h2>
           <p className="text-sm text-slate-500">
             Set the marking range and grade points for evaluations.
           </p>
@@ -244,7 +244,7 @@ export default function ExamGrades() {
             setForm(emptyForm);
             setView("add");
           }}
-          className="bg-[#004aaa] hover:bg-[#004aaa]/90 gap-2">
+          className="bg-[#081022] hover:bg-[#081022]/90 gap-2">
           <Plus className="h-4 w-4" /> Add New Grade
         </Button>
       </div>
@@ -254,25 +254,25 @@ export default function ExamGrades() {
           <Table>
             <TableHeader className="bg-[#E8EBF3]">
               <TableRow>
-                <TableHead className="text-[#004aaa] font-bold pl-6">
+                <TableHead className="text-[#081022] font-bold pl-6">
                   S/N
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-center">
+                <TableHead className="text-[#081022] font-bold text-center">
                   Grade Name
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-center">
+                <TableHead className="text-[#081022] font-bold text-center">
                   Grade Point
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-center">
+                <TableHead className="text-[#081022] font-bold text-center">
                   Mark From
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-center">
+                <TableHead className="text-[#081022] font-bold text-center">
                   Mark Up To
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold">
+                <TableHead className="text-[#081022] font-bold">
                   Comment
                 </TableHead>
-                <TableHead className="text-right text-[#004aaa] font-bold pr-6">
+                <TableHead className="text-right text-[#081022] font-bold pr-6">
                   Action
                 </TableHead>
               </TableRow>
@@ -300,7 +300,7 @@ export default function ExamGrades() {
                     <TableCell className="pl-6 text-slate-500">
                       {indexOfFirstItem + index + 1}
                     </TableCell>
-                    <TableCell className="text-center font-bold text-[#004aaa]">
+                    <TableCell className="text-center font-bold text-[#081022]">
                       {grade.grade_name ?? "—"}
                     </TableCell>
                     <TableCell className="text-center">

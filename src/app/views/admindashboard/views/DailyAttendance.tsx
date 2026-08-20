@@ -124,7 +124,7 @@ export default function DailyAttendance() {
 
   return (
     <div className="space-y-6 p-4">
-      <h2 className="text-2xl font-bold text-[#004aaa]">Manage Daily Attendance</h2>
+      <h2 className="text-2xl font-bold text-[#081022]">Manage Daily Attendance</h2>
 
       <Card className="border-slate-200 bg-slate-50/50">
         <CardContent className="p-6">
@@ -150,7 +150,7 @@ export default function DailyAttendance() {
             <Button
               onClick={handleGetStudents}
               disabled={loading}
-              className="bg-[#004aaa] hover:bg-[#004aaa]/90 gap-2">
+              className="bg-[#081022] hover:bg-[#081022]/90 gap-2">
               <Search size={16} /> {loading ? "Loading..." : "Get Students"}
             </Button>
           </div>
@@ -162,7 +162,7 @@ export default function DailyAttendance() {
           <CardHeader className="bg-white border-b py-4">
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
-                <CardTitle className="text-lg font-bold text-[#004aaa]">
+                <CardTitle className="text-lg font-bold text-[#081022]">
                   Attendance — {selectedClass}
                 </CardTitle>
                 <p className="text-xs text-slate-400 mt-1">
@@ -175,7 +175,7 @@ export default function DailyAttendance() {
               <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-[#004aaa] hover:bg-[#004aaa]/90 gap-2 h-9 px-6">
+                className="bg-[#081022] hover:bg-[#081022]/90 gap-2 h-9 px-6">
                 <Save size={16} /> {saving ? "Saving..." : "Save Attendance"}
               </Button>
             </div>
@@ -184,10 +184,10 @@ export default function DailyAttendance() {
             <Table>
               <TableHeader className="bg-[#E8EBF3]">
                 <TableRow>
-                  <TableHead className="w-[80px] text-[#004aaa] font-bold pl-6">#</TableHead>
-                  <TableHead className="text-[#004aaa] font-bold">Adm No</TableHead>
-                  <TableHead className="text-[#004aaa] font-bold">Name</TableHead>
-                  <TableHead className="text-[#004aaa] font-bold pr-6">Status</TableHead>
+                  <TableHead className="w-[80px] text-[#081022] font-bold pl-6">#</TableHead>
+                  <TableHead className="text-[#081022] font-bold">Adm No</TableHead>
+                  <TableHead className="text-[#081022] font-bold">Name</TableHead>
+                  <TableHead className="text-[#081022] font-bold pr-6">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

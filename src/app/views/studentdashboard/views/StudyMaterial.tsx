@@ -85,7 +85,7 @@ export default function Messaging() {
           {/* Compose */}
           <button
             type="button"
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-[#004aaa] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#003d8f]"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-[#081022] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#003d8f]"
           >
             <span>Compose</span>
 
@@ -110,7 +110,7 @@ export default function Messaging() {
               <span>Inbox</span>
             </div>
 
-            <span className="flex h-6 min-w-7 items-center justify-center rounded-full bg-[#004aaa] px-2 text-xs font-bold text-white">
+            <span className="flex h-6 min-w-7 items-center justify-center rounded-full bg-[#081022] px-2 text-xs font-bold text-white">
               0
             </span>
           </button>
@@ -133,7 +133,7 @@ export default function Messaging() {
               <span>Sent</span>
             </div>
 
-            <span className="flex h-6 min-w-7 items-center justify-center rounded-full bg-[#004aaa] px-2 text-xs font-bold text-white">
+            <span className="flex h-6 min-w-7 items-center justify-center rounded-full bg-[#081022] px-2 text-xs font-bold text-white">
               0
             </span>
           </button>
@@ -148,7 +148,7 @@ export default function Messaging() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="search in your Inbox messages..."
-              className="h-12 w-full rounded-sm border border-slate-300 bg-white px-4 pr-12 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-[#004aaa]"
+              className="h-12 w-full rounded-sm border border-slate-300 bg-white px-4 pr-12 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-[#081022]"
             />
 
             <Search className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />

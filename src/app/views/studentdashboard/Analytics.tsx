@@ -96,7 +96,7 @@
 //   return (
 //     <div className="space-y-6">
 //       <div className="flex flex-col gap-1">
-//         <h1 className="text-2xl font-bold text-[#004aaa]">Student Dashboard</h1>
+//         <h1 className="text-2xl font-bold text-[#081022]">Student Dashboard</h1>
 //         <p className="font-medium text-sm text-slate-500">
 //           {currentSession?.name
 //             ? `Current Session: ${currentSession.name}`
@@ -118,10 +118,10 @@
 //                   <card.icon className="h-7 w-7" />
 //                 </div>
 //                 <div className="flex flex-col justify-center px-4 py-4 sm:px-6">
-//                   <p className="text-sm font-semibold text-[#004aaa]">
+//                   <p className="text-sm font-semibold text-[#081022]">
 //                     {card.title}
 //                   </p>
-//                   <p className="mt-1 text-3xl font-black text-[#004aaa]">
+//                   <p className="mt-1 text-3xl font-black text-[#081022]">
 //                     {card.isLoading ? "..." : card.value}
 //                   </p>
 //                 </div>
@@ -138,7 +138,7 @@
 //               </div>
 //               <div className="flex flex-col justify-center gap-3 px-4 py-4 sm:px-6">
 //                 <div>
-//                   <p className="text-sm font-semibold text-[#004aaa]">
+//                   <p className="text-sm font-semibold text-[#081022]">
 //                     Student ID Card
 //                   </p>
 //                   <p className="mt-1 text-xs text-slate-500">
@@ -148,7 +148,7 @@
 //                 <Button
 //                   asChild
 //                   size="sm"
-//                   className="w-fit bg-[#004aaa] hover:bg-[#004aaa]/90"
+//                   className="w-fit bg-[#081022] hover:bg-[#081022]/90"
 //                   disabled={!studentId}
 //                 >
 //                   <Link
@@ -172,7 +172,7 @@
 //           <CardHeader className="border-b bg-slate-50/50">
 //             <div className="flex items-center gap-2">
 //               <CalendarIcon className="h-5 w-5 text-blue-600" />
-//               <CardTitle className="text-xl text-[#004aaa]">
+//               <CardTitle className="text-xl text-[#081022]">
 //                 Term Calendar
 //               </CardTitle>
 //             </div>
@@ -192,7 +192,7 @@
 //           <CardHeader className="flex flex-col gap-3 border-b bg-slate-50/50 sm:flex-row sm:items-center sm:justify-between">
 //             <div className="flex items-center gap-2">
 //               <Bell className="h-5 w-5 text-orange-500" />
-//               <CardTitle className="text-lg text-[#004aaa] sm:text-xl">
+//               <CardTitle className="text-lg text-[#081022] sm:text-xl">
 //                 School Notices
 //               </CardTitle>
 //             </div>
@@ -211,12 +211,12 @@
 //                   key={notice._id || notice.id}
 //                   className="flex gap-4 p-4 transition-colors hover:bg-slate-50/60"
 //                 >
-//                   <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#004aaa]">
+//                   <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#081022]">
 //                     <Megaphone className="h-4 w-4" />
 //                   </div>
 //                   <div className="min-w-0 flex-1">
 //                     <div className="flex items-start justify-between gap-3">
-//                       <p className="text-sm font-semibold leading-6 text-[#004aaa]">
+//                       <p className="text-sm font-semibold leading-6 text-[#081022]">
 //                         {notice.notice || "No notice content"}
 //                       </p>
 //                       <span className="whitespace-nowrap text-[10px] text-slate-400">
@@ -334,7 +334,7 @@ function SectionBanner({
 }) {
   return (
     <div
-      className="relative inline-flex items-center gap-2 bg-[#004aaa] py-2 pl-4 pr-7 text-sm font-semibold text-white"
+      className="relative inline-flex items-center gap-2 bg-[#081022] py-2 pl-4 pr-7 text-sm font-semibold text-white"
       style={{ clipPath: "polygon(0 0, 100% 0, 92% 50%, 100% 100%, 0 100%)" }}
     >
       <Icon className="h-4 w-4 shrink-0" />
@@ -383,7 +383,7 @@ function ProgressCell({ row }: { row: CourseProgressRow }) {
   return (
     <div className="h-2 w-28 overflow-hidden rounded-full bg-slate-100">
       <div
-        className="h-full rounded-full bg-[#004aaa]"
+        className="h-full rounded-full bg-[#081022]"
         style={{ width: `${Math.min(100, Math.max(0, row.progressPercent))}%` }}
       />
     </div>
@@ -439,7 +439,7 @@ const StudentDashboard = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold text-[#004aaa]">Student Dashboard</h1>
+        <h1 className="text-2xl font-bold text-[#081022]">Student Dashboard</h1>
         <p className="font-medium text-sm text-slate-500">
           {currentSession?.name
             ? `Current Session: ${currentSession.name}`
@@ -497,7 +497,7 @@ const StudentDashboard = () => {
                 {courseProgress.map((row) => (
                   <tr key={row._id || row.code} className="hover:bg-slate-50/60">
                     <td className="whitespace-nowrap px-4 py-3 md:px-6">
-                      <span className="font-semibold text-[#004aaa]">{row.code}</span>
+                      <span className="font-semibold text-[#081022]">{row.code}</span>
                       <span className="text-slate-500"> - </span>
                       <span className="italic text-slate-600">{row.name}</span>
                     </td>
@@ -538,11 +538,11 @@ const StudentDashboard = () => {
                 key={d._id || i}
                 className="flex items-center gap-4 px-4 py-3 md:px-6"
               >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#004aaa]">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#081022]">
                   <BookOpen className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-[#004aaa]">
+                  <p className="truncate text-sm font-semibold text-[#081022]">
                     {d.title || "Untitled"}
                   </p>
                   <p className="text-xs text-slate-500">{d.course}</p>

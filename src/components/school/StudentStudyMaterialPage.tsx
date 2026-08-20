@@ -93,7 +93,7 @@ export default function StudentStudyMaterialPage() {
   return (
     <div className="space-y-6 p-4">
       <div>
-        <h2 className="text-2xl font-bold text-[#004aaa]">Study Material</h2>
+        <h2 className="text-2xl font-bold text-[#081022]">Study Material</h2>
         <p className="text-sm text-slate-500">
           Learning resources for {className}.
         </p>
@@ -104,19 +104,19 @@ export default function StudentStudyMaterialPage() {
           <Table>
             <TableHeader className="bg-[#E8EBF3]">
               <TableRow>
-                <TableHead className="w-[60px] text-[#004aaa] font-bold pl-6">
+                <TableHead className="w-[60px] text-[#081022] font-bold pl-6">
                   S/N
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold">Date</TableHead>
-                <TableHead className="text-[#004aaa] font-bold">Title</TableHead>
-                <TableHead className="text-[#004aaa] font-bold">
+                <TableHead className="text-[#081022] font-bold">Date</TableHead>
+                <TableHead className="text-[#081022] font-bold">Title</TableHead>
+                <TableHead className="text-[#081022] font-bold">
                   Description
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold">Class</TableHead>
-                <TableHead className="text-[#004aaa] font-bold">
+                <TableHead className="text-[#081022] font-bold">Class</TableHead>
+                <TableHead className="text-[#081022] font-bold">
                   Subject
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-center">
+                <TableHead className="text-[#081022] font-bold text-center">
                   Download
                 </TableHead>
               </TableRow>
@@ -126,7 +126,7 @@ export default function StudentStudyMaterialPage() {
                 <TableRow>
                   <TableCell colSpan={7} className="py-12 text-center">
                     <div className="inline-flex items-center gap-2 text-slate-500">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#004aaa] border-t-transparent" />
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#081022] border-t-transparent" />
                       Loading study materials...
                     </div>
                   </TableCell>
@@ -159,7 +159,7 @@ export default function StudentStudyMaterialPage() {
                           : "Not set"}
                       </div>
                     </TableCell>
-                    <TableCell className="font-bold text-[#004aaa]">
+                    <TableCell className="font-bold text-[#081022]">
                       {item.title || "Untitled Material"}
                     </TableCell>
                     <TableCell className="text-slate-500 text-sm">
@@ -175,7 +175,7 @@ export default function StudentStudyMaterialPage() {
                       <Button
                         asChild
                         size="sm"
-                        className="bg-[#004aaa] hover:bg-[#004aaa]/90 gap-2 h-8 px-4"
+                        className="bg-[#081022] hover:bg-[#081022]/90 gap-2 h-8 px-4"
                       >
                         <a
                           href={item.Downloads || "#"}

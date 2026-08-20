@@ -45,16 +45,16 @@ export default function NoticeBoard() {
           <Table>
             <TableHeader className="bg-[#E8EBF3]">
               <TableRow className="hover:bg-transparent border-none">
-                <TableHead className="text-[#004aaa] font-bold text-center w-[80px]">
+                <TableHead className="text-[#081022] font-bold text-center w-[80px]">
                   S/N
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold">
+                <TableHead className="text-[#081022] font-bold">
                   Notice Content
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-center">
+                <TableHead className="text-[#081022] font-bold text-center">
                   Posted By
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold text-right pr-6">
+                <TableHead className="text-[#081022] font-bold text-right pr-6">
                   Action
                 </TableHead>
               </TableRow>
@@ -88,7 +88,7 @@ export default function NoticeBoard() {
                   <TableCell className="text-center font-medium text-slate-500">
                     {indexOfFirstItem + index + 1}
                   </TableCell>
-                  <TableCell className="text-[#004aaa] max-w-[400px]">
+                  <TableCell className="text-[#081022] max-w-[400px]">
                     <p className="line-clamp-1 font-medium">
                       {(item.notice as string) ||
                         (item.message as string) ||

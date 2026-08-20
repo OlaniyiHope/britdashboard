@@ -37,7 +37,7 @@ export default function OnScreenMarkingHub() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:p-8">
       <div className="mb-6 sm:mb-8">
-        <h2 className="text-2xl font-bold text-[#004aaa] sm:text-3xl">On-Screen Marking</h2>
+        <h2 className="text-2xl font-bold text-[#081022] sm:text-3xl">On-Screen Marking</h2>
         <p className="text-slate-500">
           Choose your preferred grading environment to begin.
         </p>
@@ -51,11 +51,11 @@ export default function OnScreenMarkingHub() {
             onClick={() => navigate(opt.path)}>
             <CardHeader>
               <div className="mb-4">{opt.icon}</div>
-              <CardTitle className="text-[#004aaa]">{opt.title}</CardTitle>
+              <CardTitle className="text-[#081022]">{opt.title}</CardTitle>
               <CardDescription>{opt.description}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center text-sm font-semibold text-[#004aaa]">
+              <div className="flex items-center text-sm font-semibold text-[#081022]">
                 Get Started <ArrowRight className="ml-2 h-4 w-4" />
               </div>
             </CardContent>

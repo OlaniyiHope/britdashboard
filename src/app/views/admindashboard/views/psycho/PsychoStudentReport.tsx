@@ -159,7 +159,7 @@ function PsychoStudentReport() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-[#004aaa]">
+      <h2 className="text-xl font-bold text-[#081022]">
         Manage Affective &amp; Psychomotor Report
       </h2>
 
@@ -201,7 +201,7 @@ function PsychoStudentReport() {
             <Button
               onClick={handleGetStudents}
               disabled={loading}
-              className="bg-[#004aaa] hover:bg-[#004aaa]/90 w-fit px-8">
+              className="bg-[#081022] hover:bg-[#081022]/90 w-fit px-8">
               {loading ? "Loading..." : "Get Students"}
             </Button>
           </div>
@@ -211,7 +211,7 @@ function PsychoStudentReport() {
       {fetched && (
         <div className="space-y-4">
           <div>
-            <h3 className="text-lg font-bold text-[#004aaa]">
+            <h3 className="text-lg font-bold text-[#081022]">
               Extracurricular Marks — {selectedClass}
             </h3>
           </div>
@@ -221,16 +221,16 @@ function PsychoStudentReport() {
               <Table>
                 <TableHeader className="bg-[#E8EBF3]">
                   <TableRow>
-                    <TableHead className="w-[40px] text-[#004aaa] font-bold pl-4">#</TableHead>
-                    <TableHead className="text-[#004aaa] font-bold">Adm No</TableHead>
-                    <TableHead className="text-[#004aaa] font-bold">Name</TableHead>
-                    <TableHead className="text-[#004aaa] font-bold text-[11px] leading-tight">Following<br />Instruction</TableHead>
-                    <TableHead className="text-[#004aaa] font-bold text-[11px] leading-tight">Working<br />Independently</TableHead>
-                    <TableHead className="text-[#004aaa] font-bold text-[11px] leading-tight">Punctuality</TableHead>
-                    <TableHead className="text-[#004aaa] font-bold text-[11px] leading-tight">Talking</TableHead>
-                    <TableHead className="text-[#004aaa] font-bold text-[11px] leading-tight">Eye Contact</TableHead>
-                    <TableHead className="text-[#004aaa] font-bold text-[11px] leading-tight min-w-[140px]">Teacher Remarks</TableHead>
-                    <TableHead className="text-[#004aaa] font-bold text-[11px] leading-tight min-w-[140px]">Principal Remarks</TableHead>
+                    <TableHead className="w-[40px] text-[#081022] font-bold pl-4">#</TableHead>
+                    <TableHead className="text-[#081022] font-bold">Adm No</TableHead>
+                    <TableHead className="text-[#081022] font-bold">Name</TableHead>
+                    <TableHead className="text-[#081022] font-bold text-[11px] leading-tight">Following<br />Instruction</TableHead>
+                    <TableHead className="text-[#081022] font-bold text-[11px] leading-tight">Working<br />Independently</TableHead>
+                    <TableHead className="text-[#081022] font-bold text-[11px] leading-tight">Punctuality</TableHead>
+                    <TableHead className="text-[#081022] font-bold text-[11px] leading-tight">Talking</TableHead>
+                    <TableHead className="text-[#081022] font-bold text-[11px] leading-tight">Eye Contact</TableHead>
+                    <TableHead className="text-[#081022] font-bold text-[11px] leading-tight min-w-[140px]">Teacher Remarks</TableHead>
+                    <TableHead className="text-[#081022] font-bold text-[11px] leading-tight min-w-[140px]">Principal Remarks</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -298,7 +298,7 @@ function PsychoStudentReport() {
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="bg-[#004aaa] hover:bg-[#004aaa]/90 px-10">
+              className="bg-[#081022] hover:bg-[#081022]/90 px-10">
               {saving ? "Saving..." : "Save Changes"}
             </Button>
           </div>

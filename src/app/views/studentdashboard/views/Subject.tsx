@@ -130,11 +130,11 @@ export default function MyCourses() {
                   to={`/course/${course.slug || course.code.toLowerCase().replace(/\s+/g, "-")}`}
                   className="flex items-center gap-4 py-3 transition-colors hover:bg-slate-50/60"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#004aaa]">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#081022]">
                     <BookOpen className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-[#004aaa]">
+                    <p className="truncate text-sm font-bold text-[#081022]">
                       {course.code}
                     </p>
                     <p className="truncate text-sm text-slate-600">{course.title}</p>

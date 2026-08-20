@@ -134,14 +134,14 @@ export default function StudentProfile() {
         <div className="mb-6 flex items-center gap-3">
           <Button
             variant="outline"
-            className="border-[#004aaa] text-[#004aaa]"
+            className="border-[#081022] text-[#081022]"
             onClick={() => setActiveTab("update")}
           >
             About Me
           </Button>
 
           <Button
-            className="bg-[#004aaa] hover:bg-[#004aaa]/90"
+            className="bg-[#081022] hover:bg-[#081022]/90"
             onClick={() => setEditing(true)}
           >
             <Pencil className="mr-2 h-4 w-4" />
@@ -159,7 +159,7 @@ export default function StudentProfile() {
             </button>
 
             <button
-              className="border-b-2 border-[#004aaa] pb-3 text-sm font-semibold text-[#004aaa]"
+              className="border-b-2 border-[#081022] pb-3 text-sm font-semibold text-[#081022]"
             >
               Courses
             </button>
@@ -199,14 +199,14 @@ export default function StudentProfile() {
         <div className="mb-6 flex items-center gap-3">
           <Button
             variant="outline"
-            className="border-[#004aaa] text-[#004aaa]"
+            className="border-[#081022] text-[#081022]"
             onClick={() => setActiveTab("update")}
           >
             About Me
           </Button>
 
           <Button
-            className="bg-[#004aaa] hover:bg-[#004aaa]/90"
+            className="bg-[#081022] hover:bg-[#081022]/90"
             onClick={() => setEditing(true)}
           >
             <Pencil className="mr-2 h-4 w-4" />
@@ -230,7 +230,7 @@ export default function StudentProfile() {
               Courses
             </button>
 
-            <button className="border-b-2 border-[#004aaa] pb-3 text-sm font-semibold text-[#004aaa]">
+            <button className="border-b-2 border-[#081022] pb-3 text-sm font-semibold text-[#081022]">
               Preferences
             </button>
           </div>
@@ -296,7 +296,7 @@ export default function StudentProfile() {
           <div className="mt-5 flex gap-1">
             <Button
               variant="outline"
-              className="h-9 rounded border-[#004aaa] bg-white px-4 text-sm font-semibold text-[#004aaa]"
+              className="h-9 rounded border-[#081022] bg-white px-4 text-sm font-semibold text-[#081022]"
               onClick={() => {
                 setActiveTab("update");
                 setEditing(false);
@@ -306,7 +306,7 @@ export default function StudentProfile() {
             </Button>
 
             <Button
-              className="h-9 rounded bg-[#004aaa] px-4 text-sm font-semibold hover:bg-[#004aaa]/90"
+              className="h-9 rounded bg-[#081022] px-4 text-sm font-semibold hover:bg-[#081022]/90"
               onClick={() => setEditing(true)}
             >
               Edit
@@ -321,7 +321,7 @@ export default function StudentProfile() {
               onClick={() => setActiveTab("update")}
               className={`pb-3 text-sm ${
                 activeTab === "update"
-                  ? "border-b-2 border-[#004aaa] font-semibold text-[#004aaa]"
+                  ? "border-b-2 border-[#081022] font-semibold text-[#081022]"
                   : "text-slate-600"
               }`}
             >
@@ -550,7 +550,7 @@ export default function StudentProfile() {
             <Button
               onClick={handleSave}
               disabled={loading}
-              className="bg-[#004aaa] px-7 hover:bg-[#004aaa]/90"
+              className="bg-[#081022] px-7 hover:bg-[#081022]/90"
             >
               <Save className="mr-2 h-4 w-4" />
 

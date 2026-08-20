@@ -163,14 +163,14 @@ export default function ExamList() {
     <div className="space-y-6 p-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-[#004aaa]">Exam List</h2>
+          <h2 className="text-2xl font-bold text-[#081022]">Exam List</h2>
           <p className="text-sm text-slate-500">
             View and manage scheduled academic examinations.
           </p>
         </div>
         <Button
           onClick={() => { setForm({ name: "", date: "", comment: "" }); setSelectedExam(null); setView("add"); }}
-          className="bg-[#004aaa] hover:bg-[#004aaa]/90 gap-2">
+          className="bg-[#081022] hover:bg-[#081022]/90 gap-2">
           <Plus className="h-4 w-4" /> Add Exam
         </Button>
       </div>
@@ -180,17 +180,17 @@ export default function ExamList() {
           <Table>
             <TableHeader className="bg-[#E8EBF3]">
               <TableRow>
-                <TableHead className="w-[80px] text-[#004aaa] font-bold pl-6">
+                <TableHead className="w-[80px] text-[#081022] font-bold pl-6">
                   S/N
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold">
+                <TableHead className="text-[#081022] font-bold">
                   Exam Name
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold">Date</TableHead>
-                <TableHead className="text-[#004aaa] font-bold">
+                <TableHead className="text-[#081022] font-bold">Date</TableHead>
+                <TableHead className="text-[#081022] font-bold">
                   Comment
                 </TableHead>
-                <TableHead className="text-right text-[#004aaa] font-bold pr-6">
+                <TableHead className="text-right text-[#081022] font-bold pr-6">
                   Action
                 </TableHead>
               </TableRow>
@@ -224,7 +224,7 @@ export default function ExamList() {
                   <TableCell className="pl-6 font-medium text-slate-500">
                     {indexOfFirstItem + index + 1}
                   </TableCell>
-                  <TableCell className="font-bold text-[#004aaa]">
+                  <TableCell className="font-bold text-[#081022]">
                     {(exam.name as string) || "—"}
                   </TableCell>
                   <TableCell className="text-slate-600">

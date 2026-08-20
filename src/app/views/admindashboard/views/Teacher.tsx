@@ -174,7 +174,7 @@ const Teacher = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#004aaa]">
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#081022]">
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
@@ -188,10 +188,10 @@ const Teacher = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-row gap-4 justify-between items-center">
-        <h2 className="text-2xl font-bold text-[#004aaa]">Manage Teachers</h2>
+        <h2 className="text-2xl font-bold text-[#081022]">Manage Teachers</h2>
         <Button
           onClick={() => { setForm({ name: "", email: "", phone: "", address: "", password: "" }); setSelectedTeacher(null); setView("add"); }}
-          className="bg-[#004aaa] gap-2 hover:bg-[#004aaa]/90">
+          className="bg-[#081022] gap-2 hover:bg-[#081022]/90">
           <Plus className="h-4 w-4" />
           Add new Teacher
         </Button>
@@ -202,20 +202,20 @@ const Teacher = () => {
           <Table>
             <TableHeader className="bg-[#E8EBF3]">
               <TableRow>
-                <TableHead className="w-[80px] text-[#004aaa] font-bold pl-6">
+                <TableHead className="w-[80px] text-[#081022] font-bold pl-6">
                   S/N
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold">Name</TableHead>
-                <TableHead className="text-[#004aaa] font-bold">
+                <TableHead className="text-[#081022] font-bold">Name</TableHead>
+                <TableHead className="text-[#081022] font-bold">
                   Email
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold">
+                <TableHead className="text-[#081022] font-bold">
                   Phone
                 </TableHead>
-                <TableHead className="text-[#004aaa] font-bold">
+                <TableHead className="text-[#081022] font-bold">
                   Address
                 </TableHead>
-                <TableHead className="text-right text-[#004aaa] font-bold pr-6">
+                <TableHead className="text-right text-[#081022] font-bold pr-6">
                   Action
                 </TableHead>
               </TableRow>
@@ -248,7 +248,7 @@ const Teacher = () => {
                   <TableCell className="pl-6 text-slate-500 font-medium">
                     {indexOfFirstItem + index + 1}
                   </TableCell>
-                  <TableCell className="font-bold text-[#004aaa]">
+                  <TableCell className="font-bold text-[#081022]">
                     {(teacher.username as string) ||
                       (teacher.name as string) ||
                       "Unnamed"}

@@ -740,9 +740,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border bg-[#004aaa] p-4">
+      <SidebarHeader className="border-b border-sidebar-border bg-[#081022] p-4">
         <div className="flex items-center gap-3">
-          <img src={logo} alt="EduPro" className="h-10 w-10 rounded object-contain" />
+          
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground leading-tight">
@@ -756,7 +756,7 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-[#004aaa] py-2 text-white [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/40 hover:[&::-webkit-scrollbar-thumb]:bg-white/60">
+      <SidebarContent className="bg-[#081022] py-2 text-white [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/40 hover:[&::-webkit-scrollbar-thumb]:bg-white/60">
     {nav.map((group) => {
   // Standalone navigation item such as Curriculum
   if ("url" in group && group.url) {
@@ -769,7 +769,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               asChild
               isActive={currentPath === group.url}
-              className="text-white hover:bg-white/12 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#004aaa]"
+              className="text-white hover:bg-white/12 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#081022]"
             >
               {isExternal ? (
                 <a
@@ -785,7 +785,7 @@ export function AppSidebar() {
                 <NavLink
                   to={group.url}
                   end
-                  activeClassName="bg-white text-[#004aaa] font-semibold"
+                  activeClassName="bg-white text-[#081022] font-semibold"
                   className="rounded-md px-2 py-2 hover:bg-white/12"
                 >
                   <group.icon className="mr-2 h-4 w-4 shrink-0" />
@@ -828,7 +828,7 @@ export function AppSidebar() {
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
                             tooltip={item.title}
-                            className="text-white hover:bg-white/12 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#004aaa]"
+                            className="text-white hover:bg-white/12 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#081022]"
                           >
                             <item.icon className="mr-2 h-4 w-4 shrink-0" />
                             <span>{item.title}</span>
@@ -843,7 +843,7 @@ export function AppSidebar() {
                                 <SidebarMenuSubButton
                                   asChild
                                   isActive={currentPath === sub.url}
-                                  className="text-white/80 hover:bg-white/10 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#004aaa]"
+                                  className="text-white/80 hover:bg-white/10 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#081022]"
                                 >
                                   <NavLink to={sub.url}>
                                     {sub.title}
@@ -866,7 +866,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       isActive={currentPath === url}
-                      className="text-white hover:bg-white/12 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#004aaa]"
+                      className="text-white hover:bg-white/12 hover:text-white data-[active=true]:bg-white data-[active=true]:text-[#081022]"
                     >
                       {isExternal ? (
                         <a
@@ -882,7 +882,7 @@ export function AppSidebar() {
                         <NavLink
                           to={url}
                           end
-                          activeClassName="bg-white text-[#004aaa] font-semibold"
+                          activeClassName="bg-white text-[#081022] font-semibold"
                           className="rounded-md px-2 py-2 hover:bg-white/12"
                         >
                           <item.icon className="mr-2 h-4 w-4 shrink-0" />
@@ -902,7 +902,7 @@ export function AppSidebar() {
 })}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border bg-[#004aaa] p-3">
+      <SidebarFooter className="border-t border-sidebar-border bg-[#081022] p-3">
         <Button
           variant="ghost"
           className="w-full justify-start text-white hover:bg-white/12 hover:text-white"

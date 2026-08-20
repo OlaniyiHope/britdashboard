@@ -212,14 +212,14 @@ function Subject() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-[#004aaa]">Subjects</h2>
+          <h2 className="text-2xl font-bold text-[#081022]">Subjects</h2>
           <p className="text-sm text-slate-500 uppercase">
             {classId || "All Classes"}
           </p>
         </div>
         <Button
           onClick={() => { setSubjectName(""); setSelectedTeacher(""); setView("add"); }}
-          className="w-full gap-2 bg-[#004aaa] hover:bg-[#004aaa]/90 sm:w-fit">
+          className="w-full gap-2 bg-[#081022] hover:bg-[#081022]/90 sm:w-fit">
           <Plus className="h-4 w-4" /> Add new Subject
         </Button>
       </div>
@@ -230,11 +230,11 @@ function Subject() {
           <Table>
             <TableHeader className="bg-[#E8EBF3]">
               <TableRow>
-                <TableHead className="w-[80px] text-[#004aaa] font-bold pl-6">S/N</TableHead>
-                <TableHead className="text-[#004aaa] font-bold">Subject</TableHead>
-                <TableHead className="text-[#004aaa] font-bold">Teacher</TableHead>
-                <TableHead className="text-[#004aaa] font-bold">Class</TableHead>
-                <TableHead className="text-right text-[#004aaa] font-bold pr-6">Action</TableHead>
+                <TableHead className="w-[80px] text-[#081022] font-bold pl-6">S/N</TableHead>
+                <TableHead className="text-[#081022] font-bold">Subject</TableHead>
+                <TableHead className="text-[#081022] font-bold">Teacher</TableHead>
+                <TableHead className="text-[#081022] font-bold">Class</TableHead>
+                <TableHead className="text-right text-[#081022] font-bold pr-6">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -264,7 +264,7 @@ function Subject() {
                     <TableCell className="pl-6 text-slate-500">
                       {indexOfFirst + index + 1}
                     </TableCell>
-                    <TableCell className="font-bold text-[#004aaa]">
+                    <TableCell className="font-bold text-[#081022]">
                       {(sub.subjectName as string) || (sub.name as string) || "—"}
                     </TableCell>
                     <TableCell className="text-blue-600 font-medium">

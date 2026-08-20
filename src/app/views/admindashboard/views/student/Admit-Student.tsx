@@ -73,7 +73,7 @@ function AdmitStudent() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-[#004aaa]">
+        <h2 className="text-2xl font-bold tracking-tight text-[#081022]">
           Admit New Student
         </h2>
         <p className="text-muted-foreground">
@@ -178,7 +178,7 @@ function AdmitStudent() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full gap-2 bg-[#004aaa] px-8 hover:bg-[#004aaa]/90 sm:w-auto">
+                className="w-full gap-2 bg-[#081022] px-8 hover:bg-[#081022]/90 sm:w-auto">
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
                 {loading ? "Submitting..." : "Submit Admission"}
               </Button>
