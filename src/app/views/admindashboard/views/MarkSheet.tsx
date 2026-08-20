@@ -1,60 +1,341 @@
-import { useContext } from "react";
-import { useParams, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { FileBarChart, ArrowLeft } from "lucide-react";
-import useFetch from "@/hooks/useFetch";
-import { SessionContext } from "@/contexts/SessionContext";
+import { Bell, Home, MoreVertical, Wrench } from "lucide-react";
 
-const MarkSheet = () => {
-  const { id } = useParams<{ id: string }>();
-  const { currentSession } = useContext(SessionContext);
+interface NotificationItem {
+  text: React.ReactNode;
+  time: string;
+}
 
-  const { data: raw } = useFetch(
-    id && currentSession?._id ? `/get-students/${id}/${currentSession._id}` : null
-  );
-  const student = raw ? (Array.isArray(raw) ? (raw as any[])[0] : raw as any) : null;
-  const studentName = student?.studentName || student?.name || "Student";
-  const studentClass = student?.classname || "";
+interface NotificationGroup {
+  date: string;
+  notifications: NotificationItem[];
+}
 
-  const reportCards = [
-    { title: "First Term Report Card",  route: `/dashboard/first_term_report_card/${id}` },
-    { title: "Second Term Report Card", route: `/dashboard/term_report_card/${id}` },
-    { title: "Third Term Report Card",  route: `/dashboard/third_term_report_card/${id}` },
-    { title: "Cumulative Result",        route: `/dashboard/cumulative/${id}` },
+const StudentNotification = () => {
+  const notificationGroups: NotificationGroup[] = [
+    {
+      date: "August 18th 2026",
+      notifications: [
+        {
+          text: (
+            <>
+              <strong>GABRIEL Samaila</strong> has started MTH 101 Lectures meeting
+            </>
+          ),
+          time: "14 hours ago",
+        },
+        {
+          text: (
+            <>
+              <strong>ABDULSALAM Abdulwasiu</strong> has invited you to a meeting
+              for Differential and Integral Calculus - MATH 105
+            </>
+          ),
+          time: "14 hours ago",
+        },
+        {
+          text: (
+            <>
+              Reminder: <strong>ABDULSALAM Abdulwasiu</strong> has invited you to
+              a meeting
+            </>
+          ),
+          time: "14 hours ago",
+        },
+        {
+          text: (
+            <>
+              <strong>GABRIEL Samaila</strong> has invited you to a meeting for
+              Sets and Number System - MATH 101
+            </>
+          ),
+          time: "15 hours ago",
+        },
+        {
+          text: (
+            <>
+              Reminder: <strong>GABRIEL Samaila</strong> has invited you to a
+              meeting
+            </>
+          ),
+          time: "15 hours ago",
+        },
+      ],
+    },
+
+    {
+      date: "August 17th 2026",
+      notifications: [
+        {
+          text: (
+            <>
+              <strong>DANJUMA Dauda</strong> has started PHYS111 meeting
+            </>
+          ),
+          time: "2 days ago",
+        },
+        {
+          text: (
+            <>
+              <strong>GABRIEL Samaila</strong> has started MTH 101 Lectures
+              meeting
+            </>
+          ),
+          time: "2 days ago",
+        },
+        {
+          text: (
+            <>
+              You have a new quiz: <strong>"maths 101 quiz"</strong> in Sets and
+              Number System - MATH 101 course
+            </>
+          ),
+          time: "2 days ago",
+        },
+        {
+          text: (
+            <>
+              <strong>GABRIEL Samaila</strong> has invited you to a meeting for
+              Sets and Number System - MATH 101
+            </>
+          ),
+          time: "2 days ago",
+        },
+        {
+          text: (
+            <>
+              Reminder: <strong>GABRIEL Samaila</strong> has invited you to a
+              meeting
+            </>
+          ),
+          time: "2 days ago",
+        },
+      ],
+    },
+
+    {
+      date: "August 15th 2026",
+      notifications: [
+        {
+          text: (
+            <>
+              <strong>SAFIYA Umar</strong> has started Microsoft Excel meeting
+            </>
+          ),
+          time: "3 days ago",
+        },
+      ],
+    },
+
+    {
+      date: "August 14th 2026",
+      notifications: [
+        {
+          text: (
+            <>
+              You have a New Group Discussion <strong>"FRM3"</strong> in
+              Mechanics - PHYS 111 course
+            </>
+          ),
+          time: "5 days ago",
+        },
+        {
+          text: (
+            <>
+              <strong>DANJUMA Dauda</strong> has invited you to a group
+              discussion
+            </>
+          ),
+          time: "5 days ago",
+        },
+      ],
+    },
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <Link to={-1 as any} className="flex items-center gap-2 text-slate-500 hover:text-[#004aaa] transition-colors">
-        <ArrowLeft size={18} /> Back to List
-      </Link>
+    <div className="min-h-screen bg-[#fafafa] text-[#333]">
+      {/* PAGE CONTENT */}
+      <div className="px-6 md:px-8 pt-7 pb-16">
+        {/* PAGE TITLE */}
+        <h1 className="text-[18px] font-medium text-[#333] mb-4">
+          Notifications
+        </h1>
 
-      <header>
-        <h2 className="text-2xl font-bold text-[#004aaa]">Academic Marksheet</h2>
-        <p className="text-slate-500">
-          Student: <span className="font-bold text-[#004aaa]">{studentName}</span>
-          {studentClass && <span className="text-slate-400"> · {studentClass}</span>}
-        </p>
-      </header>
+        {/* BREADCRUMB */}
+        <div className="h-[38px] border border-[#e5e5e5] bg-white flex items-center px-3 text-[12px] text-[#999]">
+          <Home size={13} className="mr-3 text-[#888]" />
+          <span>Notification</span>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
-        {reportCards.map((card) => (
-          <Card key={card.title} className="border-none shadow-sm ring-1 ring-slate-200 hover:ring-[#004aaa] transition-all group">
-            <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
-              <div className="p-4 bg-slate-50 rounded-full text-[#004aaa] group-hover:bg-[#004aaa] group-hover:text-white transition-colors">
-                <FileBarChart size={32} />
-              </div>
-              <h3 className="font-bold text-[#004aaa] text-lg">{card.title}</h3>
-              <Link to={card.route} className="w-full">
-                <Button className="w-full bg-[#004aaa] hover:bg-[#004aaa]/90">View Report</Button>
-              </Link>
-            </CardContent>
-          </Card>
-        ))}
+        {/* ACTIVITY STREAM */}
+        <div className="mt-9 w-full">
+          <div className="max-w-[900px] mx-auto">
+            {/* ACTIVITY STREAM HEADER */}
+            <div className="border border-[#e5e5e5] bg-white h-[42px] flex items-center px-5">
+              <Wrench
+                size={17}
+                strokeWidth={2.5}
+                className="mr-2 text-[#222]"
+              />
+
+              <span className="text-[13px] font-semibold text-[#333]">
+                Activity Stream
+              </span>
+            </div>
+
+            {/* ACTIVITY LIST */}
+            <div className="mt-3">
+              {notificationGroups.map((group, groupIndex) => (
+                <div
+                  key={group.date}
+                  className={`relative ${
+                    groupIndex !== 0 ? "mt-4" : ""
+                  }`}
+                >
+                  {/* DATE LABEL */}
+                  <div className="relative z-10 inline-flex">
+                    <div className="bg-[#252525] text-white text-[10px] font-semibold px-5 py-[6px] min-w-[105px] text-center">
+                      {group.date}
+                    </div>
+
+                    {/* TRIANGLE UNDER DATE */}
+                    <div
+                      className="
+                        absolute
+                        left-[18px]
+                        top-full
+                        w-0
+                        h-0
+                        border-t-[8px]
+                        border-t-[#252525]
+                        border-r-[8px]
+                        border-r-transparent
+                      "
+                    />
+                  </div>
+
+                  {/* NOTIFICATION BOX */}
+                  <div className="border border-[#e8e8e8] bg-white mt-[-1px]">
+                    {group.notifications.map((notification, index) => (
+                      <div
+                        key={index}
+                        className="
+                          min-h-[34px]
+                          px-7
+                          py-[7px]
+                          flex
+                          items-center
+                          justify-between
+                          gap-5
+                          border-b
+                          border-[#eeeeee]
+                          last:border-b-0
+                        "
+                      >
+                        <div className="text-[11px] leading-[18px] text-[#555]">
+                          {notification.text}
+                        </div>
+
+                        <span className="text-[9px] text-[#999] whitespace-nowrap">
+                          {notification.time}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT SIDE VERTICAL ACTION MENU */}
+        <div
+          className="
+            hidden
+            lg:flex
+            fixed
+            right-[8%]
+            top-[54%]
+            -translate-y-1/2
+            flex-col
+            bg-[#292929]
+            rounded-[2px]
+            overflow-hidden
+            shadow-md
+          "
+        >
+          <button
+            type="button"
+            className="
+              w-[27px]
+              h-[31px]
+              flex
+              items-center
+              justify-center
+              text-white
+              border-b
+              border-[#555]
+              hover:bg-[#3b3b3b]
+              transition
+            "
+          >
+            <Bell size={12} />
+          </button>
+
+          <button
+            type="button"
+            className="
+              w-[27px]
+              h-[31px]
+              flex
+              items-center
+              justify-center
+              text-white
+              border-b
+              border-[#555]
+              hover:bg-[#3b3b3b]
+              transition
+            "
+          >
+            <Wrench size={12} />
+          </button>
+
+          <button
+            type="button"
+            className="
+              w-[27px]
+              h-[31px]
+              flex
+              items-center
+              justify-center
+              text-white
+              border-b
+              border-[#555]
+              hover:bg-[#3b3b3b]
+              transition
+            "
+          >
+            <MoreVertical size={13} />
+          </button>
+
+          <button
+            type="button"
+            className="
+              w-[27px]
+              h-[31px]
+              flex
+              items-center
+              justify-center
+              text-white
+              hover:bg-[#3b3b3b]
+              transition
+            "
+          >
+            <MoreVertical size={13} />
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
-export default MarkSheet;
+export default StudentNotification;

@@ -1,117 +1,263 @@
-import { useContext, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import useFetch from "@/hooks/useFetch";
-import { useAuth } from "@/contexts/AuthContext";
-import { SessionContext } from "@/contexts/SessionContext";
-import { ReceiptText } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
-export default function StudentPaymentHistory() {
-  const { user } = useAuth();
-  const { currentSession } = useContext(SessionContext);
+interface Meeting {
+  id: number;
+  name: string;
+  instructor: string;
+  startTime: string;
+  duration: string;
+  status: "Completed" | "Upcoming";
+  meetingUrl?: string;
+}
 
-  const userInfo = useMemo(() => {
-    const stored = localStorage.getItem("user");
-    const parsed = stored ? JSON.parse(stored) : {};
-    return { ...parsed, ...user } as Record<string, any>;
-  }, [user]);
+const meetings: Meeting[] = [
+  {
+    id: 1,
+    name: "MATH 105 Lecture",
+    instructor: "ABDULSALAM Abdulwasiu",
+    startTime: "Tue 18 Aug 2026, 20:30",
+    duration: "1 hour",
+    status: "Completed",
+  },
+  {
+    id: 2,
+    name: "MTH 101 Lectures",
+    instructor: "GABRIEL Samaila",
+    startTime: "Tue 18 Aug 2026, 20:00",
+    duration: "1 hour",
+    status: "Completed",
+  },
+  {
+    id: 3,
+    name: "MTH 101 Lectures",
+    instructor: "GABRIEL Samaila",
+    startTime: "Mon 17 Aug 2026, 19:00",
+    duration: "1 hour",
+    status: "Completed",
+  },
+  {
+    id: 4,
+    name: "PHYS111",
+    instructor: "DANJUMA Dauda",
+    startTime: "Mon 17 Aug 2026, 19:00",
+    duration: "1 hour",
+    status: "Completed",
+  },
+  {
+    id: 5,
+    name: "Microsoft Excel",
+    instructor: "SAFIYA Umar",
+    startTime: "Sat 15 Aug 2026, 22:00",
+    duration: "2 hours",
+    status: "Completed",
+  },
+  {
+    id: 6,
+    name: "PHYS111",
+    instructor: "DANJUMA Dauda",
+    startTime: "Fri 14 Aug 2026, 19:00",
+    duration: "3 hours",
+    status: "Completed",
+  },
+  {
+    id: 7,
+    name: "MATH 103 CLASS",
+    instructor: "SAMINU Garba",
+    startTime: "Thu 13 Aug 2026, 20:00",
+    duration: "30 mins",
+    status: "Completed",
+  },
+  {
+    id: 8,
+    name: "MS WORD CONTINUATION",
+    instructor: "SAFIYA Umar",
+    startTime: "Thu 13 Aug 2026, 19:00",
+    duration: "1 hour",
+    status: "Completed",
+  },
+  {
+    id: 9,
+    name: "MS WORD CONTINUATION",
+    instructor: "SAFIYA Umar",
+    startTime: "Thu 13 Aug 2026, 17:30",
+    duration: "1 hour",
+    status: "Completed",
+  },
+  {
+    id: 10,
+    name: "Introduction to Computing",
+    instructor: "SAFIYA Umar",
+    startTime: "Thu 13 Aug 2026, 17:00",
+    duration: "1 hour",
+    status: "Completed",
+  },
+];
 
-  // Fetch all receipts for the session, then filter by student name/id
-  const { data, loading } = useFetch(
-    currentSession?._id ? `/receipt-session/${currentSession._id}` : null
-  );
+export default function Meetings() {
+  const [entries, setEntries] = useState("10");
 
-  const receipts = useMemo(() => {
-    if (!Array.isArray(data)) return [];
-    const name = String(userInfo?.studentName || userInfo?.username || userInfo?.name || "").toLowerCase().trim();
-    const id = String(userInfo?._id || userInfo?.id || "");
-    return data.filter((r: any) => {
-      if (id && (String(r.studentId || "") === id)) return true;
-      const rName = String(r.studentName || "").toLowerCase().trim();
-      return name && rName === name;
-    });
-  }, [data, userInfo]);
+  const visibleMeetings = useMemo(() => {
+    if (entries === "all") return meetings;
 
-  const statusColor = (status: string) => {
-    const s = String(status || "").toLowerCase();
-    if (s === "complete" || s === "paid" || s === "full") return "bg-green-100 text-green-700";
-    if (s === "partial") return "bg-yellow-100 text-yellow-700";
-    return "bg-red-100 text-red-700";
-  };
+    return meetings.slice(0, Number(entries));
+  }, [entries]);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-[#004aaa]">Payment History</h2>
-        <p className="text-sm text-slate-500">Your fee payment records</p>
+    <div className="w-full">
+      {/* Page Title */}
+      <div className="mb-0">
+        <h2 className="text-2xl font-semibold text-slate-800">
+          All Meetings
+        </h2>
       </div>
 
-      <Card className="border-none shadow-sm ring-1 ring-slate-200 overflow-hidden">
-        <CardHeader className="bg-slate-50/50 border-b">
-          <div className="flex items-center gap-2">
-            <ReceiptText className="h-4 w-4 text-[#004aaa]" />
-            <CardTitle className="text-sm font-bold text-[#004aaa]">
-              {loading ? "Loading…" : `${receipts.length} Payment${receipts.length !== 1 ? "s" : ""} Found`}
-            </CardTitle>
+      {/* Breadcrumb */}
+      <div className="mt-5 border-y border-slate-200 bg-slate-50 px-4 py-4">
+        <div className="text-sm text-slate-700">
+          <span>Home</span>
+          <span className="mx-3 text-slate-400">/</span>
+          <span>Meetings</span>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <Card className="mt-0 border-none shadow-none">
+        <CardContent className="px-0 pt-12">
+          {/* Entries selector */}
+          <div className="mb-24 flex items-center gap-3 px-4">
+            <span className="text-sm text-slate-700">
+              Show
+            </span>
+
+            <select
+              value={entries}
+              onChange={(e) => setEntries(e.target.value)}
+              className="h-9 w-[90px] rounded border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-slate-400"
+            >
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="all">All</option>
+            </select>
+
+            <span className="text-sm text-slate-700">
+              entries
+            </span>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
+
+          {/* Meetings Table */}
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-[#E8EBF3]">
-                <TableRow>
-                  <TableHead className="pl-6 font-bold text-[#004aaa] w-[60px]">S/N</TableHead>
-                  <TableHead className="font-bold text-[#004aaa]">Receipt No</TableHead>
-                  <TableHead className="font-bold text-[#004aaa]">Reason</TableHead>
-                  <TableHead className="font-bold text-[#004aaa] text-right">Total (₦)</TableHead>
-                  <TableHead className="font-bold text-[#004aaa] text-right">Paid (₦)</TableHead>
-                  <TableHead className="font-bold text-[#004aaa] text-right">Balance (₦)</TableHead>
-                  <TableHead className="font-bold text-[#004aaa]">Date</TableHead>
-                  <TableHead className="font-bold text-[#004aaa]">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-10 text-slate-500">
-                      Loading payment records…
-                    </TableCell>
-                  </TableRow>
-                ) : receipts.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-10 text-slate-500">
-                      No payment records found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  receipts.map((r: any, i) => {
-                    const total = Number(r.amount || r.total || 0);
-                    const paid = Number(r.paid ?? r.balance ?? 0);
-                    const balance = Math.max(0, total - paid);
-                    return (
-                      <TableRow key={r._id} className="hover:bg-slate-50/50">
-                        <TableCell className="pl-6 text-slate-500">{i + 1}</TableCell>
-                        <TableCell className="font-mono text-xs text-slate-600">{r.receiptNo || r.serial || "—"}</TableCell>
-                        <TableCell className="text-slate-700">{r.reason || "—"}</TableCell>
-                        <TableCell className="text-right font-semibold text-[#004aaa]">{total.toLocaleString()}</TableCell>
-                        <TableCell className="text-right font-semibold text-green-700">{paid.toLocaleString()}</TableCell>
-                        <TableCell className="text-right font-semibold text-red-600">{balance > 0 ? balance.toLocaleString() : "0"}</TableCell>
-                        <TableCell className="text-slate-600 text-sm">
-                          {r.date ? new Date(r.date).toLocaleDateString() : "—"}
-                        </TableCell>
-                        <TableCell>
-                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${statusColor(r.status)}`}>
-                            {r.status || "—"}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+            <div className="min-w-[1100px] overflow-hidden border-t border-slate-300">
+              {/* Header */}
+              <div className="grid grid-cols-[minmax(500px,1fr)_280px_210px_150px] border-b border-slate-300 bg-white">
+                <div className="flex items-center justify-between px-7 py-4">
+                  <span className="text-sm font-bold text-slate-800">
+                    Name
+                  </span>
+
+                  <span className="text-xs text-slate-400">
+                    ↑↓
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between border-l border-slate-200 px-5 py-4">
+                  <span className="text-sm font-bold text-slate-800">
+                    Start Time
+                  </span>
+
+                  <span className="text-xs text-slate-400">
+                    ↑↓
+                  </span>
+                </div>
+
+                <div className="border-l border-slate-200 px-5 py-4">
+                  <span className="text-sm font-bold text-slate-800">
+                    Start/Join
+                  </span>
+                </div>
+
+                <div className="border-l border-slate-200 px-5 py-4">
+                  <span className="text-sm font-bold text-slate-800">
+                    Duration
+                  </span>
+                </div>
+              </div>
+
+              {/* Rows */}
+              {visibleMeetings.map((meeting) => (
+                <div
+                  key={meeting.id}
+                  className="grid min-h-[72px] grid-cols-[minmax(500px,1fr)_280px_210px_150px] border-b border-slate-200 bg-white hover:bg-slate-50"
+                >
+                  {/* Name */}
+                  <div className="flex items-center px-7">
+                    <span className="text-sm text-slate-700">
+                      {meeting.name}
+
+                      <span className="mx-1">-</span>
+
+                      <span className="italic text-slate-600">
+                        {meeting.instructor}
+                      </span>
+                    </span>
+                  </div>
+
+                  {/* Start Time */}
+                  <div className="flex items-center border-l border-slate-200 px-5">
+                    <span className="text-sm text-slate-600">
+                      {meeting.startTime}
+                    </span>
+                  </div>
+
+                  {/* Start / Join */}
+                  <div className="flex items-center border-l border-slate-200 px-5">
+                    {meeting.status === "Completed" ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled
+                        className="h-9 min-w-[105px] border-slate-300 bg-slate-50 text-xs text-slate-500"
+                      >
+                        Completed
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        className="h-9 min-w-[105px] bg-[#004aaa] text-xs text-white hover:bg-[#004aaa]/90"
+                        onClick={() => {
+                          if (meeting.meetingUrl) {
+                            window.open(
+                              meeting.meetingUrl,
+                              "_blank",
+                              "noopener,noreferrer"
+                            );
+                          }
+                        }}
+                      >
+                        Start / Join
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Duration */}
+                  <div className="flex items-center border-l border-slate-200 px-5">
+                    <span className="text-sm text-slate-600">
+                      {meeting.duration}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              {/* Empty state */}
+              {visibleMeetings.length === 0 && (
+                <div className="py-12 text-center text-sm text-slate-500">
+                  No meetings found.
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

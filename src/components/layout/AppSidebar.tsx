@@ -448,50 +448,80 @@ function buildTeacherNav(classes: any[]) {
       : [{ title: "No courses assigned yet", url: "/staff/dashboard/course-allocation" }];
 
   return [
-    {
-      label: "Staff Menu",
-      items: [
-        { title: "Dashboard", url: "/staff/dashboard", icon: LayoutDashboard, key: "staff-dashboard" },
-      ],
-    },
+       {
+  label: "Dashboard",
+  url: "/curriculum",
+  icon: BookOpen,
+  key: "curriculum",
+},
+
 
     // ── Courses ──────────────────────────────────────────────────────────
     {
-      label: "Courses",
+      label: "Home",
       items: [
-        { title: "Course Allocation", icon: BookOpen, key: "staff-course-allocation", subItems: courseSubItems },
-        { title: "AI Homework Review & Curriculum", url: "/staff/dashboard/homework-curriculum", icon: MessageSquareText, key: "homework-curriculum" },
+        { title: "Course Forum", icon: BookOpen, key: "staff-course-allocation", subItems: courseSubItems },
+        { title: "Learning List", url: "/staff/dashboard/homework-curriculum", icon: MessageSquareText, key: "homework-curriculum" },
+        { title: "Discussion", url: "/staff/dashboard/homework-curriculum", icon: MessageSquareText, key: "homework-curriculum" },
+        { title: "Profile", url: "/staff/dashboard/homework-curriculum", icon: MessageSquareText, key: "homework-curriculum" },
       ],
     },
+       {
+  label: "My Course",
+  url: "/curriculum",
+  icon: BookOpen,
+  key: "curriculum",
+},
 
     // ── Students ─────────────────────────────────────────────────────────
     {
-      label: "Students",
+      label: "Quiz List",
       items: [
-        { title: "Student Advisory & Mentorship", url: "/staff/dashboard/advisory-mentorship", key: "advisory-mentorship" },
-        { title: "Student Roster & Attendance", url: "/staff/dashboard/roster-attendance", icon: ListChecks, key: "roster-attendance" },
+        { title: "Manage Quiz", url: "/staff/dashboard/advisory-mentorship", key: "advisory-mentorship" },
+        { title: "Create Quiz", url: "/staff/dashboard/roster-attendance", icon: ListChecks, key: "roster-attendance" },
       ],
     },
+     {
+  label: "Notifcation",
+  url: "/curriculum",
+  icon: BookOpen,
+  key: "curriculum",
+},
 
     // ── Assessment & Exams ───────────────────────────────────────────────
     {
-      label: "Assessment & Exams",
+      label: "Grading",
       items: [
-        { title: "Continuous Assessment Logger", url: "/staff/dashboard/continuous-assessment", icon: FileEdit, key: "continuous-assessment" },
+        { title: "Grade Book", url: "/staff/dashboard/continuous-assessment", icon: FileEdit, key: "continuous-assessment" },
         { title: "Exam Mark Entry Sheet", url: "/staff/dashboard/exam-mark-entry", icon: TableProperties, key: "exam-mark-entry" },
-        { title: "Online Exam Manager", url: "/staff/dashboard/online-exam-manager", icon: Laptop2, key: "online-exam-manager" },
+    
       ],
     },
 
     // ── E-Learning & Live Classes ────────────────────────────────────────
     {
-      label: "E-Learning & Live Classes",
+      label: "Studio",
       items: [
-        { title: "E-Learning", url: "/staff/dashboard/e-learning", icon: Laptop, key: "e-learning" },
-        { title: "Go Live / Live Classes", url: "/staff/dashboard/live",  key: "live-classes" },
+        { title: "LiveStream", url: "/staff/dashboard/e-learning", icon: Laptop, key: "e-learning" },
+        { title: "Activity Stream", url: "/staff/dashboard/live",  key: "live-classes" },
+        { title: "Meetings", url: "/staff/dashboard/live",  key: "live-classes" },
+        { title: "Messaging", url: "/staff/dashboard/live",  key: "live-classes" },
       ],
     },
-
+    {
+      label: "Assignment",
+      items: [
+        { title: "Create Assignment", url: "/staff/dashboard/e-learning", icon: Laptop, key: "e-learning" },
+        { title: "All Assignment", url: "/staff/dashboard/live",  key: "live-classes" },
+     
+      ],
+    },
+     {
+  label: "Student Application",
+  url: "/curriculum",
+  icon: BookOpen,
+  key: "curriculum",
+},
     // ── SIWES ────────────────────────────────────────────────────────────
     {
       label: "SIWES",
@@ -521,63 +551,119 @@ function buildTeacherNav(classes: any[]) {
     },
 
     // ── Communication ────────────────────────────────────────────────────
-    {
-      label: "Communication",
-      items: [
-        { title: "Notice Board", url: "/staff/dashboard/notices", icon: Info, key: "notice" },
-        { title: "Notification Center", url: "/staff/dashboard/notifications", key: "notifications" },
-      ],
-    },
+  
   ];
 }
 
 function buildStudentNav(_classes: any[]) {
   return [
-    {
-      label: "Student Menu",
+      {
+  label: "Dashboard",
+  url: "/student-dashboard",
+  icon: BookOpen,
+  key: "student-dashboard",
+},
+
+       {
+  label: "Home",
+  url: "/student/dashboard/home",
+  icon: BookOpen,
+  key: "my-courses",
+},
+   {
+      label: "Application",
       items: [
-        { title: "Dashboard", url: "/student/dashboard", icon: LayoutDashboard, key: "student-dashboard" },
+        { title: "My Application", url: "/student/dashboard/application/my-application", icon: NotebookPen, key: "my-application" },
+        { title: "All Application", url: "/student/dashboard/application/all-application", icon: ListChecks, key: "all-application" },
+       
+      
       ],
     },
 
     // ── Academics ────────────────────────────────────────────────────────
     {
-      label: "Academics",
+      label: "Course",
       items: [
-        { title: "Class Information", url: "/student/dashboard/class-information", icon: NotebookPen, key: "class-information" },
-        { title: "Course Registration", url: "/student/dashboard/course-registration", icon: ListChecks, key: "course-registration" },
-        { title: "Lecture & Exam Timetable", url: "/student/dashboard/timetable", icon: TableProperties, key: "timetable" },
-        { title: "Assignment & Project Submission", url: "/student/dashboard/assignments", icon: FileEdit, key: "assignments" },
-        { title: "Final Year Project Hub", url: "/student/dashboard/final-year-project",  key: "final-year-project" },
+        { title: "Course Registration", url: "/student/dashboard/course/course-registration", icon: NotebookPen, key: "course-registration" },
+        { title: "My Course", url: "/student/dashboard/my-courses", icon: NotebookPen, key: "my-courses" },
+        { title: "Course Forum", url: "/student/dashboard/course-forum", icon: NotebookPen, key: "course-forum" },
+        { title: "Learning List", url: "/student/dashboard/learning-list", icon: ListChecks, key: "learning-list" },
+        { title: "Discussion", url: "/student/dashboard/discussion", icon: TableProperties, key: "discussion" },
+   
+      
       ],
     },
 
-    // ── E-Learning & Live Classes ────────────────────────────────────────
-    {
-      label: "E-Learning & Live Classes",
-      items: [
-        { title: "E-Learning", url: "/student/dashboard/e-learning", icon: Laptop, key: "e-learning" },
-        { title: "Live Classes", url: "/student/dashboard/live",  key: "live-classes" },
-      ],
-    },
+  
 
-    // ── Results ──────────────────────────────────────────────────────────
-    {
-      label: "Results",
-      items: [
-        { title: "Transcript & My Result", url: "/student/dashboard/transcript", icon: GraduationCap, key: "transcript" },
-      ],
-    },
+        {
+  label: "Quiz List",
+  url: "/student/dashboard/quiz-list",
+  icon: BookOpen,
+  key: "quiz-list",
+},
+
 
     // ── Library ──────────────────────────────────────────────────────────
-    {
-      label: "Library",
+      {
+  label: "Notifications",
+  url: "/student/dashboard/notification",
+  icon: BookOpen,
+  key: "notification",
+},
+
+
+
+
+      {
+      label: "Studio",
       items: [
-        { title: "Library Portal", url: "/student/dashboard/library", icon: BookCopy, key: "library-portal" },
+        { title: "Live Stream", url: "/student/dashboard/course-forum", icon: NotebookPen, key: "course-forum" },
+        { title: "Activity Stream", url: "/student/dashboard/studio/activity-stream", icon: ListChecks, key: "activity-stream" },
+        { title: "Meetings", url: "/student/dashboard/studio/meeting", icon: TableProperties, key: "meeting" },
+        { title: "Messaging", url: "/student/dashboard/studio/messaging", icon: FileEdit, key: "messaging" },
+      
       ],
     },
+          {
+  label: "Grade Book",
+  url: "/student/dashboard/grade-book",
+  icon: BookOpen,
+  key: "grade-book",
+},
+      {
+  label: "Assignement",
+  url: "/student/dashboard/assignment",
+  icon: BookOpen,
+  key: "assignment",
+},
 
-    // ── Hostel & Accommodation ───────────────────────────────────────────
+
+ 
+
+   
+
+
+
+
+
+
+       {
+      label: "Payment",
+      items: [
+        { title: "Make Payment", url: "/student/dashboard/payment/make-payment", icon: NotebookPen, key: "make-payment" },
+        { title: "Additional Payment", url: "/student/dashboard/payment/additional-payment", icon: ListChecks, key: "additional-payment" },
+        { title: "Payment History", url: "/student/dashboard/payment/payment-history", icon: ListChecks, key: "payment-history" },
+       
+      
+      ],
+    },
+    {
+  label: "Profile",
+  url: "/student/dashboard/profile",
+  icon: BookOpen,
+  key: "profile",
+},
     {
       label: "Hostel & Accommodation",
       items: [
@@ -586,29 +672,17 @@ function buildStudentNav(_classes: any[]) {
     },
 
     // ── ID & Profile ─────────────────────────────────────────────────────
-    {
-      label: "ID & Profile",
-      items: [
-        { title: "Digital ID Card", url: "/student/dashboard/digital-id", key: "digital-id" },
-        { title: "Profile & Biodata", url: "/student/dashboard/biodata", icon: User2, key: "profile-biodata" },
-        { title: "System Profile", url: "/student/dashboard/profile", icon: User2, key: "system-profile" },
-      ],
-    },
+    // {
+    //   label: "ID & Profile",
+    //   items: [
+    //     { title: "Digital ID Card", url: "/student/dashboard/digital-id", key: "digital-id" },
+    //     { title: "Profile & Biodata", url: "/student/dashboard/biodata", icon: User2, key: "profile-biodata" },
+    //     { title: "System Profile", url: "/student/dashboard/profile", icon: User2, key: "system-profile" },
+    //   ],
+    // },
 
     // ── Finance ──────────────────────────────────────────────────────────
-    {
-      label: "Finance",
-      items: [
-        { title: "Fees Payment Portal", url: "/student/dashboard/fees-payment", icon: ReceiptText, key: "fees-payment" },
-        { title: "Payment History & Receipts", url: "/student/dashboard/payment-history", icon: ReceiptText, key: "payment-history" },
-      ],
-    },
-
-    // ── Notice Board ─────────────────────────────────────────────────────
-    {
-      label: "Notice Board",
-      items: [{ title: "Noticeboard", url: "/student/dashboard/notices", icon: Info, key: "notice" }],
-    },
+ 
   ];
 }
 
@@ -646,9 +720,9 @@ export function AppSidebar() {
 
   const nav = useMemo(() => {
     switch (user?.role) {
-      case "teacher": return buildTeacherNav(classes);
+      case "staff": return buildTeacherNav(classes);
       case "student": return buildStudentNav(classes);
-      case "parent": return buildParentNav();
+      // case "parent": return buildParentNav();
       default:        return buildAdminNav(classes);
     }
   }, [user?.role, classes]);

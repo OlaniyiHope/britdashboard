@@ -1,78 +1,149 @@
 import { useContext, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
 import useFetch from "@/hooks/useFetch";
 import { SessionContext } from "@/contexts/SessionContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { BookOpen, ChevronRight, Users } from "lucide-react";
 
-export default function StudentSubjectView() {
+// ─────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────
+
+type Course = {
+  _id?: string;
+  code: string;
+  title: string;
+  slug?: string;
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// Fallback/mock data — swap out once the real courses endpoint exists.
+// ─────────────────────────────────────────────────────────────────────────
+
+const fallbackCourses: Course[] = [
+  { code: "COSC 101", title: "Introduction to Computing", slug: "introduction-to-computing-673" },
+  { code: "MATH 101", title: "Sets and Number System", slug: "sets-and-number-system" },
+  { code: "MATH 103", title: "Trigonometry and Co-ordinate Geometry", slug: "trigonometry-and-co-ordinate-geometry" },
+  { code: "MATH 105", title: "Differential and Integral Calculus", slug: "differential-and-integral-calculus" },
+  { code: "PHYS 111", title: "Mechanics", slug: "mechanics" },
+  { code: "PHYS 131", title: "Heat and Properties of Matter", slug: "heat-and-properties-of-matter" },
+  { code: "GENS 101", title: "Nationalism", slug: "nationalism" },
+  { code: "GENS 103", title: "English and Communication Skills", slug: "english-and-communication-skills" },
+];
+
+// ─────────────────────────────────────────────────────────────────────────
+// Page
+// ─────────────────────────────────────────────────────────────────────────
+
+export default function MyCourses() {
   const { currentSession } = useContext(SessionContext);
   const { user } = useAuth();
 
-  const className = useMemo(() => {
+  const studentId = useMemo(() => {
     const stored = localStorage.getItem("user");
     const parsed = stored ? JSON.parse(stored) : {};
     const merged = { ...parsed, ...user } as any;
-    return String(merged?.classname || merged?.className || merged?.class || "");
+    return String(merged?._id || merged?.id || "");
   }, [user]);
 
-  const { data, loading } = useFetch(
-    currentSession?._id && className
-      ? `/get-subject/${className}/${currentSession._id}`
+  const { data: coursesData, loading: coursesLoading } = useFetch(
+    currentSession?._id && studentId
+      ? `/student/${studentId}/courses/${currentSession._id}`
       : null
   );
-  const subjects = useMemo(
-    () => (Array.isArray(data) ? (data as any[]) : []),
-    [data]
+  const courses: Course[] =
+    Array.isArray(coursesData) && coursesData.length > 0
+      ? (coursesData as Course[])
+      : fallbackCourses;
+
+  const { data: groupingData } = useFetch(
+    currentSession?._id && studentId
+      ? `/student/${studentId}/course-grouping-summary/${currentSession._id}`
+      : null
   );
+  const courseGrouping =
+    groupingData && typeof groupingData === "object"
+      ? Number((groupingData as any).courseGrouping ?? courses.length)
+      : courses.length;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-[#004aaa]">My Subjects</h2>
-        <p className="text-sm text-slate-500">
-          {className ? `${subjects.length} subject${subjects.length !== 1 ? "s" : ""} for ${className.toUpperCase()}` : "No class assigned"}
-        </p>
-      </div>
+    <div className="space-y-4">
+      <h2 className="text-xl font-bold text-slate-800">My Courses</h2>
+      <p className="text-sm text-slate-500">
+        Home <span className="mx-1">/</span>
+        <span className="font-medium text-slate-600">My Courses</span>
+      </p>
 
-      <Card className="border-none shadow-sm ring-1 ring-slate-200 overflow-hidden">
+      {/* Stat circles */}
+      <Card className="overflow-hidden border-none shadow-sm ring-1 ring-slate-200">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-[#E8EBF3]">
-              <TableRow>
-                <TableHead className="pl-6 w-[60px] font-bold text-[#004aaa]">S/N</TableHead>
-                <TableHead className="font-bold text-[#004aaa]">Subject</TableHead>
-                <TableHead className="font-bold text-[#004aaa]">Teacher</TableHead>
-                <TableHead className="font-bold text-[#004aaa]">Class</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-10 text-slate-500">Loading subjects…</TableCell>
-                </TableRow>
-              ) : subjects.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-10 text-slate-500">No subjects found.</TableCell>
-                </TableRow>
-              ) : subjects.map((s, i) => (
-                <TableRow key={s._id || i} className="hover:bg-slate-50/50">
-                  <TableCell className="pl-6 text-slate-500">{i + 1}</TableCell>
-                  <TableCell className="font-bold text-[#004aaa]">
-                    {s.subjectName || s.name || "—"}
-                  </TableCell>
-                  <TableCell className="text-slate-600">
-                    {s.teacherName || s.teacher || s.username || "—"}
-                  </TableCell>
-                  <TableCell className="text-slate-500 text-sm">
-                    {s.classname || s.class || className || "—"}
-                  </TableCell>
-                </TableRow>
+          <div className="flex flex-col divide-y divide-slate-100 sm:flex-row sm:divide-x sm:divide-y-0">
+            <div className="flex flex-1 items-center justify-center gap-4 px-4 py-8">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-amber-400">
+                <BookOpen className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <p className="text-3xl font-extrabold text-slate-800">
+                  {coursesLoading ? "…" : courses.length}
+                </p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Courses
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-1 items-center justify-center gap-4 px-4 py-8">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-rose-500">
+                <Users className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <p className="text-3xl font-extrabold text-slate-800">
+                  {coursesLoading ? "…" : courseGrouping}
+                </p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Course Grouping
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Course list */}
+      <Card className="border-none shadow-sm ring-1 ring-slate-200">
+        <CardContent className="space-y-4 p-5 md:p-6">
+          <h3 className="text-sm font-bold text-slate-800">Course List</h3>
+
+          {coursesLoading ? (
+            <p className="py-10 text-center text-sm text-slate-500">
+              Loading courses…
+            </p>
+          ) : courses.length === 0 ? (
+            <p className="py-10 text-center text-sm text-slate-500">
+              You are not registered for any courses this semester.
+            </p>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {courses.map((course) => (
+                <Link
+                  key={course._id || course.code}
+                  to={`/course/${course.slug || course.code.toLowerCase().replace(/\s+/g, "-")}`}
+                  className="flex items-center gap-4 py-3 transition-colors hover:bg-slate-50/60"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#004aaa]">
+                    <BookOpen className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-[#004aaa]">
+                      {course.code}
+                    </p>
+                    <p className="truncate text-sm text-slate-600">{course.title}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
+                </Link>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

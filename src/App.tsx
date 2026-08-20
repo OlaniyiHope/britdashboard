@@ -48,7 +48,6 @@ import Settings from "./app/views/admindashboard/views/Settings";
 import Profile from "./app/views/admindashboard/views/system/Profile";
 import Account from "./app/views/admindashboard/views/system/Account";
 import MarkSheet from "./app/views/admindashboard/views/MarkSheet";
-import StudentProfile from "./app/views/admindashboard/views/StudentProfile";
 import ReportCard from "./app/views/admindashboard/views/ReportCard";
 
 // Teacher
@@ -82,6 +81,24 @@ import ParentResults from "./app/views/parentdashboard/views/Results";
 import ParentMaterials from "./app/views/parentdashboard/views/Materials";
 import ParentHomework from "./app/views/parentdashboard/views/Homework";
 import BulkPrintReports from "./app/views/admindashboard/views/student/BulkPrintReports";
+import CourseForumThread from "./app/views/studentdashboard/views/student/MyClass";
+import LearnersList from "./app/views/studentdashboard/views/Teacher";
+import MyCourses from "./app/views/studentdashboard/views/Subject";
+import QuizList from "./app/views/studentdashboard/views/exam/ExamList";
+import ActivityStream from "./app/views/studentdashboard/views/onlineexam/Manage";
+import GradeBook from "./app/views/studentdashboard/JambPastQuestions";
+import Messaging from "./app/views/studentdashboard/views/StudyMaterial";
+import Assignments from "./app/views/studentdashboard/views/Homework";
+import StudentHome from "./app/views/admindashboard/views/system/Profile";
+import StudentProfile from "./app/views/studentdashboard/views/Noticeboard";
+import StudentNotification from "./app/views/admindashboard/views/MarkSheet";
+import Discussion from "./app/views/studentdashboard/views/Discussion";
+import AllApplications from "./app/views/studentdashboard/views/AllApplication";
+import MyApplications from "./app/views/studentdashboard/views/MyApplication";
+import MakePayment from "./app/views/studentdashboard/views/payment/MakePayment";
+import AdditionalPayment from "./app/views/studentdashboard/views/payment/AdditionalPayment";
+import StudentPaymentHistorys from "./app/views/studentdashboard/views/payment/PaymentHistory";
+import CourseRegistration from "./app/views/studentdashboard/views/CourseRegistration";
 
 // const DashboardWrapper = () => {
 //   const { user } = useAuth();
@@ -168,23 +185,30 @@ const App = () => (
 
                 {/* ── Student ── */}
                 <Route path="/student/dashboard/default" element={<StudentDashboard />} />
-                <Route path="/student/dashboard/my-class" element={<StudentMyClass />} />
-                <Route path="/student/dashboard/teacher" element={<StudentTeacher />} />
-                <Route path="/student/dashboard/subject" element={<StudentSubject />} />
-                <Route path="/student/dashboard/exam" element={<StudentExamList />} />
-                <Route path="/student/dashboard/examlist" element={<StudentExamList />} />
-                <Route path="/student/dashboard/online-exam" element={<StudentManageOnlineExams />} />
-                <Route path="/student/dashboard/manage-online-exam" element={<StudentManageOnlineExams />} />
-                <Route path="/student/dashboard/manage-online-exam/:id" element={<StudentManageOnlineExams />} />
-                <Route path="/student/dashboard/manage-online-result" element={<StudentManageOnlineExams />} />
-                <Route path="/student/dashboard/jamb-past-questions" element={<JambPastQuestions />} />
-                <Route path="/student/dashboard/student_mark_sheet" element={<StudentMarkSheetRedirect />} />
-                <Route path="/student/dashboard/student-payment" element={<StudentPaymentHistory />} />
-                <Route path="/student/dashboard/student-material" element={<StudentStudyMaterial />} />
-                <Route path="/student/dashboard/homework" element={<StudentHomework />} />
-                <Route path="/student/dashboard/profile" element={<StudentProfilePage />} />
-                <Route path="/student/dashboard/notices" element={<StudentNoticeboard />} />
-                <Route path="/dashboard/report_card/:id" element={<StudentMarkSheet />} />
+                <Route path="/student/dashboard/course-forum" element={<CourseForumThread />} />
+         
+                <Route path="/student/dashboard/learning-list" element={<LearnersList />} />
+                <Route path="/student/dashboard/my-courses" element={<MyCourses />} />
+                <Route path="/student/dashboard/quiz-list" element={<QuizList />} />
+                <Route path="/student/dashboard/studio/activity-stream" element={<ActivityStream />} />
+      
+                
+             
+                <Route path="/student/dashboard/grade-book" element={<GradeBook />} />
+                <Route path="/student/dashboard/studio/meeting" element={<StudentPaymentHistory />} />
+          
+                <Route path="/student/dashboard/studio/messaging" element={<Messaging />} />
+                <Route path="/student/dashboard/assignment" element={<Assignments />} />
+                <Route path="/student/dashboard/home" element={<StudentHome />} />
+                <Route path="/student/dashboard/profile" element={<StudentProfile />} />
+                <Route path="/student/dashboard/discussion" element={<Discussion />} />
+                <Route path="/student/dashboard/notification" element={<StudentNotification />} />
+                <Route path="/student/dashboard/application/all-application" element={<AllApplications />} />
+                <Route path="/student/dashboard/application/my-application" element={<MyApplications />} />
+                <Route path="/student/dashboard/payment/make-payment" element={<MakePayment />} />
+                <Route path="/student/dashboard/payment/additional-payment" element={<AdditionalPayment />} />
+                <Route path="/student/dashboard/payment/payment-history" element={<StudentPaymentHistorys />} />
+                <Route path="/student/dashboard/course/course-registration" element={<CourseRegistration />} />
 
                 {/* Parent */}
                 <Route path="/parent/dashboard" element={<ParentDashboard />} />
