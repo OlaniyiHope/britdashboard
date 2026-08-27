@@ -158,6 +158,9 @@ import ParentDashboard from "./app/views/parentdashboard/Analytics";
 import ParentResults from "./app/views/parentdashboard/views/Results";
 import ParentMaterials from "./app/views/parentdashboard/views/Materials";
 import ParentHomework from "./app/views/parentdashboard/views/Homework";
+import Departments from "./app/views/admindashboard/views/admin/Department";
+import CourseAllocation from "./app/views/admindashboard/views/admin/CourseAllocation";
+import Signup from "./app/views/Signup";
 
 // ============================================================
 // Dashboard redirect by role
@@ -207,6 +210,7 @@ const App = () => (
               {/* ========================================================
                   PUBLIC
               ======================================================== */}
+              <Route path="/signup" element={<Signup />} />
               <Route path="/login" element={<Login />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/session/forgot-password" element={<ForgotPassword />} />
@@ -233,7 +237,9 @@ const App = () => (
                 <Route path="/admin/admissions/credentials" element={<AcademicsCredentials />} />
 
                 <Route path="/admin/programmes" element={<Programmes />} />
+                <Route path="/admin/departments" element={<Departments />} />
                 <Route path="/admin/curriculum" element={<Curriculum />} />
+                <Route path="/admin/course-allocation" element={<CourseAllocation />} />
                 <Route path="/admin/course-forum" element={<CourseForumOversight />} />
                 <Route path="/admin/discussion" element={<DiscussionModeration />} />
 
@@ -321,8 +327,7 @@ const App = () => (
                 {/* ======================================================
                     STAFF
                 ====================================================== */}
-                <Route path="/staff/dashboard/home" element={<StaffHome />} />
-
+          
                 <Route path="/staff/dashboard/application/to-review" element={<StaffApplicationsToReview />} />
                 <Route path="/staff/dashboard/application/all" element={<StaffAllApplications />} />
 

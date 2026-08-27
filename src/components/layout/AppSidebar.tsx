@@ -65,10 +65,13 @@ function buildAdminNav(classes: any[]) {
 
     // ── Programmes & Curriculum (correlates with student "Course") ─────────
     {
-      label: "Programmes",
+      label: "Programmes & Departments",
       items: [
+         { title: "Departments", url: "/admin/departments", icon: BookCopy, key: "departments" },
         { title: "Programmes by Department", url: "/admin/programmes", icon: BookCopy, key: "programmes-by-department" },
+       
         { title: "Curriculum", url: "/admin/curriculum", icon: BookCopy, key: "curriculum" },
+        { title: "Course Allocation", url: "/admin/course-allocation", icon: BookCopy, key: "course-allocation" },
         { title: "Course Forum Oversight", url: "/admin/course-forum", icon: NotebookPen, key: "course-forum-oversight" },
         { title: "Discussion Moderation", url: "/admin/discussion", icon: TableProperties, key: "discussion-moderation" },
       ],
@@ -110,7 +113,7 @@ function buildAdminNav(classes: any[]) {
       items: [
         { title: "Live Stream Monitoring", url: "/admin/studio/live-stream", icon: Video, key: "studio-live-stream" },
         { title: "Activity Stream", url: "/admin/studio/activity-stream", icon: ListChecks, key: "studio-activity-stream" },
-        { title: "Meetings", url: "/admin/studio/meetings", icon: TableProperties, key: "studio-meetings" },
+        { title: "Lectures", url: "/admin/studio/meetings", icon: TableProperties, key: "studio-meetings" },
         { title: "Messaging", url: "/admin/studio/messaging", icon: FileEdit, key: "studio-messaging" },
       ],
     },
@@ -210,22 +213,9 @@ function buildTeacherNav(classes: any[]) {
       icon: LayoutDashboard,
       key: "staff-dashboard",
     },
-    {
-      label: "Home",
-      url: "/staff/dashboard/home",
-      icon: BookOpen,
-      key: "staff-home",
-    },
+ 
 
     // ── Application (correlates with student "Application") ────────────────
-    // Staff reviews/processes the applications students submit.
-    {
-      label: "Application",
-      items: [
-        { title: "Applications To Review", url: "/staff/dashboard/application/to-review", icon: ClipboardCheck, key: "applications-to-review" },
-        { title: "All Applications", url: "/staff/dashboard/application/all", icon: ListChecks, key: "staff-all-applications" },
-      ],
-    },
 
     // ── Course (correlates with student "Course") ───────────────────────────
     {
@@ -263,7 +253,7 @@ function buildTeacherNav(classes: any[]) {
       items: [
         { title: "Live Stream", url: "/staff/dashboard/studio/live-stream", icon: Video, key: "staff-live-stream" },
         { title: "Activity Stream", url: "/staff/dashboard/studio/activity-stream", icon: ListChecks, key: "staff-activity-stream" },
-        { title: "Meetings", url: "/staff/dashboard/studio/meeting", icon: TableProperties, key: "staff-meeting" },
+        { title: "Lectures", url: "/staff/dashboard/studio/meeting", icon: TableProperties, key: "staff-meeting" },
         { title: "Messaging", url: "/staff/dashboard/studio/messaging", icon: FileEdit, key: "staff-messaging" },
       ],
     },
@@ -388,7 +378,7 @@ function buildStudentNav(_classes: any[]) {
       items: [
         { title: "Live Stream", url: "/student/dashboard/course-forum", icon: NotebookPen, key: "course-forum" },
         { title: "Activity Stream", url: "/student/dashboard/studio/activity-stream", icon: ListChecks, key: "activity-stream" },
-        { title: "Meetings", url: "/student/dashboard/studio/meeting", icon: TableProperties, key: "meeting" },
+        { title: "Lectures", url: "/student/dashboard/studio/meeting", icon: TableProperties, key: "meeting" },
         { title: "Messaging", url: "/student/dashboard/studio/messaging", icon: FileEdit, key: "messaging" },
       ],
     },
