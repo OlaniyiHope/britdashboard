@@ -2909,7 +2909,7 @@ export default function Curriculum() {
   const approveCourse = async (course: Course) => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}api/courses/${course._id}`,
+        `${API_BASE_URL}/api/courses/${course._id}`,
         {
           method: "PUT",
 

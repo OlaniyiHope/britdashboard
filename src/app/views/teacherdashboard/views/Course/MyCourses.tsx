@@ -40,7 +40,7 @@ import {
 
 const API_BASE_URL =
   import.meta.env.VITE_NODE_API_URL ||
-  "http://localhost:5001/api";
+  "http://localhost:5001";
 
 
 // ============================================================
@@ -210,7 +210,7 @@ export default function MyCourses() {
       }
 
       const response = await fetch(
-        `${API_BASE_URL}/course-allocations/my`,
+        `${API_BASE_URL}/api/course-allocations/my`,
         {
           method: "GET",
 

@@ -29,7 +29,7 @@ import {
 
 const API_BASE_URL =
   import.meta.env.VITE_BASE_URL ||
-  "http://localhost:5001/api";
+  "http://localhost:5001";
 
 /* ================================================================
    TYPES
@@ -388,7 +388,7 @@ const fetchStaff = async () => {
   localStorage.getItem("jwtToken");
 
     const response = await fetch(
-      `${API_BASE_URL}/staff`,
+      `${API_BASE_URL}/api/staff`,
       {
         method: "GET",
         headers: {
@@ -494,7 +494,7 @@ const fetchStaff = async () => {
   const fetchCourses = async () => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/courses`
+        `${API_BASE_URL}/api/courses`
       );
 
       const data =
@@ -535,7 +535,7 @@ const fetchStaff = async () => {
   const fetchProgrammes = async () => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/programmes`
+        `${API_BASE_URL}/api/programmes`
       );
 
       const data =
@@ -583,7 +583,7 @@ const fetchAcademicSessions = async () => {
 
     console.log(
       "ACADEMIC SESSION URL:",
-      `${API_BASE_URL}/sessions`
+      `${API_BASE_URL}/api/sessions`
     );
 
     console.log(
@@ -592,7 +592,7 @@ const fetchAcademicSessions = async () => {
     );
 
     const response = await fetch(
-      `${API_BASE_URL}/sessions`,
+      `${API_BASE_URL}/api/sessions`,
       {
         method: "GET",
         headers: {
@@ -676,7 +676,7 @@ const fetchAcademicSessions = async () => {
   const fetchAllocations = async () => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/course-allocations`
+        `${API_BASE_URL}/api/course-allocations`
       );
 
       const data =
@@ -885,8 +885,8 @@ const fetchAcademicSessions = async () => {
           Boolean(editingAllocation);
 
         const url = isEditing
-          ? `${API_BASE_URL}/course-allocations/${editingAllocation?._id}`
-          : `${API_BASE_URL}/course-allocations`;
+          ? `${API_BASE_URL}/api/course-allocations/${editingAllocation?._id}`
+          : `${API_BASE_URL}/api/course-allocations`;
 
         const response =
           await fetch(url, {
@@ -960,7 +960,7 @@ const fetchAcademicSessions = async () => {
       try {
         const response =
           await fetch(
-            `${API_BASE_URL}/course-allocations/${allocation._id}`,
+            `${API_BASE_URL}/api/course-allocations/${allocation._id}`,
             {
               method: "DELETE",
             }
