@@ -768,7 +768,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 const API_BASE_URL =
-  import.meta.env.VITE_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
   "http://localhost:5001";
 
 type ProgrammeStatus = "Active" | "Inactive";
