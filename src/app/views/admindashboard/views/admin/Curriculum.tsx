@@ -2291,7 +2291,7 @@ import {
 ================================================================ */
 
 const API_BASE_URL =
-  import.meta.env.VITE_BASE_URL || "http://localhost:5001/api";
+  import.meta.env.VITE_BASE_URL || "http://localhost:5001";
 
 /* ================================================================
    TYPES
@@ -2557,7 +2557,7 @@ export default function Curriculum() {
   const fetchProgrammes = async () => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/programmes`
+        `${API_BASE_URL}/api/programmes`
       );
 
       const data = await response.json();
@@ -2591,7 +2591,7 @@ export default function Curriculum() {
   const fetchDepartments = async () => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/departments`
+        `${API_BASE_URL}/api/departments`
       );
 
       const data = await response.json();
@@ -2626,7 +2626,7 @@ export default function Curriculum() {
   const fetchCourses = async () => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/courses`
+        `${API_BASE_URL}/api/courses`
       );
 
       const data = await response.json();
@@ -2796,8 +2796,8 @@ export default function Curriculum() {
       const isEditing = Boolean(editingCourse);
 
       const url = isEditing
-        ? `${API_BASE_URL}/courses/${editingCourse?._id}`
-        : `${API_BASE_URL}/courses`;
+        ? `${API_BASE_URL}/api/courses/${editingCourse?._id}`
+        : `${API_BASE_URL}/api/courses`;
 
       const payload = {
         code: form.code.trim().toUpperCase(),
@@ -2872,7 +2872,7 @@ export default function Curriculum() {
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/courses/${course._id}`,
+        `${API_BASE_URL}/api/courses/${course._id}`,
         {
           method: "DELETE",
         }
@@ -2909,7 +2909,7 @@ export default function Curriculum() {
   const approveCourse = async (course: Course) => {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/courses/${course._id}`,
+        `${API_BASE_URL}api/courses/${course._id}`,
         {
           method: "PUT",
 

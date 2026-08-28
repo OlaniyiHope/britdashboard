@@ -769,7 +769,7 @@ import { Input } from "@/components/ui/input";
 
 const API_BASE_URL =
   import.meta.env.VITE_BASE_URL ||
-  "http://localhost:5001/api";
+  "http://localhost:5001";
 
 type ProgrammeStatus = "Active" | "Inactive";
 
@@ -860,7 +860,7 @@ export default function Programmes() {
       setLoading(true);
 
  const response = await fetch(
-  `${API_BASE_URL}/programmes`
+  `${API_BASE_URL}/api/programmes`
 );
 
       const data = await response.json();
@@ -888,7 +888,7 @@ export default function Programmes() {
   const fetchDepartments = async () => {
     try {
  const response = await fetch(
-  `${API_BASE_URL}/departments`
+  `${API_BASE_URL}/api/departments`
 );
 
       const data = await response.json();
@@ -1006,8 +1006,8 @@ export default function Programmes() {
       const isEditing = Boolean(editingProgramme);
 
     const url = isEditing
-  ? `${API_BASE_URL}/programmes/${editingProgramme?._id}`
-  : `${API_BASE_URL}/programmes`;
+  ? `${API_BASE_URL}/api/programmes/${editingProgramme?._id}`
+  : `${API_BASE_URL}/api/programmes`;
       const response = await fetch(url, {
         method: isEditing ? "PUT" : "POST",
 
@@ -1064,7 +1064,7 @@ export default function Programmes() {
 
     try {
     const response = await fetch(
-  `${API_BASE_URL}/programmes/${programme._id}`,
+  `${API_BASE_URL}/api/programmes/${programme._id}`,
         {
           method: "DELETE",
         }
@@ -1110,7 +1110,7 @@ export default function Programmes() {
           : "Active";
 
       const response = await fetch(
-        `${API_BASE_URL}/programmes/${programme._id}`,
+        `${API_BASE_URL}/api/programmes/${programme._id}`,
         {
           method: "PUT",
 

@@ -54,13 +54,13 @@ export default function Departments() {
   // ============================================================
 const API_BASE_URL =
   import.meta.env.VITE_BASE_URL ||
-  "http://localhost:5001/api";
+  "http://localhost:5001";
   const fetchDepartments = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const response = await fetch(`${API_BASE_URL}/departments`);
+      const response = await fetch(`${API_BASE_URL}/api/departments`);
 
       const data = await response.json();
 
@@ -148,7 +148,7 @@ const API_BASE_URL =
 
     try {
       const response = await fetch(
-       `${API_BASE_URL}/departments/${id}`,
+       `${API_BASE_URL}/api/departments/${id}`,
         {
           method: "DELETE",
         }
@@ -190,8 +190,8 @@ const API_BASE_URL =
   }) => {
     try {
    const url = editingDepartment
-  ? `${API_BASE_URL}/departments/${editingDepartment._id}`
-  : `${API_BASE_URL}/departments`;
+  ? `${API_BASE_URL}/api/departments/${editingDepartment._id}`
+  : `${API_BASE_URL}/api/departments`;
 
       const method = editingDepartment
         ? "PUT"

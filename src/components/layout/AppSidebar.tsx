@@ -1,4 +1,4 @@
-import { useContext, useMemo, useState } from "react";
+import { useContext, useMemo, useEffect, useState } from "react";
 import {
   LayoutDashboard, User2, User, NotebookPen, BookCopy, ListChecks, ListCheck,
   BookOpen, Info, GraduationCap, FileEdit, TableProperties, CheckCheck,
@@ -196,15 +196,29 @@ function buildAdminNav(classes: any[]) {
  * Mirrors the student nav one-to-one: wherever a student consumes something,
  * staff create/manage it. e.g. student "Assignment" -> staff "Create Assignment".
  */
-function buildTeacherNav(classes: any[]) {
-  // "classes" = courses/programmes assigned to this staff member
+
+const getJwtToken = () => {
+  return localStorage.getItem("jwtToken") || "";
+};
+function buildTeacherNav(courses: any[]) {
   const courseSubItems =
-    classes.length > 0
-      ? classes.map((c) => ({
-          title: className(c),
-          url: `/staff/dashboard/course/${classId(c)}`,
+    courses.length > 0
+      ? courses.map((allocation) => ({
+          title:
+            allocation.course?.code
+              ? `${allocation.course.code} - ${
+                  allocation.course?.title || "Untitled Course"
+                }`
+              : allocation.course?.title || "Untitled Course",
+
+          url: `/staff/dashboard/course/${allocation._id}`,
         }))
-      : [{ title: "No courses assigned yet", url: "/staff/dashboard/course-allocation" }];
+      : [
+          {
+            title: "No courses assigned yet",
+           url: "/staff/dashboard/course-allocation",
+          },
+        ];
 
   return [
     {
@@ -213,90 +227,199 @@ function buildTeacherNav(classes: any[]) {
       icon: LayoutDashboard,
       key: "staff-dashboard",
     },
- 
 
-    // ── Application (correlates with student "Application") ────────────────
-
-    // ── Course (correlates with student "Course") ───────────────────────────
+    // ── Course ───────────────────────────────────────────────────────────
     {
       label: "Course",
       items: [
-        { title: "My Courses", icon: NotebookPen, key: "staff-my-courses", subItems: courseSubItems },
-        { title: "Course Materials", url: "/staff/dashboard/course/materials", icon: ListChecks, key: "course-materials" },
-        { title: "Course Forum", url: "/staff/dashboard/course-forum", icon: NotebookPen, key: "staff-course-forum" },
-        { title: "Discussion", url: "/staff/dashboard/discussion", icon: TableProperties, key: "staff-discussion" },
+        {
+          title: "My Courses",
+          icon: NotebookPen,
+          key: "staff-my-courses",
+          subItems: courseSubItems,
+        },
+
+
+        {
+          title: "Course Forum",
+          url: "/staff/dashboard/course-forum",
+          icon: NotebookPen,
+          key: "staff-course-forum",
+        },
+
+        {
+          title: "Discussion",
+          url: "/staff/dashboard/discussion",
+          icon: TableProperties,
+          key: "staff-discussion",
+        },
       ],
     },
 
-    // ── Quiz (correlates with student "Quiz List") ──────────────────────────
+    // ── Quiz ─────────────────────────────────────────────────────────────
     {
       label: "Quiz",
       items: [
-        { title: "Create Quiz", url: "/staff/dashboard/quiz/create", icon: FileEdit, key: "create-quiz" },
-        { title: "Manage Quiz", url: "/staff/dashboard/quiz/manage", icon: ListChecks, key: "manage-quiz" },
-        { title: "Quiz Results", url: "/staff/dashboard/quiz/results", icon: ClipboardCheck, key: "staff-quiz-results" },
+        {
+          title: "Create Quiz",
+          url: "/staff/dashboard/quiz/create",
+          icon: FileEdit,
+          key: "create-quiz",
+        },
+        {
+          title: "Manage Quiz",
+          url: "/staff/dashboard/quiz/manage",
+          icon: ListChecks,
+          key: "manage-quiz",
+        },
+        {
+          title: "Quiz Results",
+          url: "/staff/dashboard/quiz/results",
+          icon: ClipboardCheck,
+          key: "staff-quiz-results",
+        },
       ],
     },
 
-    // ── Notifications (correlates with student "Notifications") ────────────
+    // ── Notifications ────────────────────────────────────────────────────
     {
       label: "Notifications",
       items: [
-        { title: "Send Notification", url: "/staff/dashboard/notification/send", icon: BellRing, key: "send-notification" },
-        { title: "Notification History", url: "/staff/dashboard/notification/history", icon: TableProperties, key: "notification-history" },
+        {
+          title: "Send Notification",
+          url: "/staff/dashboard/notification/send",
+          icon: BellRing,
+          key: "send-notification",
+        },
+        {
+          title: "Notification History",
+          url: "/staff/dashboard/notification/history",
+          icon: TableProperties,
+          key: "notification-history",
+        },
       ],
     },
 
-    // ── Studio (correlates with student "Studio") ───────────────────────────
+    // ── Studio ───────────────────────────────────────────────────────────
     {
       label: "Studio",
       items: [
-        { title: "Live Stream", url: "/staff/dashboard/studio/live-stream", icon: Video, key: "staff-live-stream" },
-        { title: "Activity Stream", url: "/staff/dashboard/studio/activity-stream", icon: ListChecks, key: "staff-activity-stream" },
-        { title: "Lectures", url: "/staff/dashboard/studio/meeting", icon: TableProperties, key: "staff-meeting" },
-        { title: "Messaging", url: "/staff/dashboard/studio/messaging", icon: FileEdit, key: "staff-messaging" },
+        {
+          title: "Live Stream",
+          url: "/staff/dashboard/studio/live-stream",
+          icon: Video,
+          key: "staff-live-stream",
+        },
+        {
+          title: "Activity Stream",
+          url: "/staff/dashboard/studio/activity-stream",
+          icon: ListChecks,
+          key: "staff-activity-stream",
+        },
+        {
+          title: "Lectures",
+          url: "/staff/dashboard/studio/meeting",
+          icon: TableProperties,
+          key: "staff-meeting",
+        },
+        {
+          title: "Messaging",
+          url: "/staff/dashboard/studio/messaging",
+          icon: FileEdit,
+          key: "staff-messaging",
+        },
       ],
     },
 
-    // ── Grade Book (correlates with student "Grade Book") ──────────────────
+    // ── Grade Book ───────────────────────────────────────────────────────
     {
       label: "Grade Book",
       items: [
-        { title: "Continuous Assessment", url: "/staff/dashboard/grade-book/continuous-assessment", icon: FileEdit, key: "continuous-assessment" },
-        { title: "Exam Mark Entry Sheet", url: "/staff/dashboard/grade-book/exam-mark-entry", icon: TableProperties, key: "exam-mark-entry" },
-        { title: "Tabulation Sheet", url: "/staff/dashboard/grade-book/tabulation", icon: TableProperties, key: "staff-tabulation" },
+        {
+          title: "Continuous Assessment",
+          url: "/staff/dashboard/grade-book/continuous-assessment",
+          icon: FileEdit,
+          key: "continuous-assessment",
+        },
+        {
+          title: "Exam Mark Entry Sheet",
+          url: "/staff/dashboard/grade-book/exam-mark-entry",
+          icon: TableProperties,
+          key: "exam-mark-entry",
+        },
+        {
+          title: "Tabulation Sheet",
+          url: "/staff/dashboard/grade-book/tabulation",
+          icon: TableProperties,
+          key: "staff-tabulation",
+        },
       ],
     },
 
-    // ── Assignment (correlates with student "Assignment") ──────────────────
+    // ── Assignment ───────────────────────────────────────────────────────
     {
       label: "Assignment",
       items: [
-        { title: "Create Assignment", url: "/staff/dashboard/assignment/create", icon: FileEdit, key: "create-assignment" },
-        { title: "All Assignments", url: "/staff/dashboard/assignment/all", icon: ListChecks, key: "staff-all-assignments" },
-        { title: "Grade Submissions", url: "/staff/dashboard/assignment/grade-submissions", icon: ClipboardCheck, key: "grade-submissions" },
+        {
+          title: "Create Assignment",
+          url: "/staff/dashboard/assignment/create",
+          icon: FileEdit,
+          key: "create-assignment",
+        },
+        {
+          title: "All Assignments",
+          url: "/staff/dashboard/assignment/all",
+          icon: ListChecks,
+          key: "staff-all-assignments",
+        },
+        {
+          title: "Grade Submissions",
+          url: "/staff/dashboard/assignment/grade-submissions",
+          icon: ClipboardCheck,
+          key: "grade-submissions",
+        },
       ],
     },
 
-    // ── Payment (correlates with student "Payment", staff-side = payroll) ──
+    // ── Payroll ──────────────────────────────────────────────────────────
     {
       label: "Payroll",
       items: [
-        { title: "Pay Slip", url: "/staff/dashboard/payroll/pay-slip", icon: ReceiptText, key: "pay-slip" },
-        { title: "Payment History", url: "/staff/dashboard/payroll/history", icon: TableProperties, key: "staff-payment-history" },
+        {
+          title: "Pay Slip",
+          url: "/staff/dashboard/payroll/pay-slip",
+          icon: ReceiptText,
+          key: "pay-slip",
+        },
+        {
+          title: "Payment History",
+          url: "/staff/dashboard/payroll/history",
+          icon: TableProperties,
+          key: "staff-payment-history",
+        },
       ],
     },
 
-    // ── Profile (correlates with student "Profile") ─────────────────────────
+    // ── Profile ──────────────────────────────────────────────────────────
     {
       label: "Profile",
       items: [
-        { title: "Profile System", url: "/staff/dashboard/profile", icon: User2, key: "profile-system" },
-        { title: "Profile & Biodata", url: "/staff/dashboard/biodata", icon: User2, key: "profile-biodata" },
+        {
+          title: "Profile System",
+          url: "/staff/dashboard/profile",
+          icon: User2,
+          key: "profile-system",
+        },
+        {
+          title: "Profile & Biodata",
+          url: "/staff/dashboard/biodata",
+          icon: User2,
+          key: "profile-biodata",
+        },
       ],
     },
 
-    // ── Hostel & Accommodation (correlates with student module, warden role) ─
+    // ── Hostel ───────────────────────────────────────────────────────────
     {
       label: "Hostel & Accommodation",
       url: "/staff/dashboard/hostel",
@@ -304,21 +427,41 @@ function buildTeacherNav(classes: any[]) {
       key: "staff-hostel",
     },
 
-    // ── SIWES ────────────────────────────────────────────────────────────
+    // ── SIWES ─────────────────────────────────────────────────────────────
     {
       label: "SIWES",
       items: [
-        { title: "IT Supervisor Dashboard", url: "/staff/dashboard/siwes", icon: TableProperties, key: "siwes-supervisor" },
+        {
+          title: "IT Supervisor Dashboard",
+          url: "/staff/dashboard/siwes",
+          icon: TableProperties,
+          key: "siwes-supervisor",
+        },
       ],
     },
 
-    // ── HR & Payroll (staff-only, admin-facing employment info) ─────────────
+    // ── HR ────────────────────────────────────────────────────────────────
     {
       label: "HR",
       items: [
-        { title: "Personal HR", url: "/staff/dashboard/hr", icon: User, key: "personal-hr" },
-        { title: "Approval & Promotion Tracker", url: "/staff/dashboard/hr/promotion-tracker", icon: TableProperties, key: "promotion-tracker" },
-        { title: "Leave & Absence Request", url: "/staff/dashboard/hr/leave-request", icon: AlarmClock, key: "leave-request" },
+        {
+          title: "Personal HR",
+          url: "/staff/dashboard/hr",
+          icon: User,
+          key: "personal-hr",
+        },
+        {
+          title: "Approval & Promotion Tracker",
+          url: "/staff/dashboard/hr/promotion-tracker",
+          icon: TableProperties,
+          key: "promotion-tracker",
+        },
+        {
+          title: "Leave & Absence Request",
+          url: "/staff/dashboard/hr/leave-request",
+          icon: AlarmClock,
+          key: "leave-request",
+        },
       ],
     },
   ];
@@ -426,25 +569,97 @@ export function AppSidebar() {
   const location = useLocation();
   const { user, logout } = useAuth();
   const { currentSession } = useContext(SessionContext);
+const { data: rawClasses } = useFetch(
+  currentSession?._id ? `/class/${currentSession._id}` : null
+);
 
-  const { data: rawClasses } = useFetch(
-    currentSession?._id ? `/class/${currentSession._id}` : null
-  );
-  const classes = useMemo(
-    () => Array.isArray(rawClasses)
-      ? [...rawClasses].sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")))
+const classes = useMemo(
+  () =>
+    Array.isArray(rawClasses)
+      ? [...rawClasses].sort((a, b) =>
+          String(a.name || "").localeCompare(
+            String(b.name || "")
+          )
+        )
       : [],
-    [rawClasses]
-  );
+  [rawClasses]
+);
 
-  const nav = useMemo(() => {
-    switch (user?.role) {
-      case "staff": return buildTeacherNav(classes);
-      case "student": return buildStudentNav(classes);
-    
-      default:        return buildAdminNav(classes);
+// ============================================================
+// STAFF COURSE ALLOCATIONS
+// ============================================================
+
+const [staffCourses, setStaffCourses] = useState<any[]>([]);
+const [coursesLoading, setCoursesLoading] = useState(false);
+
+useEffect(() => {
+  if (user?.role !== "staff") return;
+
+  const fetchStaffCourses = async () => {
+    try {
+      setCoursesLoading(true);
+
+      const token = localStorage.getItem("jwtToken");
+
+      if (!token) {
+        console.error("jwtToken not found");
+        return;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_NODE_API_URL || "http://localhost:5001/api"}/course-allocations/my`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message || "Failed to load staff courses"
+        );
+      }
+
+      setStaffCourses(
+        Array.isArray(data?.allocations)
+          ? data.allocations.filter(
+              (allocation: any) =>
+                allocation.status === "Active"
+            )
+          : []
+      );
+    } catch (error) {
+      console.error(
+        "Failed to load staff course allocations:",
+        error
+      );
+
+      setStaffCourses([]);
+    } finally {
+      setCoursesLoading(false);
     }
-  }, [user?.role, classes]);
+  };
+
+  fetchStaffCourses();
+}, [user?.role]);
+
+const nav = useMemo(() => {
+  switch (user?.role) {
+    case "staff":
+      return buildTeacherNav(staffCourses);
+
+    case "student":
+      return buildStudentNav(classes);
+
+    default:
+      return buildAdminNav(classes);
+  }
+}, [user?.role, staffCourses, classes]);
 
   const currentPath = location.pathname;
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});

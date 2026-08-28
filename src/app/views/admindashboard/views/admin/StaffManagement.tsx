@@ -189,7 +189,7 @@ interface StaffApiResponse {
 
 const API_BASE_URL =
   import.meta.env.VITE_BASE_URL ||
-  "http://localhost:5001/api";
+  "http://localhost:5001";
 
 /*
 |--------------------------------------------------------------------------
@@ -216,7 +216,7 @@ const token = localStorage.getItem("jwtToken");
   }
 
   const response = await fetch(
-    `${API_BASE_URL}${endpoint}`,
+    `${API_BASE_URL}/api${endpoint}`,
     {
       ...options,
       headers,

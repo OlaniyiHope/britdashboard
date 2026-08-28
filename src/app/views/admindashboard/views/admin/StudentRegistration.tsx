@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -8,208 +8,776 @@ import {
   GraduationCap,
   Users,
   UserCheck,
-  Clock3,
-  MoreHorizontal,
   Download,
   X,
-  CheckCircle2,
   AlertCircle,
-  BookOpen,
   ChevronLeft,
   ChevronRight,
   FileText,
   Pencil,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { SessionContext } from "@/contexts/SessionContext";
+import useFetch from "@/hooks/useFetch";
 
-type RegistrationStatus =
-  | "Completed"
-  | "Pending"
-  | "Incomplete"
-  | "Not Started";
+/* ================================================================
+   TYPES
+================================================================ */
 
-interface StudentRegistrationRecord {
+type Level = "ND1" | "ND2";
+type StudyMode = "full-time" | "part-time";
+type Gender = "male" | "female";
+
+interface BackendStudentUser {
+  _id: string;
+  role: "student";
+  username: string;
+  email?: string;
+  address?: string;
+  phone?: number | string;
+  gender?: Gender;
+  birthday?: string;
+  studentName?: string;
+  matricNo?: string;
+  programme?: string; // stored as a raw ObjectId string — NOT populated (see note above)
+  level?: Level;
+  studyMode?: StudyMode;
+  session?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// From programmeController.js — field names are a best guess since you
+// haven't shared the Programme model. Adjust getProgrammeLabel() below
+// if your actual fields differ (e.g. "title" instead of "name").
+interface BackendProgramme {
+  _id: string;
+  name?: string;
+  programmeName?: string;
+  title?: string;
+  code?: string;
+}
+
+interface Student {
   id: string;
-  applicationNumber: string;
-  matricNumber: string;
+  username: string;
   name: string;
   email: string;
   phone: string;
-  programme: string;
-  department: string;
+  matricNo: string;
+  programmeId: string;
+  programmeName: string;
   level: string;
-  session: string;
-  registrationStatus: RegistrationStatus;
-  courseRegistration: "Completed" | "Pending" | "Not Started";
-  registeredDate?: string;
-  lastUpdated: string;
+  studyMode: string;
+  gender: string;
+  address: string;
+  birthday: string;
+  profileComplete: boolean;
+  createdAt: string;
 }
 
-/*
-|--------------------------------------------------------------------------
-| TEMPORARY DATA
-|--------------------------------------------------------------------------
-|
-| Replace this with your API data when the student registration endpoint
-| is connected.
-|
-*/
+/* ================================================================
+   HELPERS
+================================================================ */
 
-const registrationRecords: StudentRegistrationRecord[] = [
-  {
-    id: "1",
-    applicationNumber: "BTP/APP/2026/0012",
-    matricNumber: "BTP/CSC/2026/001",
-    name: "Daniel Mensah",
-    email: "daniel.mensah@example.com",
-    phone: "+234 801 234 5678",
-    programme: "Computer Science",
-    department: "Computing & Technology",
-    level: "100 Level",
-    session: "2026/2027",
-    registrationStatus: "Completed",
-    courseRegistration: "Completed",
-    registeredDate: "20 Aug 2026",
-    lastUpdated: "25 Aug 2026",
-  },
-  {
-    id: "2",
-    applicationNumber: "BTP/APP/2026/0018",
-    matricNumber: "BTP/BUS/2026/002",
-    name: "Sarah Williams",
-    email: "sarah.williams@example.com",
-    phone: "+234 802 345 6789",
-    programme: "Business Administration",
-    department: "Business Studies",
-    level: "100 Level",
-    session: "2026/2027",
-    registrationStatus: "Pending",
-    courseRegistration: "Not Started",
-    lastUpdated: "25 Aug 2026",
-  },
-  {
-    id: "3",
-    applicationNumber: "BTP/APP/2026/0021",
-    matricNumber: "BTP/ENG/2026/003",
-    name: "Michael Johnson",
-    email: "michael.johnson@example.com",
-    phone: "+234 803 456 7890",
-    programme: "Mechanical Engineering",
-    department: "Engineering",
-    level: "100 Level",
-    session: "2026/2027",
-    registrationStatus: "Incomplete",
-    courseRegistration: "Pending",
-    lastUpdated: "24 Aug 2026",
-  },
-  {
-    id: "4",
-    applicationNumber: "BTP/APP/2026/0027",
-    matricNumber: "BTP/ACC/2026/004",
-    name: "Grace Mensima",
-    email: "grace.mensima@example.com",
-    phone: "+234 804 567 8901",
-    programme: "Accounting",
-    department: "Business Studies",
-    level: "100 Level",
-    session: "2026/2027",
-    registrationStatus: "Completed",
-    courseRegistration: "Completed",
-    registeredDate: "18 Aug 2026",
-    lastUpdated: "23 Aug 2026",
-  },
-  {
-    id: "5",
-    applicationNumber: "BTP/APP/2026/0034",
-    matricNumber: "BTP/CVE/2026/005",
-    name: "Samuel Okoro",
-    email: "samuel.okoro@example.com",
-    phone: "+234 805 678 9012",
-    programme: "Civil Engineering",
-    department: "Engineering",
-    level: "100 Level",
-    session: "2026/2027",
-    registrationStatus: "Not Started",
-    courseRegistration: "Not Started",
-    lastUpdated: "22 Aug 2026",
-  },
-  {
-    id: "6",
-    applicationNumber: "BTP/APP/2026/0040",
-    matricNumber: "BTP/INF/2026/006",
-    name: "Esther Adams",
-    email: "esther.adams@example.com",
-    phone: "+234 806 789 0123",
-    programme: "Information Technology",
-    department: "Computing & Technology",
-    level: "100 Level",
-    session: "2026/2027",
-    registrationStatus: "Completed",
-    courseRegistration: "Pending",
-    registeredDate: "16 Aug 2026",
-    lastUpdated: "21 Aug 2026",
-  },
-];
+const API_BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5001";
+
+const formatDate = (date?: string): string => {
+  if (!date) return "—";
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return "—";
+  return parsed.toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" });
+};
+
+const isProfileComplete = (s: BackendStudentUser): boolean =>
+  Boolean(s.matricNo && s.programme && s.level);
+
+const getProgrammeLabel = (p?: BackendProgramme): string => {
+  if (!p) return "Not set";
+  return p.name || p.programmeName || p.title || p.code || "Unnamed Programme";
+};
+
+const getProgrammeCode = (p?: BackendProgramme): string => {
+  if (!p) return "GEN";
+  return (p.code || p.name || "GEN").replace(/[^A-Za-z]/g, "").slice(0, 3).toUpperCase() || "GEN";
+};
 
 /*
 |--------------------------------------------------------------------------
-| STATUS BADGE
+| BADGES
 |--------------------------------------------------------------------------
 */
 
-function RegistrationStatusBadge({
-  status,
-}: {
-  status: RegistrationStatus;
-}) {
-  const styles: Record<RegistrationStatus, string> = {
-    Completed:
-      "bg-emerald-50 text-emerald-700 border-emerald-200",
-    Pending:
-      "bg-amber-50 text-amber-700 border-amber-200",
-    Incomplete:
-      "bg-orange-50 text-orange-700 border-orange-200",
-    "Not Started":
-      "bg-slate-100 text-slate-600 border-slate-200",
-  };
-
+function ProfileStatusBadge({ complete }: { complete: boolean }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-bold ${styles[status]}`}
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+        complete
+          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+          : "bg-amber-50 text-amber-700 border-amber-200"
+      }`}
     >
-      {status}
+      {complete ? "Profile Complete" : "Incomplete"}
     </span>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="mb-1 block text-xs font-semibold text-slate-600">{label}</label>
+      {children}
+    </div>
   );
 }
 
 /*
 |--------------------------------------------------------------------------
-| COURSE REGISTRATION BADGE
+| REGISTER STUDENT MODAL (admin creating a brand-new student)
 |--------------------------------------------------------------------------
 */
 
-function CourseRegistrationBadge({
-  status,
+interface RegisterFormState {
+  username: string;
+  password: string;
+  studentName: string;
+  email: string;
+  matricNo: string;
+  programmeId: string;
+  level: Level | "";
+  studyMode: StudyMode | "";
+  gender: Gender | "";
+  phone: string;
+  address: string;
+  birthday: string;
+  assignCurrentSession: boolean;
+}
+
+const emptyForm: RegisterFormState = {
+  username: "",
+  password: "",
+  studentName: "",
+  email: "",
+  matricNo: "",
+  programmeId: "",
+  level: "",
+  studyMode: "",
+  gender: "",
+  phone: "",
+  address: "",
+  birthday: "",
+  assignCurrentSession: true,
+};
+
+function RegisterStudentModal({
+  programmes,
+  onClose,
+  onSuccess,
+  currentSessionId,
+  currentSessionName,
 }: {
-  status: StudentRegistrationRecord["courseRegistration"];
+  programmes: BackendProgramme[];
+  onClose: () => void;
+  onSuccess: () => void;
+  currentSessionId?: string;
+  currentSessionName?: string;
 }) {
-  const styles = {
-    Completed:
-      "bg-emerald-50 text-emerald-700 border-emerald-200",
-    Pending:
-      "bg-amber-50 text-amber-700 border-amber-200",
-    "Not Started":
-      "bg-slate-100 text-slate-600 border-slate-200",
+  const [form, setForm] = useState<RegisterFormState>(emptyForm);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const update = <K extends keyof RegisterFormState>(
+    key: K,
+    value: RegisterFormState[K]
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const selectedProgramme = programmes.find(
+    (p) => p._id === form.programmeId
+  );
+
+  const suggestMatric = () => {
+    if (!selectedProgramme) return;
+
+    const code = getProgrammeCode(selectedProgramme);
+
+    const year =
+      currentSessionName?.match(/\d{4}/)?.[0] ||
+      new Date().getFullYear();
+
+    update("matricNo", `BTP/${code}/${year}/___`);
+  };
+
+  const handleSubmit = async () => {
+    setFormError("");
+
+    if (!form.username.trim()) {
+      setFormError("Username is required.");
+      return;
+    }
+
+    if (!form.password.trim()) {
+      setFormError("Password is required.");
+      return;
+    }
+
+    if (!form.matricNo.trim()) {
+      setFormError("Matric number is required.");
+      return;
+    }
+
+    if (!form.programmeId) {
+      setFormError("Please select a programme.");
+      return;
+    }
+
+    if (!form.level) {
+      setFormError("Please select a level.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const token = localStorage.getItem("jwtToken");
+
+      const payload: Record<string, unknown> = {
+        role: "student",
+        username: form.username.trim(),
+        password: form.password,
+
+        studentName: form.studentName.trim() || undefined,
+        email: form.email.trim() || undefined,
+
+        matricNo: form.matricNo.trim(),
+
+        // Backend student field
+        programme: form.programmeId,
+
+        level: form.level,
+        studyMode: form.studyMode || undefined,
+
+        gender: form.gender || undefined,
+
+        phone: form.phone
+          ? form.phone
+          : undefined,
+
+        address: form.address.trim() || undefined,
+
+        birthday: form.birthday || undefined,
+      };
+
+      if (form.assignCurrentSession && currentSessionId) {
+        payload.session = [currentSessionId];
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token
+            ? {
+                Authorization: `Bearer ${token}`,
+              }
+            : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            `Registration failed (${response.status}).`
+        );
+      }
+
+      onSuccess();
+    } catch (err) {
+      setFormError(
+        err instanceof Error
+          ? err.message
+          : "Unable to register student."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold ${styles[status]}`}
-    >
-      {status}
-    </span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+
+        {/* HEADER */}
+        <div className="flex items-start justify-between border-b border-slate-200 bg-[#081022] p-6 text-white">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-200">
+              Student Registration
+            </p>
+
+            <h2 className="mt-1 text-xl font-bold">
+              Register New Student
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="rounded-lg p-2 text-slate-300 hover:bg-white/10 hover:text-white disabled:opacity-50"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="space-y-5 p-6">
+
+          {/* ERROR */}
+          {formError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-xs font-medium text-red-700">
+                {formError}
+              </p>
+            </div>
+          )}
+
+          {/* LOGIN */}
+          <div>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+              Login Credentials
+            </p>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+
+              <Field label="Username *">
+                <input
+                  value={form.username}
+                  onChange={(e) =>
+                    update("username", e.target.value)
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#006dcc]"
+                  placeholder="e.g. dmensah2026"
+                />
+              </Field>
+
+              <Field label="Password *">
+                <input
+                  type="password"
+                  value={form.password}
+                  onChange={(e) =>
+                    update("password", e.target.value)
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#006dcc]"
+                  placeholder="Temporary password"
+                />
+              </Field>
+
+            </div>
+          </div>
+
+          {/* PERSONAL */}
+          <div>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+              Personal Information
+            </p>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+
+              <Field label="Full Name">
+                <input
+                  value={form.studentName}
+                  onChange={(e) =>
+                    update("studentName", e.target.value)
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#006dcc]"
+                />
+              </Field>
+
+              <Field label="Email">
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) =>
+                    update("email", e.target.value)
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#006dcc]"
+                />
+              </Field>
+
+              <Field label="Phone">
+                <input
+                  value={form.phone}
+                  onChange={(e) =>
+                    update("phone", e.target.value)
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#006dcc]"
+                />
+              </Field>
+
+              <Field label="Gender">
+                <select
+                  value={form.gender}
+                  onChange={(e) =>
+                    update(
+                      "gender",
+                      e.target.value as Gender
+                    )
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#006dcc]"
+                >
+                  <option value="">Select</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </Field>
+
+              <Field label="Birthday">
+                <input
+                  type="date"
+                  value={form.birthday}
+                  onChange={(e) =>
+                    update("birthday", e.target.value)
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#006dcc]"
+                />
+              </Field>
+
+              <Field label="Address">
+                <input
+                  value={form.address}
+                  onChange={(e) =>
+                    update("address", e.target.value)
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#006dcc]"
+                />
+              </Field>
+
+            </div>
+          </div>
+
+          {/* ACADEMIC */}
+          <div>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+              Academic Information
+            </p>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+
+              <Field label="Programme *">
+                <select
+                  value={form.programmeId}
+                  onChange={(e) =>
+                    update("programmeId", e.target.value)
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#006dcc]"
+                >
+                  <option value="">
+                    Select programme
+                  </option>
+
+                  {programmes.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {getProgrammeLabel(p)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Level *">
+                <select
+                  value={form.level}
+                  onChange={(e) =>
+                    update(
+                      "level",
+                      e.target.value as Level
+                    )
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#006dcc]"
+                >
+                  <option value="">Select</option>
+                  <option value="ND1">ND1</option>
+                  <option value="ND2">ND2</option>
+                </select>
+              </Field>
+
+              <Field label="Study Mode">
+                <select
+                  value={form.studyMode}
+                  onChange={(e) =>
+                    update(
+                      "studyMode",
+                      e.target.value as StudyMode
+                    )
+                  }
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#006dcc]"
+                >
+                  <option value="">Select</option>
+                  <option value="full-time">
+                    Full-time
+                  </option>
+                  <option value="part-time">
+                    Part-time
+                  </option>
+                </select>
+              </Field>
+
+              <Field label="Matric Number *">
+                <div className="flex gap-2">
+
+                  <input
+                    value={form.matricNo}
+                    onChange={(e) =>
+                      update("matricNo", e.target.value)
+                    }
+                    className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#006dcc]"
+                    placeholder="e.g. BTP/CSC/2026/001"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={suggestMatric}
+                    disabled={!selectedProgramme}
+                    className="shrink-0 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                  >
+                    Suggest
+                  </button>
+
+                </div>
+              </Field>
+
+            </div>
+
+            {currentSessionId && (
+              <label className="mt-3 flex items-center gap-2 text-xs text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={form.assignCurrentSession}
+                  onChange={(e) =>
+                    update(
+                      "assignCurrentSession",
+                      e.target.checked
+                    )
+                  }
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+
+                Assign to current session (
+                {currentSessionName || "active session"})
+              </label>
+            )}
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <div className="flex justify-end gap-2 border-t border-slate-200 bg-slate-50 px-6 py-4">
+
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="gap-2 bg-[#006dcc] hover:bg-[#005ca8]"
+          >
+            {submitting && (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            )}
+
+            {submitting
+              ? "Registering..."
+              : "Register Student"}
+          </Button>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/*
+|--------------------------------------------------------------------------
+| COMPLETE REGISTRATION MODAL
+| For students who already self-registered (have username, email,
+| studentName, programme — but NO matricNo/level/studyMode yet, exactly
+| like the "hopeolaniyan" record you pasted). Admin assigns the missing
+| academic fields here.
+|
+| ⚠️ BACKEND REQUIREMENT: your routes only expose POST /register and
+| POST /login — there is no update-user endpoint yet. This calls
+| PATCH ${API_BASE_URL}/users/:id as a placeholder. You need to add
+| something like:
+|
+|   router.patch("/users/:id", authenticateUser, updateUser);
+|
+| with an updateUser controller that does User.findByIdAndUpdate(id, req.body).
+| Adjust the URL/method below once that route exists.
+|--------------------------------------------------------------------------
+*/
+
+function CompleteRegistrationModal({
+  student,
+  programmes,
+  onClose,
+  onSuccess,
+}: {
+  student: Student;
+  programmes: BackendProgramme[];
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [matricNo, setMatricNo] = useState(student.matricNo === "Not assigned" ? "" : student.matricNo);
+  const [programmeId, setProgrammeId] = useState(student.programmeId);
+  const [level, setLevel] = useState<Level | "">((student.level as Level) || "");
+  const [studyMode, setStudyMode] = useState<StudyMode | "">((student.studyMode as StudyMode) || "");
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const selectedProgramme = programmes.find((p) => p._id === programmeId);
+
+  const suggestMatric = () => {
+    if (!selectedProgramme) return;
+    const code = getProgrammeCode(selectedProgramme);
+    const year = new Date().getFullYear();
+    setMatricNo(`BTP/${code}/${year}/___`);
+  };
+
+  const handleSubmit = async () => {
+    setFormError("");
+
+    if (!matricNo.trim() || !programmeId || !level) {
+      setFormError("Matric number, programme and level are all required to complete registration.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const token = localStorage.getItem("jwtToken");
+
+      const response = await fetch(`${API_BASE_URL}/api/put-students/${student.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          matricNo: matricNo.trim(),
+          programme: programmeId,
+          level,
+          studyMode: studyMode || undefined,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message || data?.error ||
+          `Unable to update student — endpoint PATCH /users/:id may not exist yet on your backend (${response.status}).`
+        );
+      }
+
+      onSuccess();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Unable to complete registration.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div className="flex items-start justify-between border-b border-slate-200 bg-[#081022] p-6 text-white">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-200">Complete Registration</p>
+            <h2 className="mt-1 text-xl font-bold">{student.name}</h2>
+            <p className="mt-1 text-xs text-slate-300">@{student.username}</p>
+          </div>
+          <button type="button" onClick={onClose} disabled={submitting} className="rounded-lg p-2 text-slate-300 hover:bg-white/10 hover:text-white disabled:opacity-50">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="space-y-4 p-6">
+          {formError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-xs font-medium text-red-700">{formError}</p>
+            </div>
+          )}
+
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+            <p className="text-xs leading-5 text-blue-700">
+              This student self-registered and is missing academic details. Assign the fields below to
+              activate their full profile.
+            </p>
+          </div>
+
+          <Field label="Programme">
+            <select value={programmeId} onChange={(e) => setProgrammeId(e.target.value)}
+              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#006dcc]">
+              <option value="">Select programme</option>
+              {programmes.map((p) => (
+                <option key={p._id} value={p._id}>{getProgrammeLabel(p)}</option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Level">
+            <select value={level} onChange={(e) => setLevel(e.target.value as Level)}
+              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#006dcc]">
+              <option value="">Select</option>
+              <option value="ND1">ND1</option>
+              <option value="ND2">ND2</option>
+            </select>
+          </Field>
+
+          <Field label="Study Mode">
+            <select value={studyMode} onChange={(e) => setStudyMode(e.target.value as StudyMode)}
+              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#006dcc]">
+              <option value="">Select</option>
+              <option value="full-time">Full-time</option>
+              <option value="part-time">Part-time</option>
+            </select>
+          </Field>
+
+          <Field label="Matric Number">
+            <div className="flex gap-2">
+              <input value={matricNo} onChange={(e) => setMatricNo(e.target.value)}
+                className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-[#006dcc]" placeholder="e.g. BTP/CSC/2026/001" />
+              <button type="button" onClick={suggestMatric} disabled={!selectedProgramme}
+                className="shrink-0 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40">
+                Suggest
+              </button>
+            </div>
+          </Field>
+        </div>
+
+        <div className="flex justify-end gap-2 border-t border-slate-200 bg-slate-50 px-6 py-4">
+          <Button variant="outline" onClick={onClose} disabled={submitting}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={submitting} className="gap-2 bg-[#006dcc] hover:bg-[#005ca8]">
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+            {submitting ? "Saving..." : "Save & Complete"}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -220,1096 +788,592 @@ function CourseRegistrationBadge({
 */
 
 export default function StudentRegistration() {
-  const navigate = useNavigate();
+  const { currentSession } = useContext(SessionContext);
+  const sessionId = currentSession?._id;
+
+  const {
+    data: rawStudents,
+    loading,
+    error,
+    reFetch,
+  } = useFetch(sessionId ? `/users/student/${sessionId}` : null);
+
+  // NEW: fetch real programmes so IDs can be resolved to names.
+  const { data: rawProgrammes, loading: programmesLoading } = useFetch("/programmes");
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [departmentFilter, setDepartmentFilter] = useState("All");
-  const [sessionFilter, setSessionFilter] = useState("All");
+  const [levelFilter, setLevelFilter] = useState("All");
+  const [studyModeFilter, setStudyModeFilter] = useState("All");
+  const [completionFilter, setCompletionFilter] = useState("All");
+  const [programmeFilter, setProgrammeFilter] = useState("All");
 
-  const [selectedStudent, setSelectedStudent] =
-    useState<StudentRegistrationRecord | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [completingStudent, setCompletingStudent] = useState<Student | null>(null);
 
-  /*
-  |--------------------------------------------------------------------------
-  | COUNTS
-  |--------------------------------------------------------------------------
-  */
+  /* ==============================================================
+     NORMALIZE PROGRAMMES
+  ============================================================== */
 
-  const totalStudents = registrationRecords.length;
+  const programmes = useMemo<BackendProgramme[]>(() => {
+    if (Array.isArray(rawProgrammes)) return rawProgrammes as BackendProgramme[];
+    if (
+      rawProgrammes &&
+      typeof rawProgrammes === "object" &&
+      Array.isArray((rawProgrammes as { programmes?: BackendProgramme[] }).programmes)
+    ) {
+      return (rawProgrammes as { programmes: BackendProgramme[] }).programmes;
+    }
+    if (
+      rawProgrammes &&
+      typeof rawProgrammes === "object" &&
+      Array.isArray((rawProgrammes as { data?: BackendProgramme[] }).data)
+    ) {
+      return (rawProgrammes as { data: BackendProgramme[] }).data;
+    }
+    return [];
+  }, [rawProgrammes]);
 
-  const completedCount = registrationRecords.filter(
-    (student) => student.registrationStatus === "Completed"
-  ).length;
+  const programmeMap = useMemo(() => {
+    const map = new Map<string, BackendProgramme>();
+    programmes.forEach((p) => map.set(p._id, p));
+    return map;
+  }, [programmes]);
 
-  const pendingCount = registrationRecords.filter(
-    (student) => student.registrationStatus === "Pending"
-  ).length;
+  /* ==============================================================
+     NORMALIZE STUDENTS — resolves programme id -> name via programmeMap
+  ============================================================== */
 
-  const incompleteCount = registrationRecords.filter(
-    (student) =>
-      student.registrationStatus === "Incomplete" ||
-      student.registrationStatus === "Not Started"
-  ).length;
+  const students = useMemo<Student[]>(() => {
+    let list: BackendStudentUser[] = [];
 
-  /*
-  |--------------------------------------------------------------------------
-  | FILTER OPTIONS
-  |--------------------------------------------------------------------------
-  */
+    if (Array.isArray(rawStudents)) {
+      list = rawStudents as BackendStudentUser[];
+    } else if (
+      rawStudents &&
+      typeof rawStudents === "object" &&
+      Array.isArray((rawStudents as { students?: BackendStudentUser[] }).students)
+    ) {
+      list = (rawStudents as { students: BackendStudentUser[] }).students;
+    } else if (
+      rawStudents &&
+      typeof rawStudents === "object" &&
+      Array.isArray((rawStudents as { data?: BackendStudentUser[] }).data)
+    ) {
+      list = (rawStudents as { data: BackendStudentUser[] }).data;
+    }
 
-  const departments = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          registrationRecords.map(
-            (student) => student.department
-          )
-        )
-      ),
-    []
+    return list.map((s): Student => {
+      const programmeId = s.programme || "";
+      const programme = programmeMap.get(programmeId);
+
+      return {
+        id: s._id,
+        username: s.username,
+        name: s.studentName || s.username,
+        email: s.email || "No email",
+        phone: s.phone !== undefined && s.phone !== null ? String(s.phone) : "No phone",
+        matricNo: s.matricNo || "Not assigned",
+        programmeId,
+        programmeName: programme ? getProgrammeLabel(programme) : programmeId ? "Unknown programme" : "Not set",
+        level: s.level || "Not set",
+        studyMode: s.studyMode || "Not set",
+        gender: s.gender || "Not set",
+        address: s.address || "Not provided",
+        birthday: formatDate(s.birthday),
+        profileComplete: isProfileComplete(s),
+        createdAt: formatDate(s.createdAt),
+      };
+    });
+  }, [rawStudents, programmeMap]);
+
+  /* ==============================================================
+     COUNTS
+  ============================================================== */
+
+  const totalStudents = students.length;
+  const completedCount = students.filter((s) => s.profileComplete).length;
+  const incompleteCount = students.filter((s) => !s.profileComplete).length;
+
+  /* ==============================================================
+     FILTER OPTIONS + FILTERING
+  ============================================================== */
+
+  const levels = useMemo(
+    () => Array.from(new Set(students.map((s) => s.level).filter((l) => l !== "Not set"))),
+    [students]
   );
 
-  const sessions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          registrationRecords.map(
-            (student) => student.session
-          )
-        )
-      ),
-    []
+  const studyModes = useMemo(
+    () => Array.from(new Set(students.map((s) => s.studyMode).filter((m) => m !== "Not set"))),
+    [students]
   );
-
-  /*
-  |--------------------------------------------------------------------------
-  | FILTERING
-  |--------------------------------------------------------------------------
-  */
 
   const filteredStudents = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return registrationRecords.filter((student) => {
+    return students.filter((student) => {
       const matchesSearch =
         !query ||
         student.name.toLowerCase().includes(query) ||
-        student.matricNumber.toLowerCase().includes(query) ||
-        student.applicationNumber
-          .toLowerCase()
-          .includes(query) ||
+        student.matricNo.toLowerCase().includes(query) ||
+        student.username.toLowerCase().includes(query) ||
         student.email.toLowerCase().includes(query) ||
-        student.programme.toLowerCase().includes(query);
+        student.programmeName.toLowerCase().includes(query);
 
-      const matchesStatus =
-        statusFilter === "All" ||
-        student.registrationStatus === statusFilter;
+      const matchesLevel = levelFilter === "All" || student.level === levelFilter;
+      const matchesStudyMode = studyModeFilter === "All" || student.studyMode === studyModeFilter;
+      const matchesProgramme = programmeFilter === "All" || student.programmeId === programmeFilter;
+      const matchesCompletion =
+        completionFilter === "All" ||
+        (completionFilter === "Complete" && student.profileComplete) ||
+        (completionFilter === "Incomplete" && !student.profileComplete);
 
-      const matchesDepartment =
-        departmentFilter === "All" ||
-        student.department === departmentFilter;
-
-      const matchesSession =
-        sessionFilter === "All" ||
-        student.session === sessionFilter;
-
-      return (
-        matchesSearch &&
-        matchesStatus &&
-        matchesDepartment &&
-        matchesSession
-      );
+      return matchesSearch && matchesLevel && matchesStudyMode && matchesProgramme && matchesCompletion;
     });
-  }, [
-    search,
-    statusFilter,
-    departmentFilter,
-    sessionFilter,
-  ]);
+  }, [students, search, levelFilter, studyModeFilter, programmeFilter, completionFilter]);
 
-  /*
-  |--------------------------------------------------------------------------
-  | EXPORT
-  |--------------------------------------------------------------------------
-  */
+  /* ==============================================================
+     EXPORT
+  ============================================================== */
 
   const handleExport = () => {
-    const headers = [
-      "Application Number",
-      "Matric Number",
-      "Name",
-      "Email",
-      "Phone",
-      "Programme",
-      "Department",
-      "Level",
-      "Session",
-      "Registration Status",
-      "Course Registration",
-    ];
-
-    const rows = filteredStudents.map((student) => [
-      student.applicationNumber,
-      student.matricNumber,
-      student.name,
-      student.email,
-      student.phone,
-      student.programme,
-      student.department,
-      student.level,
-      student.session,
-      student.registrationStatus,
-      student.courseRegistration,
+    const headers = ["Username", "Matric Number", "Name", "Email", "Phone", "Programme", "Level", "Study Mode"];
+    const rows = filteredStudents.map((s) => [
+      s.username, s.matricNo, s.name, s.email, s.phone, s.programmeName, s.level, s.studyMode,
     ]);
-
     const csv = [
       headers.join(","),
-      ...rows.map((row) =>
-        row
-          .map((value) =>
-            `"${String(value).replace(/"/g, '""')}"`
-          )
-          .join(",")
-      ),
+      ...rows.map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")),
     ].join("\n");
-
-    const blob = new Blob([csv], {
-      type: "text/csv;charset=utf-8;",
-    });
-
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-
     link.href = url;
     link.download = "student-registration.csv";
     link.click();
-
     URL.revokeObjectURL(url);
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | CLEAR FILTERS
-  |--------------------------------------------------------------------------
-  */
-
   const clearFilters = () => {
     setSearch("");
-    setStatusFilter("All");
-    setDepartmentFilter("All");
-    setSessionFilter("All");
+    setLevelFilter("All");
+    setStudyModeFilter("All");
+    setProgrammeFilter("All");
+    setCompletionFilter("All");
   };
+
+  /* ==============================================================
+     LOADING / NO SESSION
+  ============================================================== */
+
+  if (!sessionId) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center bg-slate-50 p-6">
+        <div className="text-center">
+          <AlertCircle className="mx-auto h-8 w-8 text-slate-300" />
+          <p className="mt-3 text-sm font-semibold text-slate-500">No active session selected</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || programmesLoading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center bg-slate-50 p-6">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="mt-3 text-sm text-slate-500">Loading students and programmes...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full space-y-6 bg-slate-50 p-4 md:p-6">
 
-      {/* ============================================================
-          HEADER
-      ============================================================ */}
-
+      {/* HEADER */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-
         <div className="flex items-center gap-3">
-
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#081022] text-white">
             <UserPlus className="h-5 w-5" />
           </div>
-
           <div>
-            <h1 className="text-xl font-bold text-[#081022] md:text-2xl">
-              Student Registration
-            </h1>
-
+            <h1 className="text-xl font-bold text-[#081022] md:text-2xl">Student Registration</h1>
             <p className="mt-1 text-xs text-slate-500">
-              Register approved students and manage their academic
-              registration records.
+              Register students and manage their academic profile — {currentSession?.name || "current session"}.
             </p>
           </div>
-
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row">
-
-          <Button
-            variant="outline"
-            onClick={handleExport}
-            className="gap-2 border-slate-300 bg-white"
-          >
+          <Button variant="outline" onClick={handleExport} className="gap-2 border-slate-300 bg-white">
             <Download className="h-4 w-4" />
             Export
           </Button>
-
-          <Button
-            onClick={() =>
-              navigate("/admin/students/registration/new")
-            }
-            className="gap-2 bg-[#006dcc] hover:bg-[#005ca8]"
-          >
+          <Button onClick={() => setShowRegisterModal(true)} className="gap-2 bg-[#006dcc] hover:bg-[#005ca8]">
             <UserPlus className="h-4 w-4" />
             Register Student
           </Button>
-
         </div>
       </div>
 
-      {/* ============================================================
-          INFORMATION BANNER
-      ============================================================ */}
+      {/* ERROR */}
+      {error && (
+        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+          <div className="flex-1">
+            <p className="text-sm font-bold text-red-700">Unable to load students</p>
+          </div>
+          <button type="button" onClick={() => reFetch()}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50">
+            <RefreshCw className="h-3.5 w-3.5" />
+            Retry
+          </button>
+        </div>
+      )}
 
+      {/* INFO BANNER */}
       <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-
         <div className="flex gap-3">
-
           <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
             <FileText className="h-4 w-4" />
           </div>
-
           <div>
-            <p className="text-sm font-bold text-blue-900">
-              Student registration workflow
-            </p>
-
+            <p className="text-sm font-bold text-blue-900">Student registration workflow</p>
             <p className="mt-1 max-w-3xl text-xs leading-5 text-blue-700">
-              Only students whose admission has been approved should
-              proceed to student registration. Once registered, the
-              student can continue with course registration and other
-              academic activities.
+              Students may self-register with just a username, email and programme. A profile is considered
+              complete once an administrator has assigned matric number, level and study mode via "Complete".
             </p>
           </div>
-
         </div>
-
       </div>
 
-      {/* ============================================================
-          STATISTICS
-      ============================================================ */}
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
-        {/* Total */}
-
+      {/* STATISTICS */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
           <CardContent className="p-5">
-
             <div className="flex items-center justify-between">
-
               <div>
-                <p className="text-xs font-medium text-slate-500">
-                  Total Registrations
-                </p>
-
-                <p className="mt-2 text-3xl font-black text-[#081022]">
-                  {totalStudents}
-                </p>
-
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Students in registration records
-                </p>
+                <p className="text-xs font-medium text-slate-500">Total Students</p>
+                <p className="mt-2 text-3xl font-black text-[#081022]">{totalStudents}</p>
+                <p className="mt-1 text-[11px] text-slate-400">This session</p>
               </div>
-
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
                 <Users className="h-5 w-5" />
               </div>
-
             </div>
-
           </CardContent>
         </Card>
 
-        {/* Completed */}
-
         <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
           <CardContent className="p-5">
-
             <div className="flex items-center justify-between">
-
               <div>
-                <p className="text-xs font-medium text-slate-500">
-                  Completed
-                </p>
-
-                <p className="mt-2 text-3xl font-black text-[#081022]">
-                  {completedCount}
-                </p>
-
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Registration completed
-                </p>
+                <p className="text-xs font-medium text-slate-500">Profile Complete</p>
+                <p className="mt-2 text-3xl font-black text-[#081022]">{completedCount}</p>
+                <p className="mt-1 text-[11px] text-slate-400">Matric no., programme &amp; level set</p>
               </div>
-
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
                 <UserCheck className="h-5 w-5" />
               </div>
-
             </div>
-
           </CardContent>
         </Card>
 
-        {/* Pending */}
-
         <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
           <CardContent className="p-5">
-
             <div className="flex items-center justify-between">
-
               <div>
-                <p className="text-xs font-medium text-slate-500">
-                  Pending
-                </p>
-
-                <p className="mt-2 text-3xl font-black text-[#081022]">
-                  {pendingCount}
-                </p>
-
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Awaiting registration
-                </p>
+                <p className="text-xs font-medium text-slate-500">Incomplete Profiles</p>
+                <p className="mt-2 text-3xl font-black text-[#081022]">{incompleteCount}</p>
+                <p className="mt-1 text-[11px] text-slate-400">Need matric no. / level assigned</p>
               </div>
-
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
-                <Clock3 className="h-5 w-5" />
-              </div>
-
-            </div>
-
-          </CardContent>
-        </Card>
-
-        {/* Issues */}
-
-        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
-          <CardContent className="p-5">
-
-            <div className="flex items-center justify-between">
-
-              <div>
-                <p className="text-xs font-medium text-slate-500">
-                  Incomplete
-                </p>
-
-                <p className="mt-2 text-3xl font-black text-[#081022]">
-                  {incompleteCount}
-                </p>
-
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Require administrator attention
-                </p>
-              </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-orange-700">
                 <AlertCircle className="h-5 w-5" />
               </div>
-
             </div>
-
           </CardContent>
         </Card>
-
       </div>
 
-      {/* ============================================================
-          SEARCH AND FILTERS
-      ============================================================ */}
-
+      {/* SEARCH + FILTERS */}
       <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
-
         <CardContent className="p-4">
-
           <div className="flex flex-col gap-3 xl:flex-row">
-
-            {/* Search */}
-
             <div className="relative flex-1">
-
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
               <input
                 value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
-                placeholder="Search by name, matric number, application number or programme..."
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, matric number, username or programme..."
                 className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-[#006dcc] focus:bg-white focus:ring-2 focus:ring-blue-100"
               />
-
             </div>
 
-            {/* Filters */}
-
-            <div className="flex flex-col gap-2 sm:flex-row">
-
+            <div className="flex flex-wrap gap-2">
               <div className="flex items-center gap-2">
-
                 <Filter className="h-4 w-4 text-slate-400" />
-
-                <select
-                  value={statusFilter}
-                  onChange={(event) =>
-                    setStatusFilter(event.target.value)
-                  }
-                  className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006dcc]"
-                >
-                  <option value="All">
-                    All Registration Status
-                  </option>
-                  <option value="Completed">
-                    Completed
-                  </option>
-                  <option value="Pending">
-                    Pending
-                  </option>
-                  <option value="Incomplete">
-                    Incomplete
-                  </option>
-                  <option value="Not Started">
-                    Not Started
-                  </option>
+                <select value={completionFilter} onChange={(e) => setCompletionFilter(e.target.value)}
+                  className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006dcc]">
+                  <option value="All">All Profiles</option>
+                  <option value="Complete">Complete</option>
+                  <option value="Incomplete">Incomplete</option>
                 </select>
-
               </div>
 
-              <select
-                value={departmentFilter}
-                onChange={(event) =>
-                  setDepartmentFilter(event.target.value)
-                }
-                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006dcc]"
-              >
-                <option value="All">
-                  All Departments
-                </option>
-
-                {departments.map((department) => (
-                  <option
-                    key={department}
-                    value={department}
-                  >
-                    {department}
-                  </option>
+              <select value={programmeFilter} onChange={(e) => setProgrammeFilter(e.target.value)}
+                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006dcc]">
+                <option value="All">All Programmes</option>
+                {programmes.map((p) => (
+                  <option key={p._id} value={p._id}>{getProgrammeLabel(p)}</option>
                 ))}
               </select>
 
-              <select
-                value={sessionFilter}
-                onChange={(event) =>
-                  setSessionFilter(event.target.value)
-                }
-                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006dcc]"
-              >
-                <option value="All">
-                  All Sessions
-                </option>
-
-                {sessions.map((session) => (
-                  <option key={session} value={session}>
-                    {session}
-                  </option>
+              <select value={levelFilter} onChange={(e) => setLevelFilter(e.target.value)}
+                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006dcc]">
+                <option value="All">All Levels</option>
+                {levels.map((level) => (
+                  <option key={level} value={level}>{level}</option>
                 ))}
               </select>
 
+              <select value={studyModeFilter} onChange={(e) => setStudyModeFilter(e.target.value)}
+                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006dcc]">
+                <option value="All">All Study Modes</option>
+                {studyModes.map((mode) => (
+                  <option key={mode} value={mode}>{mode}</option>
+                ))}
+              </select>
             </div>
-
           </div>
-
         </CardContent>
-
       </Card>
 
-      {/* ============================================================
-          REGISTRATION TABLE
-      ============================================================ */}
-
+      {/* TABLE */}
       <Card className="overflow-hidden border-none bg-white shadow-sm ring-1 ring-slate-200">
-
         <div className="border-b border-slate-200 px-5 py-4">
-
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-
             <div>
-
-              <h2 className="text-sm font-bold text-[#081022]">
-                Student Registration Records
-              </h2>
-
+              <h2 className="text-sm font-bold text-[#081022]">Student Registration Records</h2>
               <p className="text-xs text-slate-500">
-                {filteredStudents.length} student
-                {filteredStudents.length !== 1 ? "s" : ""} displayed
+                {filteredStudents.length} student{filteredStudents.length !== 1 ? "s" : ""} displayed
               </p>
-
             </div>
-
-            {(search ||
-              statusFilter !== "All" ||
-              departmentFilter !== "All" ||
-              sessionFilter !== "All") && (
-
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="flex items-center gap-1 text-xs font-semibold text-[#006dcc] hover:underline"
-              >
+            {(search || levelFilter !== "All" || studyModeFilter !== "All" || programmeFilter !== "All" || completionFilter !== "All") && (
+              <button type="button" onClick={clearFilters} className="flex items-center gap-1 text-xs font-semibold text-[#006dcc] hover:underline">
                 <X className="h-3 w-3" />
                 Clear filters
               </button>
-
             )}
-
           </div>
-
         </div>
 
         <div className="overflow-x-auto">
-
-          <table className="w-full min-w-[1250px]">
-
+          <table className="w-full min-w-[1100px]">
             <thead className="bg-slate-50">
-
               <tr className="border-b border-slate-200">
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Student
-                </th>
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Matric Number
-                </th>
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Programme
-                </th>
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Level
-                </th>
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Session
-                </th>
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Registration
-                </th>
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Course Reg.
-                </th>
-
-                <th className="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Action
-                </th>
-
+                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">Student</th>
+                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">Matric Number</th>
+                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">Programme</th>
+                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">Level</th>
+                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">Study Mode</th>
+                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">Profile</th>
+                <th className="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-wider text-slate-500">Action</th>
               </tr>
-
             </thead>
 
             <tbody className="divide-y divide-slate-100">
-
               {filteredStudents.length === 0 ? (
-
                 <tr>
-
-                  <td
-                    colSpan={8}
-                    className="px-5 py-16 text-center"
-                  >
-
+                  <td colSpan={7} className="px-5 py-16 text-center">
                     <Users className="mx-auto h-8 w-8 text-slate-300" />
-
-                    <p className="mt-3 text-sm font-semibold text-slate-500">
-                      No registration records found
-                    </p>
-
+                    <p className="mt-3 text-sm font-semibold text-slate-500">No registration records found</p>
                     <p className="mt-1 text-xs text-slate-400">
-                      Try changing your search or filters.
+                      {students.length === 0
+                        ? "No students have been registered for this session yet."
+                        : "Try changing your search or filters."}
                     </p>
-
                   </td>
-
                 </tr>
-
               ) : (
-
                 filteredStudents.map((student) => (
-
-                  <tr
-                    key={student.id}
-                    className="transition hover:bg-slate-50"
-                  >
-
-                    {/* Student */}
-
+                  <tr key={student.id} className="transition hover:bg-slate-50">
                     <td className="px-5 py-4">
-
                       <div className="flex items-center gap-3">
-
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#081022] text-sm font-bold text-white">
-                          {student.name
-                            .split(" ")
-                            .map((name) => name[0])
-                            .slice(0, 2)
-                            .join("")}
+                          {student.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
                         </div>
-
                         <div className="min-w-0">
-
-                          <p className="truncate text-sm font-bold text-[#081022]">
-                            {student.name}
-                          </p>
-
-                          <p className="truncate text-xs text-slate-500">
-                            {student.email}
-                          </p>
-
+                          <p className="truncate text-sm font-bold text-[#081022]">{student.name}</p>
+                          <p className="truncate text-xs text-slate-500">{student.email}</p>
                         </div>
-
                       </div>
-
                     </td>
-
-                    {/* Matric */}
-
                     <td className="px-5 py-4">
-
-                      <span className="text-xs font-semibold text-slate-700">
-                        {student.matricNumber}
-                      </span>
-
+                      <span className="text-xs font-semibold text-slate-700">{student.matricNo}</span>
                     </td>
-
-                    {/* Programme */}
-
                     <td className="px-5 py-4">
-
-                      <div>
-
-                        <p className="text-xs font-semibold text-slate-700">
-                          {student.programme}
-                        </p>
-
-                        <p className="mt-1 text-[10px] text-slate-400">
-                          {student.department}
-                        </p>
-
-                      </div>
-
+                      <p className="text-xs font-semibold text-slate-700">{student.programmeName}</p>
                     </td>
-
-                    {/* Level */}
-
                     <td className="px-5 py-4">
-
                       <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
                         {student.level}
                       </span>
-
                     </td>
-
-                    {/* Session */}
-
                     <td className="px-5 py-4">
-
-                      <span className="text-xs font-semibold text-slate-600">
-                        {student.session}
-                      </span>
-
+                      <span className="text-xs text-slate-600">{student.studyMode}</span>
                     </td>
-
-                    {/* Registration */}
-
                     <td className="px-5 py-4">
-
-                      <RegistrationStatusBadge
-                        status={student.registrationStatus}
-                      />
-
+                      <ProfileStatusBadge complete={student.profileComplete} />
                     </td>
-
-                    {/* Course registration */}
-
                     <td className="px-5 py-4">
-
-                      <CourseRegistrationBadge
-                        status={student.courseRegistration}
-                      />
-
-                    </td>
-
-                    {/* Actions */}
-
-                    <td className="px-5 py-4">
-
                       <div className="flex justify-end gap-2">
-
-                        {student.registrationStatus !==
-                          "Completed" && (
-
+                        {!student.profileComplete && (
                           <Button
                             size="sm"
-                            onClick={() =>
-                              navigate(
-                                `/admin/students/registration/${student.id}`
-                              )
-                            }
+                            onClick={() => setCompletingStudent(student)}
                             className="h-8 gap-1.5 bg-[#006dcc] text-xs hover:bg-[#005ca8]"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                             Complete
                           </Button>
-
                         )}
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            setSelectedStudent(student)
-                          }
-                          className="h-8 gap-1.5 border-slate-200 text-xs"
-                        >
+                        <Button variant="outline" size="sm" onClick={() => setSelectedStudent(student)} className="h-8 gap-1.5 border-slate-200 text-xs">
                           <Eye className="h-3.5 w-3.5" />
                           View
                         </Button>
-
-                        <button
-                          type="button"
-                          className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </button>
-
                       </div>
-
                     </td>
-
                   </tr>
-
                 ))
-
               )}
-
             </tbody>
-
           </table>
-
         </div>
-
-        {/* Pagination */}
 
         <div className="flex items-center justify-between border-t border-slate-200 px-5 py-3">
-
           <p className="text-xs text-slate-500">
-            Showing{" "}
-            <strong className="text-slate-700">
-              {filteredStudents.length}
-            </strong>{" "}
-            of{" "}
-            <strong className="text-slate-700">
-              {totalStudents}
-            </strong>{" "}
-            students
+            Showing <strong className="text-slate-700">{filteredStudents.length}</strong> of{" "}
+            <strong className="text-slate-700">{totalStudents}</strong> students
           </p>
-
           <div className="flex items-center gap-1">
-
-            <button
-              type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-400"
-            >
+            <button type="button" disabled className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-400">
               <ChevronLeft className="h-4 w-4" />
             </button>
-
-            <button
-              type="button"
-              className="flex h-8 min-w-8 items-center justify-center rounded-md bg-[#081022] px-2 text-xs font-bold text-white"
-            >
-              1
-            </button>
-
-            <button
-              type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-400"
-            >
+            <button type="button" className="flex h-8 min-w-8 items-center justify-center rounded-md bg-[#081022] px-2 text-xs font-bold text-white">1</button>
+            <button type="button" disabled className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-400">
               <ChevronRight className="h-4 w-4" />
             </button>
-
           </div>
-
         </div>
-
       </Card>
 
-      {/* ============================================================
-          STUDENT DETAILS MODAL
-      ============================================================ */}
-
+      {/* VIEW MODAL */}
       {selectedStudent && (
-
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-
-          <div className="w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-
-            {/* Header */}
-
+          <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
             <div className="flex items-start justify-between bg-[#081022] p-6 text-white">
-
               <div className="flex items-center gap-4">
-
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 text-lg font-bold">
-                  {selectedStudent.name
-                    .split(" ")
-                    .map((name) => name[0])
-                    .slice(0, 2)
-                    .join("")}
+                  {selectedStudent.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
                 </div>
-
                 <div>
-
-                  <p className="text-lg font-bold">
-                    {selectedStudent.name}
-                  </p>
-
-                  <p className="mt-1 text-xs text-slate-300">
-                    {selectedStudent.matricNumber}
-                  </p>
-
+                  <p className="text-lg font-bold">{selectedStudent.name}</p>
+                  <p className="mt-1 text-xs text-slate-300">@{selectedStudent.username}</p>
                 </div>
-
               </div>
-
-              <button
-                type="button"
-                onClick={() => setSelectedStudent(null)}
-                className="rounded-lg p-2 text-slate-300 hover:bg-white/10 hover:text-white"
-              >
+              <button type="button" onClick={() => setSelectedStudent(null)} className="rounded-lg p-2 text-slate-300 hover:bg-white/10 hover:text-white">
                 <X className="h-5 w-5" />
               </button>
-
             </div>
 
-            {/* Content */}
-
             <div className="space-y-5 p-6">
-
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-
+              <div className="flex items-center justify-between">
                 <div>
-
-                  <p className="text-xs text-slate-500">
-                    Registration Status
-                  </p>
-
+                  <p className="text-xs text-slate-500">Profile Status</p>
                   <div className="mt-2">
-                    <RegistrationStatusBadge
-                      status={
-                        selectedStudent.registrationStatus
-                      }
-                    />
+                    <ProfileStatusBadge complete={selectedStudent.profileComplete} />
                   </div>
-
                 </div>
-
-                {selectedStudent.registrationStatus !==
-                  "Completed" && (
-
+                {!selectedStudent.profileComplete && (
                   <Button
                     onClick={() => {
+                      setCompletingStudent(selectedStudent);
                       setSelectedStudent(null);
-
-                      navigate(
-                        `/admin/students/registration/${selectedStudent.id}`
-                      );
                     }}
                     className="gap-2 bg-[#006dcc] hover:bg-[#005ca8]"
                   >
                     <Pencil className="h-4 w-4" />
                     Complete Registration
                   </Button>
-
                 )}
-
               </div>
 
-              {/* Academic information */}
-
-              <div>
-
-                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Academic Information
-                </p>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-
-                  <div className="rounded-xl bg-slate-50 p-4">
-
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      Programme
-                    </p>
-
-                    <p className="mt-2 text-sm font-bold text-[#081022]">
-                      {selectedStudent.programme}
-                    </p>
-
-                  </div>
-
-                  <div className="rounded-xl bg-slate-50 p-4">
-
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      Department
-                    </p>
-
-                    <p className="mt-2 text-sm font-bold text-[#081022]">
-                      {selectedStudent.department}
-                    </p>
-
-                  </div>
-
-                  <div className="rounded-xl bg-slate-50 p-4">
-
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      Level
-                    </p>
-
-                    <p className="mt-2 text-sm font-bold text-[#081022]">
-                      {selectedStudent.level}
-                    </p>
-
-                  </div>
-
-                  <div className="rounded-xl bg-slate-50 p-4">
-
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      Academic Session
-                    </p>
-
-                    <p className="mt-2 text-sm font-bold text-[#081022]">
-                      {selectedStudent.session}
-                    </p>
-
-                  </div>
-
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Matric Number</p>
+                  <p className="mt-2 text-sm font-bold text-[#081022]">{selectedStudent.matricNo}</p>
                 </div>
-
-              </div>
-
-              {/* Registration progress */}
-
-              <div>
-
-                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Registration Progress
-                </p>
-
-                <div className="space-y-3">
-
-                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
-
-                    <div className="flex items-center gap-3">
-
-                      <CheckCircle2
-                        className={`h-4 w-4 ${
-                          selectedStudent.registrationStatus ===
-                          "Completed"
-                            ? "text-emerald-600"
-                            : "text-slate-300"
-                        }`}
-                      />
-
-                      <span className="text-sm font-medium text-slate-700">
-                        Student Registration
-                      </span>
-
-                    </div>
-
-                    <RegistrationStatusBadge
-                      status={
-                        selectedStudent.registrationStatus
-                      }
-                    />
-
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
-
-                    <div className="flex items-center gap-3">
-
-                      <BookOpen className="h-4 w-4 text-slate-400" />
-
-                      <span className="text-sm font-medium text-slate-700">
-                        Course Registration
-                      </span>
-
-                    </div>
-
-                    <CourseRegistrationBadge
-                      status={
-                        selectedStudent.courseRegistration
-                      }
-                    />
-
-                  </div>
-
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Programme</p>
+                  <p className="mt-2 text-sm font-bold text-[#081022]">{selectedStudent.programmeName}</p>
                 </div>
-
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Level</p>
+                  <p className="mt-2 text-sm font-bold text-[#081022]">{selectedStudent.level}</p>
+                </div>
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Study Mode</p>
+                  <p className="mt-2 text-sm font-bold text-[#081022]">{selectedStudent.studyMode}</p>
+                </div>
               </div>
-
-              {/* Contact */}
 
               <div className="border-t border-slate-200 pt-5">
-
-                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Contact Information
-                </p>
-
+                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">Contact &amp; Bio</p>
                 <div className="grid gap-3 sm:grid-cols-2">
-
-                  <div>
-                    <p className="text-[10px] text-slate-400">
-                      Email
-                    </p>
-
-                    <p className="mt-1 text-sm text-slate-600">
-                      {selectedStudent.email}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-[10px] text-slate-400">
-                      Phone
-                    </p>
-
-                    <p className="mt-1 text-sm text-slate-600">
-                      {selectedStudent.phone}
-                    </p>
-                  </div>
-
+                  <div><p className="text-[10px] text-slate-400">Email</p><p className="mt-1 text-sm text-slate-600">{selectedStudent.email}</p></div>
+                  <div><p className="text-[10px] text-slate-400">Phone</p><p className="mt-1 text-sm text-slate-600">{selectedStudent.phone}</p></div>
+                  <div><p className="text-[10px] text-slate-400">Gender</p><p className="mt-1 text-sm text-slate-600">{selectedStudent.gender}</p></div>
+                  <div><p className="text-[10px] text-slate-400">Birthday</p><p className="mt-1 text-sm text-slate-600">{selectedStudent.birthday}</p></div>
+                  <div className="sm:col-span-2"><p className="text-[10px] text-slate-400">Address</p><p className="mt-1 text-sm text-slate-600">{selectedStudent.address}</p></div>
                 </div>
-
               </div>
-
             </div>
-
-            {/* Footer */}
 
             <div className="flex justify-end border-t border-slate-200 bg-slate-50 px-6 py-4">
-
-              <Button
-                variant="outline"
-                onClick={() => setSelectedStudent(null)}
-              >
-                Close
-              </Button>
-
+              <Button variant="outline" onClick={() => setSelectedStudent(null)}>Close</Button>
             </div>
-
           </div>
-
         </div>
-
       )}
 
+      {/* REGISTER MODAL */}
+      {showRegisterModal && (
+        <RegisterStudentModal
+          programmes={programmes}
+          onClose={() => setShowRegisterModal(false)}
+          onSuccess={() => {
+            setShowRegisterModal(false);
+            reFetch();
+          }}
+          currentSessionId={currentSession?._id}
+          currentSessionName={currentSession?.name}
+        />
+      )}
+
+      {/* COMPLETE REGISTRATION MODAL */}
+      {completingStudent && (
+        <CompleteRegistrationModal
+          student={completingStudent}
+          programmes={programmes}
+          onClose={() => setCompletingStudent(null)}
+          onSuccess={() => {
+            setCompletingStudent(null);
+            reFetch();
+          }}
+        />
+      )}
     </div>
   );
 }

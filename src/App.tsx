@@ -161,6 +161,7 @@ import ParentHomework from "./app/views/parentdashboard/views/Homework";
 import Departments from "./app/views/admindashboard/views/admin/Department";
 import CourseAllocation from "./app/views/admindashboard/views/admin/CourseAllocation";
 import Signup from "./app/views/Signup";
+import StaffCourseDetails from "./app/views/teacherdashboard/views/Course/StaffCourseDetails";
 
 // ============================================================
 // Dashboard redirect by role
@@ -331,9 +332,21 @@ const App = () => (
                 <Route path="/staff/dashboard/application/to-review" element={<StaffApplicationsToReview />} />
                 <Route path="/staff/dashboard/application/all" element={<StaffAllApplications />} />
 
-                <Route path="/staff/dashboard/course-allocation" element={<StaffMyCourses />} />
+<Route
+  path="/staff/dashboard/course-allocation"
+  element={<StaffMyCourses />}
+/>
+
+<Route
+  path="/staff/dashboard/course/:allocationId"
+  element={<StaffCourseDetails />}
+/>
                 <Route path="/staff/dashboard/course/:classId" element={<StaffAssignedCourse />} />
                 <Route path="/staff/dashboard/course/materials" element={<StaffCourseMaterials />} />
+                <Route
+  path="/staff/dashboard/course/:allocationId/materials"
+  element={<StaffCourseMaterials />}
+/>
                 <Route path="/staff/dashboard/course-forum" element={<StaffCourseForum />} />
                 <Route path="/staff/dashboard/discussion" element={<StaffDiscussion />} />
 
