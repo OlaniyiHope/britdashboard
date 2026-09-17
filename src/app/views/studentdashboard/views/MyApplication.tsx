@@ -39,7 +39,8 @@ const myApplications: MyApplication[] = (
 ).map((app: any) => ({
   id: app._id,
   applicationName: `${app.session?.name || "Current Session"} Application`,
-  program: app.programme,
+  // program: app.programme,
+  program: app.programme?.name || app.programme?.code || "—",
   applicationNumber: app.applicationNumber,
   dateApplied: app.createdAt
     ? new Date(app.createdAt).toLocaleDateString("en-US", {
