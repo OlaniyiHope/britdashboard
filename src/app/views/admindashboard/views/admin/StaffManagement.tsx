@@ -16,6 +16,7 @@ import {
   MoreHorizontal,
   GraduationCap,
   BriefcaseBusiness,
+  ShieldCheck,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,6 +68,10 @@ interface Staff {
 
   department: string;
 
+  programme: string;
+
+  isHOD: boolean;
+
   designation: string;
 
   staffType: StaffType;
@@ -96,9 +101,18 @@ interface Staff {
 |--------------------------------------------------------------------------
 |
 | This represents the actual MongoDB user/staff object returned
-| by your backend.
+| by your backend. department/programme are populated refs now
+| (Department/Programme documents), not plain strings — but we
+| still allow the string case in case an endpoint ever returns
+| them unpopulated.
 |--------------------------------------------------------------------------
 */
+
+type ApiRef =
+  | { _id: string; name?: string; code?: string }
+  | string
+  | null
+  | undefined;
 
 interface ApiStaff {
   _id: string;
@@ -132,7 +146,11 @@ interface ApiStaff {
 
   staffRole?: string;
 
-  department?: string;
+  department?: ApiRef;
+
+  programme?: ApiRef;
+
+  isHOD?: boolean;
 
   subjectTaught?: string;
 
@@ -242,6 +260,25 @@ const token = localStorage.getItem("jwtToken");
   }
 
   return response.json();
+}
+
+/*
+|--------------------------------------------------------------------------
+| REF HELPERS
+|--------------------------------------------------------------------------
+|
+| department/programme come back from the backend as populated
+| objects ({_id, name, code}) now that they're real ObjectId refs,
+| not free-text strings. These helpers safely pull a display name
+| whether the field is populated, an unpopulated ID string, or
+| missing entirely — so we never call string methods on an object.
+|--------------------------------------------------------------------------
+*/
+
+function refName(ref: ApiRef, fallback = "—"): string {
+  if (!ref) return fallback;
+  if (typeof ref === "string") return ref || fallback;
+  return ref.name || fallback;
 }
 
 /*
@@ -370,6 +407,8 @@ function mapStaff(
     staff.staffRole
   );
 
+  const isHOD = Boolean(staff.isHOD);
+
   const name =
     staff.fullname ||
     staff.name ||
@@ -432,8 +471,13 @@ function mapStaff(
 
     address: staff.address,
 
-    department:
-      staff.department || "—",
+    department: refName(staff.department),
+
+    programme: isHOD
+      ? "Department-wide (HOD)"
+      : refName(staff.programme),
+
+    isHOD,
 
     designation:
       staff.staffRole || "—",
@@ -683,6 +727,11 @@ export default function StaffManagement() {
   |--------------------------------------------------------------------------
   | DEPARTMENTS
   |--------------------------------------------------------------------------
+  |
+  | staff.department is already a display-safe string by the time
+  | it gets here (mapStaff/refName resolved the populated ref), so
+  | this dedupe-and-sort still works unchanged.
+  |--------------------------------------------------------------------------
   */
 
   const departments = useMemo(() => {
@@ -726,6 +775,9 @@ export default function StaffManagement() {
             .toLowerCase()
             .includes(query) ||
           staff.department
+            .toLowerCase()
+            .includes(query) ||
+          staff.programme
             .toLowerCase()
             .includes(query) ||
           staff.designation
@@ -783,6 +835,7 @@ export default function StaffManagement() {
       "Email",
       "Phone",
       "Department",
+      "Programme",
       "Designation",
       "Staff Type",
       "Employment Type",
@@ -798,6 +851,7 @@ export default function StaffManagement() {
           staff.email,
           staff.phone,
           staff.department,
+          staff.programme,
           staff.designation,
           staff.staffType,
           staff.employmentType,
@@ -1165,7 +1219,7 @@ export default function StaffManagement() {
                     event.target.value
                   )
                 }
-                placeholder="Search by name, staff ID, email, department or designation..."
+                placeholder="Search by name, staff ID, email, department, programme or designation..."
                 className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-[#006dcc] focus:bg-white focus:ring-2 focus:ring-blue-100"
               />
 
@@ -1341,7 +1395,7 @@ export default function StaffManagement() {
 
         <div className="overflow-x-auto">
 
-          <table className="w-full min-w-[1250px]">
+          <table className="w-full min-w-[1350px]">
 
             <thead className="bg-slate-50">
 
@@ -1357,6 +1411,10 @@ export default function StaffManagement() {
 
                 <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   Department
+                </th>
+
+                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  Programme
                 </th>
 
                 <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
@@ -1392,7 +1450,7 @@ export default function StaffManagement() {
                 <tr>
 
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-5 py-16 text-center"
                   >
 
@@ -1411,7 +1469,7 @@ export default function StaffManagement() {
                 <tr>
 
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-5 py-16 text-center"
                   >
 
@@ -1457,9 +1515,23 @@ export default function StaffManagement() {
 
                           <div className="min-w-0">
 
-                            <p className="truncate text-sm font-bold text-[#081022]">
-                              {staff.name}
-                            </p>
+                            <div className="flex items-center gap-1.5">
+
+                              <p className="truncate text-sm font-bold text-[#081022]">
+                                {staff.name}
+                              </p>
+
+                              {staff.isHOD && (
+                                <span
+                                  title="Head of Department"
+                                  className="inline-flex shrink-0 items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700"
+                                >
+                                  <ShieldCheck className="h-3 w-3" />
+                                  HOD
+                                </span>
+                              )}
+
+                            </div>
 
                             <p className="truncate text-xs text-slate-500">
                               {staff.email}
@@ -1492,6 +1564,16 @@ export default function StaffManagement() {
 
                         <p className="max-w-[180px] text-xs text-slate-600">
                           {staff.department}
+                        </p>
+
+                      </td>
+
+                      {/* Programme */}
+
+                      <td className="px-5 py-4">
+
+                        <p className="max-w-[180px] text-xs text-slate-600">
+                          {staff.programme}
                         </p>
 
                       </td>
@@ -1695,9 +1777,20 @@ export default function StaffManagement() {
 
                 <div>
 
-                  <p className="text-lg font-bold">
-                    {selectedStaff.name}
-                  </p>
+                  <div className="flex items-center gap-2">
+
+                    <p className="text-lg font-bold">
+                      {selectedStaff.name}
+                    </p>
+
+                    {selectedStaff.isHOD && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white">
+                        <ShieldCheck className="h-3 w-3" />
+                        HOD
+                      </span>
+                    )}
+
+                  </div>
 
                   <p className="mt-1 max-w-[300px] truncate text-xs text-slate-300">
                     {selectedStaff.staffNumber}
@@ -1800,6 +1893,28 @@ export default function StaffManagement() {
                   <p className="mt-2 text-sm font-bold text-[#081022]">
                     {
                       selectedStaff.department
+                    }
+                  </p>
+
+                </div>
+
+                {/* Programme */}
+
+                <div className="rounded-xl bg-slate-50 p-4">
+
+                  <div className="flex items-center gap-2">
+
+                    <GraduationCap className="h-4 w-4 text-slate-400" />
+
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Programme
+                    </p>
+
+                  </div>
+
+                  <p className="mt-2 text-sm font-bold text-[#081022]">
+                    {
+                      selectedStaff.programme
                     }
                   </p>
 
