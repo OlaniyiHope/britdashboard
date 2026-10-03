@@ -134,7 +134,7 @@ export default function MyCourses() {
               {courses.map((course) => (
                 <Link
                   key={course.id}
-                  to={`/course/${course.code.toLowerCase().replace(/\s+/g, "-")}`}
+                  to={`/student/dashboard/my-courses/${course.id}`}
                   className="flex items-center gap-4 py-3 transition-colors hover:bg-slate-50/60"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#081022]">

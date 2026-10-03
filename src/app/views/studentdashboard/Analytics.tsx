@@ -1,81 +1,46 @@
-
-
-import { useContext, useMemo } from "react";
+import { useContext } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { SessionContext } from "@/contexts/SessionContext";
-import { useAuth } from "@/contexts/AuthContext";
 import useFetch from "@/hooks/useFetch";
 import {
   BookOpen,
   CalendarClock,
+  ChevronRight,
   GraduationCap,
   Info,
-  MessageCircleMore,
-  Users,
+  Layers,
+  ShieldCheck,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────
-// Types
+// Types (same shape as the My Courses page)
 // ─────────────────────────────────────────────────────────────────────────
 
-type GroupingSummary = {
-  courses?: number;
-  courseGrouping?: number;
-  tutorGrouping?: number;
-};
-
-type CourseProgressRow = {
-  _id?: string;
+type Course = {
+  id: string;
   code: string;
-  name: string;
-  assignmentDone: number;
-  assignmentTotal: number;
-  quizDone: number;
-  quizTotal: number;
-  forumDone: number;
-  forumTotal: number;
-  // percent (0-100) to show a bar, "completed" for a finished course,
-  // or null/undefined when there's nothing to measure yet ("N/A").
-  progressPercent?: number | null;
-  progressStatus?: "completed" | null;
+  title: string;
+  unit: number;
+  fee: number;
+  type: "Compulsory" | "Elective";
 };
 
-type Deadline = {
-  _id?: string;
-  title?: string;
-  course?: string;
-  dueDate?: string;
+type MyCoursesResponse = {
+  session: string;
+  semester: string;
+  registration: {
+    status: "Pending Payment" | "Registered";
+    totalUnits: number;
+    totalAmount: number;
+    courses: Course[];
+  } | null;
 };
 
-// ─────────────────────────────────────────────────────────────────────────
-// Fallback/mock data — mirrors the shape the API is expected to return.
-// Swap out once the real polytechnic endpoints exist.
-// ─────────────────────────────────────────────────────────────────────────
-
-const fallbackGrouping: GroupingSummary = {
-  courses: 8,
-  courseGrouping: 8,
-  tutorGrouping: 6,
-};
-
-const fallbackCourseProgress: CourseProgressRow[] = [
-  { code: "COSC 101", name: "Introduction to Computing", assignmentDone: 0, assignmentTotal: 0, quizDone: 0, quizTotal: 0, forumDone: 0, forumTotal: 0, progressPercent: null },
-  { code: "MATH 101", name: "Sets and Number System", assignmentDone: 0, assignmentTotal: 1, quizDone: 0, quizTotal: 0, forumDone: 0, forumTotal: 0, progressPercent: 10 },
-  { code: "MATH 103", name: "Trigonometry and Co-ordinate Geometry", assignmentDone: 1, assignmentTotal: 2, quizDone: 0, quizTotal: 0, forumDone: 0, forumTotal: 0, progressPercent: 50 },
-  { code: "MATH 105", name: "Differential and Integral Calculus", assignmentDone: 0, assignmentTotal: 0, quizDone: 0, quizTotal: 0, forumDone: 0, forumTotal: 0, progressPercent: null },
-  { code: "PHYS 111", name: "Mechanics", assignmentDone: 0, assignmentTotal: 0, quizDone: 0, quizTotal: 0, forumDone: 1, forumTotal: 4, progressPercent: 25 },
-  { code: "PHYS 131", name: "Heat and Properties of Matter", assignmentDone: 0, assignmentTotal: 0, quizDone: 0, quizTotal: 0, forumDone: 0, forumTotal: 0, progressPercent: null },
-  { code: "GENS 101", name: "Nationalism", assignmentDone: 1, assignmentTotal: 1, quizDone: 0, quizTotal: 0, forumDone: 0, forumTotal: 0, progressStatus: "completed" },
-  { code: "GENS 103", name: "English and Communication Skills", assignmentDone: 2, assignmentTotal: 2, quizDone: 1, quizTotal: 1, forumDone: 1, forumTotal: 2, progressPercent: 75 },
-];
-
-const fallbackDeadlines: Deadline[] = [
-  { id: "d1", title: "Assignment 2 — Sets and Number System", course: "MATH 101", dueDate: "2026-08-25" } as Deadline,
-  { id: "d2", title: "Quiz 1 — English and Communication Skills", course: "GENS 103", dueDate: "2026-08-28" } as Deadline,
-];
+const REGISTRATION_PATH = "/student/dashboard/course/course-registration";
 
 // ─────────────────────────────────────────────────────────────────────────
-// Small presentational helpers
+// Presentational helpers
 // ─────────────────────────────────────────────────────────────────────────
 
 function SectionBanner({
@@ -103,13 +68,15 @@ function StatCircle({
   ring,
 }: {
   icon: React.ElementType;
-  value: number;
+  value: number | string;
   label: string;
   ring: string;
 }) {
   return (
     <div className="flex flex-1 items-center justify-center gap-4 px-4 py-6">
-      <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full ${ring}`}>
+      <div
+        className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full ${ring}`}
+      >
         <Icon className="h-7 w-7 text-white" />
       </div>
       <div>
@@ -122,155 +89,147 @@ function StatCircle({
   );
 }
 
-function ProgressCell({ row }: { row: CourseProgressRow }) {
-  if (row.progressStatus === "completed") {
-    return (
-      <span className="text-xs font-semibold text-emerald-600">
-        Completed &#10003;
-      </span>
-    );
-  }
-  if (row.progressPercent == null) {
-    return <span className="text-xs italic text-slate-400">N/A</span>;
-  }
-  return (
-    <div className="h-2 w-28 overflow-hidden rounded-full bg-slate-100">
-      <div
-        className="h-full rounded-full bg-[#081022]"
-        style={{ width: `${Math.min(100, Math.max(0, row.progressPercent))}%` }}
-      />
-    </div>
-  );
-}
-
 // ─────────────────────────────────────────────────────────────────────────
 // Page
 // ─────────────────────────────────────────────────────────────────────────
 
 const StudentDashboard = () => {
   const { currentSession } = useContext(SessionContext);
-  const { user } = useAuth();
 
-  const userInfo = useMemo(() => {
-    const stored = localStorage.getItem("user");
-    const parsed = stored ? JSON.parse(stored) : {};
-    return { ...parsed, ...user } as Record<string, any>;
-  }, [user]);
+  // useFetch adds the API URL, "/api" and the login token for us.
+  const { data, loading, error } = useFetch("/student/courses/registration");
 
-  const studentId = String(userInfo?._id || userInfo?.id || "");
+  const result = data as MyCoursesResponse | null;
+  const registration = result?.registration ?? null;
+  const courses = registration?.courses ?? [];
+  const totalUnits = registration?.totalUnits ?? 0;
 
-  const { data: groupingData } = useFetch(
-    currentSession && studentId
-      ? `/student/${studentId}/course-grouping-summary/${currentSession._id}`
-      : null
-  );
-  const grouping: GroupingSummary =
-    groupingData && typeof groupingData === "object"
-      ? (groupingData as GroupingSummary)
-      : fallbackGrouping;
+  const statusLabel = loading
+    ? "…"
+    : registration?.status ?? "Not Registered";
 
-  const { data: progressData } = useFetch(
-    currentSession && studentId
-      ? `/student/${studentId}/course-progress/${currentSession._id}`
-      : null
-  );
-  const courseProgress: CourseProgressRow[] =
-    Array.isArray(progressData) && progressData.length > 0
-      ? (progressData as CourseProgressRow[])
-      : fallbackCourseProgress;
+  const statusRing =
+    registration?.status === "Registered"
+      ? "bg-emerald-500"
+      : registration?.status === "Pending Payment"
+      ? "bg-amber-500"
+      : "bg-slate-400";
 
-  const { data: deadlinesData } = useFetch(
-    currentSession && studentId
-      ? `/student/${studentId}/deadlines/${currentSession._id}`
-      : null
-  );
-  const deadlines: Deadline[] =
-    Array.isArray(deadlinesData) && deadlinesData.length > 0
-      ? (deadlinesData as Deadline[])
-      : fallbackDeadlines;
+  const sessionName = currentSession?.name || result?.session;
+
+  const errorMessage =
+    (error as any)?.response?.data?.message ||
+    (error ? "Could not load your courses." : "");
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold text-[#081022]">Student Dashboard</h1>
-        <p className="font-medium text-sm text-slate-500">
-          {currentSession?.name
-            ? `Current Session: ${currentSession.name}`
+        <p className="text-sm font-medium text-slate-500">
+          {sessionName
+            ? `Current Session: ${sessionName}${
+                result?.semester ? ` — ${result.semester}` : ""
+              }`
             : "Welcome to your student portal."}
         </p>
       </div>
 
-      {/* Course & Grouping Information */}
+      {/* Registration reminder */}
+      {!loading && !errorMessage && registration?.status === "Pending Payment" && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Your course registration is saved but not complete yet.{" "}
+          <Link to={REGISTRATION_PATH} className="font-semibold underline">
+            Finish registration
+          </Link>
+        </div>
+      )}
+
+      {/* Course & Registration Information */}
       <Card className="overflow-hidden border-none shadow-sm ring-1 ring-slate-200">
         <div className="p-4 pb-0">
-          <SectionBanner icon={Info}>Course &amp; Grouping Information</SectionBanner>
+          <SectionBanner icon={Info}>Course &amp; Registration Information</SectionBanner>
         </div>
         <CardContent className="p-4 pt-6 md:p-6 md:pt-6">
           <div className="flex flex-col divide-y divide-slate-100 rounded-xl border border-slate-200 sm:flex-row sm:divide-x sm:divide-y-0">
             <StatCircle
               icon={GraduationCap}
-              value={grouping.courses ?? 0}
+              value={loading ? "…" : courses.length}
               label="Courses"
               ring="bg-emerald-500"
             />
             <StatCircle
-              icon={Users}
-              value={grouping.courseGrouping ?? 0}
-              label="Course Grouping"
+              icon={Layers}
+              value={loading ? "…" : totalUnits}
+              label="Total Units"
               ring="bg-rose-700"
             />
             <StatCircle
-              icon={Users}
-              value={grouping.tutorGrouping ?? 0}
-              label="Tutor Grouping"
-              ring="bg-orange-500"
+              icon={ShieldCheck}
+              value={statusLabel}
+              label="Registration"
+              ring={statusRing}
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Course Progress Information */}
+      {/* Registered courses */}
       <Card className="overflow-hidden border-none shadow-sm ring-1 ring-slate-200">
         <div className="p-4 pb-0">
-          <SectionBanner icon={Info}>Course Progress Information</SectionBanner>
+          <SectionBanner icon={BookOpen}>My Courses</SectionBanner>
         </div>
         <CardContent className="p-0 pt-4 md:pt-6">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] border-collapse text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  <th className="px-4 py-3 md:px-6">Name</th>
-                  <th className="px-4 py-3">Assignment Completion</th>
-                  <th className="px-4 py-3">Quiz Completion</th>
-                  <th className="px-4 py-3">Forum Participation</th>
-                  <th className="px-4 py-3">Progress</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {courseProgress.map((row) => (
-                  <tr key={row._id || row.code} className="hover:bg-slate-50/60">
-                    <td className="whitespace-nowrap px-4 py-3 md:px-6">
-                      <span className="font-semibold text-[#081022]">{row.code}</span>
-                      <span className="text-slate-500"> - </span>
-                      <span className="italic text-slate-600">{row.name}</span>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-                      {row.assignmentDone} out of {row.assignmentTotal}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-                      {row.quizDone} out of {row.quizTotal}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-                      {row.forumDone} out of {row.forumTotal}
-                    </td>
-                    <td className="px-4 py-3">
-                      <ProgressCell row={row} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {loading ? (
+            <p className="px-4 py-10 text-center text-sm text-slate-500">
+              Loading courses…
+            </p>
+          ) : errorMessage ? (
+            <p className="px-4 py-10 text-center text-sm text-rose-600">
+              {errorMessage}
+            </p>
+          ) : courses.length === 0 ? (
+            <div className="px-4 py-10 text-center">
+              <p className="text-sm text-slate-500">
+                You are not registered for any courses this semester.
+              </p>
+              <Link
+                to={REGISTRATION_PATH}
+                className="mt-4 inline-block rounded-md bg-[#081022] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+              >
+                Register courses
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {courses.map((course) => (
+                <Link
+                  key={course.id}
+                  // to={`/course/${course.code.toLowerCase().replace(/\s+/g, "-")}`}
+                  to={`/student/dashboard/my-courses/${course.id}`}
+                  className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-slate-50/60 md:px-6"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#081022]">
+                    <BookOpen className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-[#081022]">
+                      {course.code}
+                    </p>
+                    <p className="truncate text-sm text-slate-600">
+                      {course.title}
+                    </p>
+                  </div>
+                  <div className="hidden shrink-0 text-right sm:block">
+                    <p className="text-xs font-medium text-slate-600">
+                      {course.unit} {course.unit === 1 ? "unit" : "units"}
+                    </p>
+                    <p className="text-[11px] text-slate-400">{course.type}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
+                </Link>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -279,34 +238,11 @@ const StudentDashboard = () => {
         <div className="p-4 pb-0">
           <SectionBanner icon={CalendarClock}>Deadlines</SectionBanner>
         </div>
-        <CardContent className="p-0 pt-4 md:pt-6">
-          <div className="divide-y divide-slate-100">
-            {deadlines.length === 0 && (
-              <p className="px-4 py-6 text-sm text-slate-400 md:px-6">
-                No upcoming deadlines.
-              </p>
-            )}
-            {deadlines.map((d, i) => (
-              <div
-                key={d._id || i}
-                className="flex items-center gap-4 px-4 py-3 md:px-6"
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#081022]">
-                  <BookOpen className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-[#081022]">
-                    {d.title || "Untitled"}
-                  </p>
-                  <p className="text-xs text-slate-500">{d.course}</p>
-                </div>
-                <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-xs text-slate-400">
-                  <MessageCircleMore className="hidden h-3 w-3" />
-                  {d.dueDate ? new Date(d.dueDate).toLocaleDateString() : ""}
-                </span>
-              </div>
-            ))}
-          </div>
+        <CardContent className="px-4 py-8 text-center md:px-6">
+          <p className="text-sm text-slate-500">
+            Assignment and quiz deadlines will appear here once your lecturers
+            publish them.
+          </p>
         </CardContent>
       </Card>
     </div>

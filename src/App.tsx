@@ -163,6 +163,8 @@ import CourseAllocation from "./app/views/admindashboard/views/admin/CourseAlloc
 import Signup from "./app/views/Signup";
 import StaffCourseDetails from "./app/views/teacherdashboard/views/Course/StaffCourseDetails";
 import PaymentCallback from "./app/views/studentdashboard/views/payment/PaymentCallback";
+import Credentials from "./app/views/studentdashboard/views/Credential";
+import StudentCourseDetails from "./app/views/studentdashboard/views/StudentCourseDetails";
 
 // ============================================================
 // Dashboard redirect by role
@@ -404,6 +406,8 @@ const App = () => (
                 <Route path="/student/dashboard/studio/messaging" element={<MessagingStudent />} />
                 <Route path="/student/dashboard/grade-book" element={<GradeBookStudent />} />
                 <Route path="/student/dashboard/assignment" element={<AssignmentsStudent />} />
+                <Route path="/student/dashboard/my-courses/:courseId" element={<StudentCourseDetails />} />
+                <Route path="/student/dashboard/application/credentials" element={<Credentials />} />
                 <Route path="/student/dashboard/profile" element={<StudentProfile />} />
                 <Route path="/student/dashboard/discussion" element={<Discussion />} />
                 <Route path="/student/dashboard/notification" element={<StudentNotification />} />

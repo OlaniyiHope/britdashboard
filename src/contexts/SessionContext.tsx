@@ -26,7 +26,7 @@ export const SessionContext = createContext<SessionContextType>({
 export const SessionProvider = ({ children }: { children: ReactNode }) => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
   useEffect(() => {
     axios

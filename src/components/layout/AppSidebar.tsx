@@ -1,6 +1,6 @@
 import { useContext, useMemo, useEffect, useState } from "react";
 import {
-  LayoutDashboard, User2, User, NotebookPen, BookCopy, ListChecks, ListCheck,
+  LayoutDashboard, User2, User, NotebookPen, BookCopy, FileCheck2, ListChecks, ListCheck,
   BookOpen, Info, GraduationCap, FileEdit, TableProperties, CheckCheck,
   Laptop, Laptop2, Disc3, ReceiptText, AlarmClock, Pencil, Settings, LogOut,
   ChevronRight,
@@ -486,6 +486,8 @@ function buildStudentNav(_classes: any[]) {
       items: [
         { title: "My Application", url: "/student/dashboard/application/my-application", icon: NotebookPen, key: "my-application" },
         { title: "All Application", url: "/student/dashboard/application/all-application", icon: ListChecks, key: "all-application" },
+        { title: "My Credentials", url: "/student/dashboard/application/credentials", icon: FileCheck2, key: "my-credentials" },
+        
       ],
     },
 
