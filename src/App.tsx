@@ -165,6 +165,7 @@ import StaffCourseDetails from "./app/views/teacherdashboard/views/Course/StaffC
 import PaymentCallback from "./app/views/studentdashboard/views/payment/PaymentCallback";
 import Credentials from "./app/views/studentdashboard/views/Credential";
 import StudentCourseDetails from "./app/views/studentdashboard/views/StudentCourseDetails";
+import AssignmentSubmissions from "./app/views/teacherdashboard/views/Assignment/AssignmentSubmissions";
 
 // ============================================================
 // Dashboard redirect by role
@@ -371,6 +372,7 @@ const App = () => (
 
                 <Route path="/staff/dashboard/assignment/create" element={<StaffCreateAssignment />} />
                 <Route path="/staff/dashboard/assignment/all" element={<StaffAllAssignments />} />
+                <Route path="/staff/dashboard/assignment/:id/submissions" element={<AssignmentSubmissions />} />
                 <Route path="/staff/dashboard/assignment/grade-submissions" element={<StaffGradeSubmissions />} />
 
                 <Route path="/staff/dashboard/payroll/pay-slip" element={<StaffPaySlip />} />
