@@ -45,15 +45,8 @@ interface Department {
   code: string;
 }
 
-interface Programme {
-  _id: string;
-  name: string;
-  code: string;
-}
-
-// A department or programme reference as it comes back from the API —
-// populated (an object) on reads, but we keep the string case handled
-// too in case an endpoint ever returns it unpopulated.
+// A department reference as it comes back from the API — populated on reads,
+// while also supporting string IDs from endpoints that return unpopulated refs.
 type Ref<T> = T | string | null | undefined;
 
 interface StaffMember {
@@ -64,7 +57,6 @@ interface StaffMember {
   phone: string;
   staffType: StaffType;
   department: string;
-  programme: string;
   isHOD: boolean;
   role: string;
   status: StaffStatus;
@@ -84,7 +76,6 @@ interface ApiStaff {
   address?: string;
   staffRole?: string;
   department?: Ref<Department>;
-  programme?: Ref<Programme>;
   isHOD?: boolean;
   subjectTaught?: string;
   employmentType?: string;
@@ -115,15 +106,9 @@ interface DepartmentListResponse {
   departments: Department[];
 }
 
-interface ProgrammeListResponse {
-  success: boolean;
-  count?: number;
-  programmes: Programme[];
-}
-
 // ======================================================
 // DATA — staff roles stay as a fixed list (not tied to a
-// collection); department & programme are now fetched live.
+// collection); departments are fetched live.
 // ======================================================
 
 const roles = [
@@ -240,10 +225,6 @@ function mapApiStaffToStaffMember(
 
     department: refName(staff.department, "Not assigned"),
 
-    programme: isHOD
-      ? "Department-wide (HOD)"
-      : refName(staff.programme, "Not assigned"),
-
     isHOD,
 
     role: staff.staffRole || "Staff",
@@ -326,7 +307,6 @@ interface StaffFormState {
   phone: string;
   staffType: StaffType;
   departmentId: string;
-  programmeId: string;
   isHOD: boolean;
   role: string;
   status: StaffStatus;
@@ -346,7 +326,6 @@ const emptyForm: StaffFormState = {
   phone: "",
   staffType: "Lecturer",
   departmentId: "",
-  programmeId: "",
   isHOD: false,
   role: "",
   status: "Active",
@@ -370,7 +349,6 @@ export default function StaffRegistration() {
 
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [programmes, setProgrammes] = useState<Programme[]>([]);
 
   const [search, setSearch] = useState("");
 
@@ -380,7 +358,6 @@ export default function StaffRegistration() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const [loading, setLoading] = useState(true);
-  const [loadingProgrammes, setLoadingProgrammes] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState<StaffFormState>(emptyForm);
@@ -429,34 +406,6 @@ export default function StaffRegistration() {
   };
 
   // ======================================================
-  // FETCH PROGRAMMES FOR A DEPARTMENT (cascading dropdown)
-  // ======================================================
-
-  const fetchProgrammesForDepartment = async (
-    departmentId: string
-  ) => {
-    if (!departmentId) {
-      setProgrammes([]);
-      return;
-    }
-
-    try {
-      setLoadingProgrammes(true);
-
-      const response = await apiRequest<ProgrammeListResponse>(
-        `/programmes?department=${departmentId}&status=Active`
-      );
-
-      setProgrammes(response.programmes);
-    } catch (error) {
-      console.error("Failed to fetch programmes:", error);
-      setProgrammes([]);
-    } finally {
-      setLoadingProgrammes(false);
-    }
-  };
-
-  // ======================================================
   // LOAD STAFF + DEPARTMENTS ON PAGE OPEN
   // ======================================================
 
@@ -479,17 +428,8 @@ export default function StaffRegistration() {
     }));
   };
 
-  const handleDepartmentChange = (departmentId: string) => {
-    updateForm("departmentId", departmentId);
-    updateForm("programmeId", "");
-    fetchProgrammesForDepartment(departmentId);
-  };
-
   const handleHODToggle = (checked: boolean) => {
     updateForm("isHOD", checked);
-    if (checked) {
-      updateForm("programmeId", "");
-    }
   };
 
   // ======================================================
@@ -529,7 +469,6 @@ export default function StaffRegistration() {
         member.staffId.toLowerCase().includes(query) ||
         member.email.toLowerCase().includes(query) ||
         member.department.toLowerCase().includes(query) ||
-        member.programme.toLowerCase().includes(query) ||
         member.role.toLowerCase().includes(query)
     );
   }, [staff, search]);
@@ -540,7 +479,6 @@ export default function StaffRegistration() {
 
   const resetForm = () => {
     setForm(emptyForm);
-    setProgrammes([]);
   };
 
   // ======================================================
@@ -564,13 +502,10 @@ export default function StaffRegistration() {
       !form.phone.trim() ||
       !form.departmentId ||
       !form.role ||
-      !form.password ||
-      (!form.isHOD && !form.programmeId)
+      !form.password
     ) {
       setErrorMessage(
-        form.isHOD
-          ? "Please complete all required fields, including the staff password."
-          : "Please complete all required fields, including a programme and the staff password."
+        "Please complete all required fields, including the staff password."
       );
 
       return;
@@ -596,8 +531,6 @@ export default function StaffRegistration() {
             staffType: form.staffType,
 
             department: form.departmentId,
-
-            programme: form.isHOD ? undefined : form.programmeId,
 
             isHOD: form.isHOD,
 
@@ -822,7 +755,7 @@ export default function StaffRegistration() {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by name, staff ID, email, department, programme or role..."
+              placeholder="Search by name, staff ID, email, department or role..."
               className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none focus:border-[#006dcc] focus:bg-white focus:ring-2 focus:ring-blue-100"
             />
           </div>
@@ -863,10 +796,6 @@ export default function StaffRegistration() {
                 </th>
 
                 <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Programme
-                </th>
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   Role
                 </th>
 
@@ -880,7 +809,7 @@ export default function StaffRegistration() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={6}
                     className="px-5 py-16 text-center text-sm text-slate-500"
                   >
                     Loading staff...
@@ -888,7 +817,7 @@ export default function StaffRegistration() {
                 </tr>
               ) : filteredStaff.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-16 text-center">
+                  <td colSpan={6} className="px-5 py-16 text-center">
                     <Users className="mx-auto h-8 w-8 text-slate-300" />
                     <p className="mt-3 text-sm font-semibold text-slate-500">
                       No staff found
@@ -952,12 +881,6 @@ export default function StaffRegistration() {
                     <td className="px-5 py-4">
                       <span className="text-xs text-slate-600">
                         {member.department}
-                      </span>
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <span className="text-xs text-slate-600">
-                        {member.programme}
                       </span>
                     </td>
 
@@ -1170,7 +1093,7 @@ export default function StaffRegistration() {
                         required
                         value={form.departmentId}
                         onChange={(event) =>
-                          handleDepartmentChange(event.target.value)
+                          updateForm("departmentId", event.target.value)
                         }
                         className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#006dcc]"
                       >
@@ -1205,54 +1128,10 @@ export default function StaffRegistration() {
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500">
-                          HODs oversee the whole department rather
-                          than a single programme, so the programme
-                          field below won't apply to them.
+                          HODs oversee the entire department and its staff.
                         </p>
                       </div>
                     </label>
-
-                    {/* PROGRAMME — hidden for HODs */}
-
-                    {!form.isHOD && (
-                      <div className="md:col-span-2">
-                        <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-600">
-                          <Briefcase className="h-3.5 w-3.5" />
-                          Programme *
-                        </label>
-
-                        <select
-                          required
-                          value={form.programmeId}
-                          onChange={(event) =>
-                            updateForm("programmeId", event.target.value)
-                          }
-                          disabled={
-                            !form.departmentId || loadingProgrammes
-                          }
-                          className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#006dcc] disabled:bg-slate-50 disabled:text-slate-400"
-                        >
-                          <option value="">
-                            {!form.departmentId
-                              ? "Select a department first"
-                              : loadingProgrammes
-                              ? "Loading programmes..."
-                              : programmes.length === 0
-                              ? "No programmes in this department"
-                              : "Select programme"}
-                          </option>
-
-                          {programmes.map((programme) => (
-                            <option
-                              key={programme._id}
-                              value={programme._id}
-                            >
-                              {programme.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
 
                     <div>
                       <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-600">

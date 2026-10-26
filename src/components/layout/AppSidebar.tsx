@@ -65,11 +65,10 @@ function buildAdminNav(classes: any[]) {
 
     // ── Programmes & Curriculum (correlates with student "Course") ─────────
     {
-      label: "Programmes & Departments",
+      label: "Departments",
       items: [
          { title: "Departments", url: "/admin/departments", icon: BookCopy, key: "departments" },
-        { title: "Programmes by Department", url: "/admin/programmes", icon: BookCopy, key: "programmes-by-department" },
-       
+    
         { title: "Curriculum", url: "/admin/curriculum", icon: BookCopy, key: "curriculum" },
         { title: "Course Allocation", url: "/admin/course-allocation", icon: BookCopy, key: "course-allocation" },
         { title: "Course Forum Oversight", url: "/admin/course-forum", icon: NotebookPen, key: "course-forum-oversight" },

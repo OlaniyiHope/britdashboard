@@ -27,12 +27,6 @@ import useFetch from "@/hooks/useFetch";
 
 /* ================================================================
    TYPES
-
-   ⚠️ These field names are BEST-GUESS based on patterns seen in your
-   other admin pages (studentName/username/email/phone/address on the
-   User model, programme as a ref-or-string). You have not shared a
-   student/User model or controller, so verify these against your
-   actual schema and trim/rename what doesn't match.
 ================================================================ */
 
 type StudentStatus =
@@ -42,18 +36,10 @@ type StudentStatus =
   | "Graduated"
   | "Inactive";
 
-interface BackendProgramme {
-  _id?: string;
-  name?: string;
-  programmeName?: string;
-  title?: string;
-  code?: string;
-}
-
 interface BackendDepartment {
-  _id?: string;
+  _id: string;
   name?: string;
-  title?: string;
+  code?: string;
 }
 
 interface BackendStudent {
@@ -64,11 +50,11 @@ interface BackendStudent {
   email?: string;
   phone?: string | number;
   address?: string;
+  matricNo?: string;
   matricNumber?: string;
   regNumber?: string;
   registrationNumber?: string;
-  programme?: BackendProgramme | string;
-  course?: BackendProgramme | string;
+  // Either a plain id or a populated object, depending on the endpoint
   department?: BackendDepartment | string;
   level?: string | number;
   status?: string;
@@ -83,7 +69,7 @@ interface Student {
   name: string;
   email: string;
   phone: string;
-  programme: string;
+  departmentId: string;
   department: string;
   level: string;
   status: StudentStatus;
@@ -92,28 +78,31 @@ interface Student {
 }
 
 /* ================================================================
-   HELPERS — adjust field priority order to match your real schema
+   HELPERS
 ================================================================ */
+
+// Accepts [...], { <key>: [...] } or { data: [...] }
+const extractArray = <T,>(data: unknown, key: string): T[] => {
+  if (Array.isArray(data)) return data as T[];
+
+  if (data && typeof data === "object") {
+    const record = data as Record<string, unknown>;
+    if (Array.isArray(record[key])) return record[key] as T[];
+    if (Array.isArray(record.data)) return record.data as T[];
+  }
+
+  return [];
+};
 
 const getStudentName = (s: BackendStudent): string =>
   s.studentName || s.fullName || s.username || "Unnamed Student";
 
 const getMatricNumber = (s: BackendStudent): string =>
-  s.matricNumber || s.regNumber || s.registrationNumber || `ID-${s._id.slice(-6).toUpperCase()}`;
-
-const getRefName = (
-  ref?: BackendProgramme | BackendDepartment | string
-): string => {
-  if (!ref) return "Not specified";
-  if (typeof ref === "string") return ref;
-  return (
-    (ref as BackendProgramme).name ||
-    (ref as BackendProgramme).programmeName ||
-    (ref as BackendProgramme).title ||
-    (ref as BackendProgramme).code ||
-    "Not specified"
-  );
-};
+  s.matricNo ||
+  s.matricNumber ||
+  s.regNumber ||
+  s.registrationNumber ||
+  `ID-${s._id.slice(-6).toUpperCase()}`;
 
 const VALID_STATUSES: StudentStatus[] = [
   "Active",
@@ -140,6 +129,15 @@ const formatDate = (date?: string): string => {
     year: "numeric",
   });
 };
+
+const getInitials = (name: string): string =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
 /*
 |--------------------------------------------------------------------------
@@ -176,7 +174,6 @@ export default function StudentRegistry() {
   const { currentSession } = useContext(SessionContext);
   const sessionId = currentSession?._id;
 
-  // Same endpoint your Dashboard.tsx already calls to count students.
   const {
     data: rawStudents,
     loading,
@@ -184,48 +181,67 @@ export default function StudentRegistry() {
     reFetch,
   } = useFetch(sessionId ? `/users/student/${sessionId}` : null);
 
+  // Used to turn a department id into its name, and to fill the filter
+  const { data: rawDepartments } = useFetch("/departments");
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [departmentFilter, setDepartmentFilter] = useState("All");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   /* ==============================================================
-     NORMALIZE — type-guarded, never indexes `unknown` directly
+     DEPARTMENTS
+  ============================================================== */
+
+  const departmentOptions = useMemo(() => {
+    return extractArray<BackendDepartment>(rawDepartments, "departments")
+      .map((d) => ({
+        id: d._id,
+        name: d.name || d.code || "Unnamed department",
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [rawDepartments]);
+
+  const departmentNames = useMemo(
+    () => new Map(departmentOptions.map((d) => [d.id, d.name])),
+    [departmentOptions]
+  );
+
+  /* ==============================================================
+     NORMALIZE
   ============================================================== */
 
   const students = useMemo<Student[]>(() => {
-    let list: BackendStudent[] = [];
+    const list = extractArray<BackendStudent>(rawStudents, "students");
 
-    if (Array.isArray(rawStudents)) {
-      list = rawStudents as BackendStudent[];
-    } else if (
-      rawStudents &&
-      typeof rawStudents === "object" &&
-      Array.isArray((rawStudents as { students?: BackendStudent[] }).students)
-    ) {
-      list = (rawStudents as { students: BackendStudent[] }).students;
-    } else if (
-      rawStudents &&
-      typeof rawStudents === "object" &&
-      Array.isArray((rawStudents as { data?: BackendStudent[] }).data)
-    ) {
-      list = (rawStudents as { data: BackendStudent[] }).data;
-    }
+    return list.map((s): Student => {
+      const populated =
+        s.department && typeof s.department === "object" ? s.department : null;
 
-    return list.map((s): Student => ({
-      id: s._id,
-      matricNumber: getMatricNumber(s),
-      name: getStudentName(s),
-      email: s.email || "No email",
-      phone: s.phone !== undefined && s.phone !== null ? String(s.phone) : "No phone",
-      programme: getRefName(s.programme || s.course),
-      department: getRefName(s.department),
-      level: s.level ? String(s.level) : "Not set",
-      status: getStudentStatus(s.status),
-      admissionYear: s.admissionYear ? String(s.admissionYear) : "—",
-      lastUpdated: formatDate(s.updatedAt || s.createdAt),
-    }));
-  }, [rawStudents]);
+      const departmentId = populated?._id || (typeof s.department === "string" ? s.department : "");
+
+      const departmentName =
+        populated?.name ||
+        populated?.code ||
+        departmentNames.get(departmentId) ||
+        "Not specified";
+
+      return {
+        id: s._id,
+        matricNumber: getMatricNumber(s),
+        name: getStudentName(s),
+        email: s.email || "No email",
+        phone:
+          s.phone !== undefined && s.phone !== null ? String(s.phone) : "No phone",
+        departmentId,
+        department: departmentName,
+        level: s.level ? String(s.level) : "Not set",
+        status: getStudentStatus(s.status),
+        admissionYear: s.admissionYear ? String(s.admissionYear) : "—",
+        lastUpdated: formatDate(s.updatedAt || s.createdAt),
+      };
+    });
+  }, [rawStudents, departmentNames]);
 
   /* ==============================================================
      COUNTS
@@ -240,12 +256,6 @@ export default function StudentRegistry() {
      FILTERING
   ============================================================== */
 
-  const departments = useMemo(() => {
-    return Array.from(
-      new Set(students.map((s) => s.department).filter((d) => d && d !== "Not specified"))
-    );
-  }, [students]);
-
   const filteredStudents = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -255,10 +265,13 @@ export default function StudentRegistry() {
         student.name.toLowerCase().includes(query) ||
         student.matricNumber.toLowerCase().includes(query) ||
         student.email.toLowerCase().includes(query) ||
-        student.programme.toLowerCase().includes(query);
+        student.department.toLowerCase().includes(query);
 
-      const matchesStatus = statusFilter === "All" || student.status === statusFilter;
-      const matchesDepartment = departmentFilter === "All" || student.department === departmentFilter;
+      const matchesStatus =
+        statusFilter === "All" || student.status === statusFilter;
+
+      const matchesDepartment =
+        departmentFilter === "All" || student.departmentId === departmentFilter;
 
       return matchesSearch && matchesStatus && matchesDepartment;
     });
@@ -270,18 +283,32 @@ export default function StudentRegistry() {
 
   const handleExport = () => {
     const headers = [
-      "Matric Number", "Name", "Email", "Phone",
-      "Programme", "Department", "Level", "Status", "Admission Year",
+      "Matric Number",
+      "Name",
+      "Email",
+      "Phone",
+      "Department",
+      "Level",
+      "Status",
+      "Admission Year",
     ];
 
     const rows = filteredStudents.map((student) => [
-      student.matricNumber, student.name, student.email, student.phone,
-      student.programme, student.department, student.level, student.status, student.admissionYear,
+      student.matricNumber,
+      student.name,
+      student.email,
+      student.phone,
+      student.department,
+      student.level,
+      student.status,
+      student.admissionYear,
     ]);
 
     const csv = [
       headers.join(","),
-      ...rows.map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")),
+      ...rows.map((row) =>
+        row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")
+      ),
     ].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -302,8 +329,12 @@ export default function StudentRegistry() {
       <div className="flex min-h-[400px] items-center justify-center bg-slate-50 p-6">
         <div className="text-center">
           <AlertCircle className="mx-auto h-8 w-8 text-slate-300" />
-          <p className="mt-3 text-sm font-semibold text-slate-500">No active session selected</p>
-          <p className="mt-1 text-xs text-slate-400">Select an academic session to view students.</p>
+          <p className="mt-3 text-sm font-semibold text-slate-500">
+            No active session selected
+          </p>
+          <p className="mt-1 text-xs text-slate-400">
+            Select an academic session to view students.
+          </p>
         </div>
       </div>
     );
@@ -322,7 +353,6 @@ export default function StudentRegistry() {
 
   return (
     <div className="min-h-full space-y-6 bg-slate-50 p-4 md:p-6">
-
       {/* HEADER */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-2">
@@ -330,15 +360,22 @@ export default function StudentRegistry() {
             <GraduationCap className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-[#081022] md:text-2xl">Student Registry</h1>
+            <h1 className="text-xl font-bold text-[#081022] md:text-2xl">
+              Student Registry
+            </h1>
             <p className="mt-1 text-xs text-slate-500">
-              View and manage all registered students — {currentSession?.name || "current session"}.
+              View and manage all registered students —{" "}
+              {currentSession?.name || "current session"}.
             </p>
           </div>
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button variant="outline" onClick={handleExport} className="gap-2 border-slate-300 bg-white">
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            className="gap-2 border-slate-300 bg-white"
+          >
             <Download className="h-4 w-4" />
             Export
           </Button>
@@ -426,7 +463,7 @@ export default function StudentRegistry() {
               <div>
                 <p className="text-xs font-medium text-slate-500">Graduated</p>
                 <p className="mt-2 text-3xl font-black text-[#081022]">{graduatedCount}</p>
-                <p className="mt-1 text-[11px] text-slate-400">Completed their programme</p>
+                <p className="mt-1 text-[11px] text-slate-400">Completed their studies</p>
               </div>
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50 text-purple-700">
                 <GraduationCap className="h-5 w-5" />
@@ -445,7 +482,7 @@ export default function StudentRegistry() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name, matric number, email or programme..."
+                placeholder="Search by name, matric number, email or department..."
                 className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-[#006dcc] focus:bg-white focus:ring-2 focus:ring-blue-100"
               />
             </div>
@@ -472,8 +509,10 @@ export default function StudentRegistry() {
               className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006dcc]"
             >
               <option value="All">All Departments</option>
-              {departments.map((department) => (
-                <option key={department} value={department}>{department}</option>
+              {departmentOptions.map((department) => (
+                <option key={department.id} value={department.id}>
+                  {department.name}
+                </option>
               ))}
             </select>
           </div>
@@ -487,7 +526,8 @@ export default function StudentRegistry() {
             <div>
               <h2 className="text-sm font-bold text-[#081022]">Registered Students</h2>
               <p className="text-xs text-slate-500">
-                {filteredStudents.length} student{filteredStudents.length !== 1 ? "s" : ""} displayed
+                {filteredStudents.length} student
+                {filteredStudents.length !== 1 ? "s" : ""} displayed
               </p>
             </div>
 
@@ -509,25 +549,33 @@ export default function StudentRegistry() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1050px]">
+          <table className="w-full min-w-[900px]">
             <thead className="bg-slate-50">
               <tr className="border-b border-slate-200">
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">Student</th>
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">Matric Number</th>
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">Programme</th>
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">Department</th>
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">Level</th>
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">Status</th>
-                <th className="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-wider text-slate-500">Action</th>
+                {["Student", "Matric Number", "Department", "Level", "Status"].map(
+                  (heading) => (
+                    <th
+                      key={heading}
+                      className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500"
+                    >
+                      {heading}
+                    </th>
+                  )
+                )}
+                <th className="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  Action
+                </th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-slate-100">
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-16 text-center">
+                  <td colSpan={6} className="px-5 py-16 text-center">
                     <Users className="mx-auto h-8 w-8 text-slate-300" />
-                    <p className="mt-3 text-sm font-semibold text-slate-500">No students found</p>
+                    <p className="mt-3 text-sm font-semibold text-slate-500">
+                      No students found
+                    </p>
                     <p className="mt-1 text-xs text-slate-400">
                       {students.length === 0
                         ? "No students have been registered for this session yet."
@@ -541,31 +589,41 @@ export default function StudentRegistry() {
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#081022] text-sm font-bold text-white">
-                          {student.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                          {getInitials(student.name)}
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-bold text-[#081022]">{student.name}</p>
-                          <p className="truncate text-xs text-slate-500">{student.email}</p>
+                          <p className="truncate text-sm font-bold text-[#081022]">
+                            {student.name}
+                          </p>
+                          <p className="truncate text-xs text-slate-500">
+                            {student.email}
+                          </p>
                         </div>
                       </div>
                     </td>
+
                     <td className="px-5 py-4">
-                      <span className="text-xs font-semibold text-slate-700">{student.matricNumber}</span>
+                      <span className="text-xs font-semibold text-slate-700">
+                        {student.matricNumber}
+                      </span>
                     </td>
+
                     <td className="px-5 py-4">
-                      <p className="text-xs font-semibold text-slate-700">{student.programme}</p>
+                      <p className="max-w-[220px] text-xs font-semibold text-slate-700">
+                        {student.department}
+                      </p>
                     </td>
-                    <td className="px-5 py-4">
-                      <p className="max-w-[180px] text-xs text-slate-600">{student.department}</p>
-                    </td>
+
                     <td className="px-5 py-4">
                       <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
                         {student.level}
                       </span>
                     </td>
+
                     <td className="px-5 py-4">
                       <StatusBadge status={student.status} />
                     </td>
+
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-2">
                         <Button
@@ -595,17 +653,29 @@ export default function StudentRegistry() {
         {/* Pagination — static placeholder; wire up when the backend paginates */}
         <div className="flex items-center justify-between border-t border-slate-200 px-5 py-3">
           <p className="text-xs text-slate-500">
-            Showing <strong className="text-slate-700">{filteredStudents.length}</strong> of{" "}
+            Showing{" "}
+            <strong className="text-slate-700">{filteredStudents.length}</strong> of{" "}
             <strong className="text-slate-700">{studentCount}</strong> students
           </p>
           <div className="flex items-center gap-1">
-            <button type="button" className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-400" disabled>
+            <button
+              type="button"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-400"
+              disabled
+            >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <button type="button" className="flex h-8 min-w-8 items-center justify-center rounded-md bg-[#081022] px-2 text-xs font-bold text-white">
+            <button
+              type="button"
+              className="flex h-8 min-w-8 items-center justify-center rounded-md bg-[#081022] px-2 text-xs font-bold text-white"
+            >
               1
             </button>
-            <button type="button" className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-400" disabled>
+            <button
+              type="button"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-400"
+              disabled
+            >
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
@@ -619,11 +689,13 @@ export default function StudentRegistry() {
             <div className="flex items-start justify-between bg-[#081022] p-6 text-white">
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 text-lg font-bold">
-                  {selectedStudent.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                  {getInitials(selectedStudent.name)}
                 </div>
                 <div>
                   <p className="text-lg font-bold">{selectedStudent.name}</p>
-                  <p className="mt-1 text-xs text-slate-300">{selectedStudent.matricNumber}</p>
+                  <p className="mt-1 text-xs text-slate-300">
+                    {selectedStudent.matricNumber}
+                  </p>
                 </div>
               </div>
               <button
@@ -656,26 +728,36 @@ export default function StudentRegistry() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Programme</p>
-                  <p className="mt-2 text-sm font-bold text-[#081022]">{selectedStudent.programme}</p>
+                <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Department
+                  </p>
+                  <p className="mt-2 text-sm font-bold text-[#081022]">
+                    {selectedStudent.department}
+                  </p>
                 </div>
                 <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Department</p>
-                  <p className="mt-2 text-sm font-bold text-[#081022]">{selectedStudent.department}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Level
+                  </p>
+                  <p className="mt-2 text-sm font-bold text-[#081022]">
+                    {selectedStudent.level}
+                  </p>
                 </div>
                 <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Level</p>
-                  <p className="mt-2 text-sm font-bold text-[#081022]">{selectedStudent.level}</p>
-                </div>
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Admission Year</p>
-                  <p className="mt-2 text-sm font-bold text-[#081022]">{selectedStudent.admissionYear}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Admission Year
+                  </p>
+                  <p className="mt-2 text-sm font-bold text-[#081022]">
+                    {selectedStudent.admissionYear}
+                  </p>
                 </div>
               </div>
 
               <div className="border-t border-slate-200 pt-5">
-                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">Contact Information</p>
+                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Contact Information
+                </p>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <Mail className="h-4 w-4 text-slate-400" />
@@ -690,7 +772,9 @@ export default function StudentRegistry() {
             </div>
 
             <div className="flex justify-end border-t border-slate-200 bg-slate-50 px-6 py-4">
-              <Button variant="outline" onClick={() => setSelectedStudent(null)}>Close</Button>
+              <Button variant="outline" onClick={() => setSelectedStudent(null)}>
+                Close
+              </Button>
             </div>
           </div>
         </div>

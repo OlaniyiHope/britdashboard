@@ -9,7 +9,7 @@ import {
   FileCheck2,
   GraduationCap,
   Megaphone,
-  Layers3,
+  Building2,
   UserPlus,
   UserRoundCog,
   Users,
@@ -102,17 +102,8 @@ const { data: rawStaff } = useFetch("/staff");
     sessionId ? `/get-all-notices/${sessionId}` : null
   );
 
-  // const { data: programmes } = useFetch(
-  //   sessionId ? `/programmes/${sessionId}` : null
-  // );
-
-
-  const { data: programmes } = useFetch("/programmes");
-const { data: courses } = useFetch("/courses");
-
-  // const { data: courses } = useFetch(
-  //   sessionId ? `/courses/${sessionId}` : null
-  // );
+  const { data: departments } = useFetch("/departments");
+  const { data: courses } = useFetch("/courses");
 
   const { data: applications } = useFetch(
     sessionId ? `/applications/${sessionId}` : null
@@ -140,10 +131,12 @@ const { data: courses } = useFetch("/courses");
   const staffCount = countItems(rawStaff);
   const adminCount = countItems(rawAdmins);
 
-  // const programmeCount = countItems(programmes);
-  const programmeCount = countItems(programmes, "programmes");
-const courseCount = countItems(courses, "courses");
+  // Only count departments that are open for admissions
+  const departmentCount = toArray(departments, "departments").filter(
+    (d: any) => d.status === "Active"
+  ).length;
 
+  const courseCount = countItems(courses, "courses");
   const applicationCount = countItems(applications);
   const resultCount = countItems(pendingResults);
 
@@ -173,11 +166,11 @@ const courseCount = countItems(courses, "courses");
         href: "/admin/staff/management",
       },
       {
-        title: "Programmes",
-        value: programmeCount,
-        subtitle: "Academic programmes",
-        icon: Layers3,
-        href: "/admin/programmes",
+        title: "Departments",
+        value: departmentCount,
+        subtitle: "Academic departments",
+        icon: Building2,
+        href: "/admin/departments",
       },
       {
         title: "Courses",
@@ -187,12 +180,7 @@ const courseCount = countItems(courses, "courses");
         href: "/admin/curriculum",
       },
     ],
-    [
-      studentCount,
-      staffCount,
-      programmeCount,
-      courseCount,
-    ]
+    [studentCount, staffCount, departmentCount, courseCount]
   );
 
   /*
@@ -736,7 +724,7 @@ const courseCount = countItems(courses, "courses");
 
               </div>
 
-              {/* Programmes */}
+                           {/* Departments */}
 
               <div className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
 
@@ -744,18 +732,18 @@ const courseCount = countItems(courses, "courses");
 
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white ring-1 ring-slate-200">
 
-                    <Layers3 className="h-5 w-5 text-[#081022]" />
+                    <Building2 className="h-5 w-5 text-[#081022]" />
 
                   </div>
 
                   <div>
 
                     <p className="text-sm font-semibold text-slate-800">
-                      Programmes
+                      Departments
                     </p>
 
                     <p className="text-xs text-slate-500">
-                      Active programmes
+                      Active departments
                     </p>
 
                   </div>
@@ -763,11 +751,10 @@ const courseCount = countItems(courses, "courses");
                 </div>
 
                 <span className="text-xl font-black text-[#081022]">
-                  {programmeCount}
+                  {departmentCount}
                 </span>
 
               </div>
-
               {/* Courses */}
 
               <div className="flex items-center justify-between rounded-xl bg-slate-50 p-4">

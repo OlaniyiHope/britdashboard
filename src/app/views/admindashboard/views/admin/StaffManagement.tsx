@@ -68,7 +68,6 @@ interface Staff {
 
   department: string;
 
-  programme: string;
 
   isHOD: boolean;
 
@@ -101,10 +100,9 @@ interface Staff {
 |--------------------------------------------------------------------------
 |
 | This represents the actual MongoDB user/staff object returned
-| by your backend. department/programme are populated refs now
-| (Department/Programme documents), not plain strings — but we
-| still allow the string case in case an endpoint ever returns
-| them unpopulated.
+| by your backend. department is a populated ref now
+| (Department document), not a plain string — but we still allow
+| the string case in case an endpoint ever returns it unpopulated.
 |--------------------------------------------------------------------------
 */
 
@@ -148,7 +146,6 @@ interface ApiStaff {
 
   department?: ApiRef;
 
-  programme?: ApiRef;
 
   isHOD?: boolean;
 
@@ -267,11 +264,10 @@ const token = localStorage.getItem("jwtToken");
 | REF HELPERS
 |--------------------------------------------------------------------------
 |
-| department/programme come back from the backend as populated
-| objects ({_id, name, code}) now that they're real ObjectId refs,
-| not free-text strings. These helpers safely pull a display name
-| whether the field is populated, an unpopulated ID string, or
-| missing entirely — so we never call string methods on an object.
+| department comes back from the backend as a populated object
+| ({_id, name, code}) now that it is a real ObjectId ref, not a
+| free-text string. This helper safely pulls a display name whether
+| the field is populated, an unpopulated ID string, or missing.
 |--------------------------------------------------------------------------
 */
 
@@ -473,9 +469,6 @@ function mapStaff(
 
     department: refName(staff.department),
 
-    programme: isHOD
-      ? "Department-wide (HOD)"
-      : refName(staff.programme),
 
     isHOD,
 
@@ -777,9 +770,6 @@ export default function StaffManagement() {
           staff.department
             .toLowerCase()
             .includes(query) ||
-          staff.programme
-            .toLowerCase()
-            .includes(query) ||
           staff.designation
             .toLowerCase()
             .includes(query);
@@ -835,7 +825,6 @@ export default function StaffManagement() {
       "Email",
       "Phone",
       "Department",
-      "Programme",
       "Designation",
       "Staff Type",
       "Employment Type",
@@ -851,7 +840,6 @@ export default function StaffManagement() {
           staff.email,
           staff.phone,
           staff.department,
-          staff.programme,
           staff.designation,
           staff.staffType,
           staff.employmentType,
@@ -1219,7 +1207,7 @@ export default function StaffManagement() {
                     event.target.value
                   )
                 }
-                placeholder="Search by name, staff ID, email, department, programme or designation..."
+                placeholder="Search by name, staff ID, email, department or designation..."
                 className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-[#006dcc] focus:bg-white focus:ring-2 focus:ring-blue-100"
               />
 
@@ -1414,10 +1402,6 @@ export default function StaffManagement() {
                 </th>
 
                 <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Programme
-                </th>
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   Designation
                 </th>
 
@@ -1564,16 +1548,6 @@ export default function StaffManagement() {
 
                         <p className="max-w-[180px] text-xs text-slate-600">
                           {staff.department}
-                        </p>
-
-                      </td>
-
-                      {/* Programme */}
-
-                      <td className="px-5 py-4">
-
-                        <p className="max-w-[180px] text-xs text-slate-600">
-                          {staff.programme}
                         </p>
 
                       </td>
@@ -1893,28 +1867,6 @@ export default function StaffManagement() {
                   <p className="mt-2 text-sm font-bold text-[#081022]">
                     {
                       selectedStaff.department
-                    }
-                  </p>
-
-                </div>
-
-                {/* Programme */}
-
-                <div className="rounded-xl bg-slate-50 p-4">
-
-                  <div className="flex items-center gap-2">
-
-                    <GraduationCap className="h-4 w-4 text-slate-400" />
-
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      Programme
-                    </p>
-
-                  </div>
-
-                  <p className="mt-2 text-sm font-bold text-[#081022]">
-                    {
-                      selectedStaff.programme
                     }
                   </p>
 
