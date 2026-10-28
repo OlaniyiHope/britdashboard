@@ -144,7 +144,7 @@ const getToken = () => localStorage.getItem("jwtToken");
 
 const PAYMENT_PATH = "/student/dashboard/payment/make-payment";
 const REGISTRATION_PATH = "/student/dashboard/course/course-registration";
-const APPLICATIONS_PATH = "/student/dashboard/application";
+const APPLICATIONS_PATH = "/student/dashboard/application/my-application";
 
 type Outcome =
   | { state: "checking" }

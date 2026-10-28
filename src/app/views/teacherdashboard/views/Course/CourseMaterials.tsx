@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import {
@@ -60,6 +60,7 @@ import {
 } from "@/components/ui/select";
 
 import { toast } from "sonner";
+import { SessionContext } from "@/contexts/SessionContext";
 
 const API_URL =
   import.meta.env.VITE_NODE_API_URL || "http://localhost:5001";
@@ -96,6 +97,7 @@ type Material = {
   fileType?: string;
   mimeType?: string;
   size?: number;
+  semester?: "First" | "Second";
   createdAt?: string;
   updatedAt?: string;
 };
@@ -207,6 +209,7 @@ const getFileIcon = (material: Material) => {
 export default function StaffCourseMaterials() {
   const { allocationId } = useParams<{ allocationId: string }>();
   const navigate = useNavigate();
+  const { currentSemester } = useContext(SessionContext);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -219,6 +222,7 @@ export default function StaffCourseMaterials() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
 
   const [openUpload, setOpenUpload] = useState(false);
 
@@ -228,6 +232,7 @@ export default function StaffCourseMaterials() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Lecture Note");
+  const [semester, setSemester] = useState<"First" | "Second">(currentSemester || "First");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   /*
@@ -319,29 +324,68 @@ export default function StaffCourseMaterials() {
     fetchMaterials();
   }, [allocationId]);
 
+  // ✅ Update semester when context changes
+  useEffect(() => {
+    setSemester(currentSemester || "First");
+  }, [currentSemester]);
+
   /*
    * ---------------------------------------------------------
-   * FILTER MATERIALS
+   * FILTER MATERIALS BY SEMESTER AND CATEGORY
    * ---------------------------------------------------------
    */
 
   const filteredMaterials = useMemo(() => {
     const value = search.trim().toLowerCase();
 
-    if (!value) return materials;
-
     return materials.filter((material) => {
-      return `
+      // Filter by semester
+      const semesterMatch = material.semester === currentSemester;
+
+      // Filter by category
+      const categoryMatch =
+        categoryFilter === "All" || material.category === categoryFilter;
+
+      // Filter by search
+      const searchMatch =
+        !value ||
+        `
         ${material.title}
         ${material.description || ""}
-        ${material.category || ""}
         ${material.fileName || ""}
         ${material.originalName || ""}
       `
-        .toLowerCase()
-        .includes(value);
+          .toLowerCase()
+          .includes(value);
+
+      return semesterMatch && categoryMatch && searchMatch;
     });
-  }, [materials, search]);
+  }, [materials, search, categoryFilter, currentSemester]);
+
+  /*
+   * ---------------------------------------------------------
+   * STATISTICS
+   * ---------------------------------------------------------
+   */
+
+  const stats = useMemo(() => {
+    const semesterMaterials = materials.filter(
+      (m) => m.semester === currentSemester
+    );
+
+    return {
+      total: semesterMaterials.length,
+      lectureNotes: semesterMaterials.filter((m) => m.category === "Lecture Note").length,
+      assignments: semesterMaterials.filter((m) => m.category === "Assignment").length,
+      videos: semesterMaterials.filter((m) => m.category === "Video").length,
+      other: semesterMaterials.filter(
+        (m) =>
+          m.category !== "Lecture Note" &&
+          m.category !== "Assignment" &&
+          m.category !== "Video"
+      ).length,
+    };
+  }, [materials, currentSemester]);
 
   /*
    * ---------------------------------------------------------
@@ -354,6 +398,7 @@ export default function StaffCourseMaterials() {
     setTitle("");
     setDescription("");
     setCategory("Lecture Note");
+    setSemester(currentSemester || "First");
     setSelectedFile(null);
 
     if (fileInputRef.current) {
@@ -375,6 +420,7 @@ export default function StaffCourseMaterials() {
     setTitle(material.title || "");
     setDescription(material.description || "");
     setCategory(material.category || "Lecture Note");
+    setSemester(material.semester || "First");
 
     setSelectedFile(null);
 
@@ -441,6 +487,7 @@ export default function StaffCourseMaterials() {
       formData.append("title", title.trim());
       formData.append("description", description.trim());
       formData.append("category", category);
+      formData.append("semester", semester);
       formData.append("allocationId", allocationId);
 
       if (selectedFile) {
@@ -480,6 +527,7 @@ export default function StaffCourseMaterials() {
       setTitle("");
       setDescription("");
       setCategory("Lecture Note");
+      setSemester(currentSemester || "First");
       setSelectedFile(null);
 
       await fetchMaterials();
@@ -621,8 +669,7 @@ export default function StaffCourseMaterials() {
               </h1>
 
               <p className="text-sm text-muted-foreground">
-                Upload and manage learning materials for your assigned
-                course.
+                Upload and manage learning materials for {currentSemester} Semester.
               </p>
 
             </div>
@@ -735,11 +782,11 @@ export default function StaffCourseMaterials() {
               <div className="text-left md:text-right">
 
                 <p className="text-sm text-muted-foreground">
-                  Total Materials
+                  Materials ({currentSemester} Semester)
                 </p>
 
                 <p className="text-2xl font-bold">
-                  {materials.length}
+                  {stats.total}
                 </p>
 
               </div>
@@ -757,7 +804,7 @@ export default function StaffCourseMaterials() {
           STATISTICS
       ====================================================== */}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
 
         <Card>
           <CardHeader className="pb-2">
@@ -766,7 +813,7 @@ export default function StaffCourseMaterials() {
             </CardDescription>
 
             <CardTitle className="text-2xl">
-              {materials.length}
+              {stats.total}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -778,11 +825,7 @@ export default function StaffCourseMaterials() {
             </CardDescription>
 
             <CardTitle className="text-2xl">
-              {
-                materials.filter(
-                  (m) => m.category === "Lecture Note"
-                ).length
-              }
+              {stats.lectureNotes}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -794,11 +837,19 @@ export default function StaffCourseMaterials() {
             </CardDescription>
 
             <CardTitle className="text-2xl">
-              {
-                materials.filter(
-                  (m) => m.category === "Assignment"
-                ).length
-              }
+              {stats.assignments}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>
+              Videos
+            </CardDescription>
+
+            <CardTitle className="text-2xl">
+              {stats.videos}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -810,13 +861,7 @@ export default function StaffCourseMaterials() {
             </CardDescription>
 
             <CardTitle className="text-2xl">
-              {
-                materials.filter(
-                  (m) =>
-                    m.category !== "Lecture Note" &&
-                    m.category !== "Assignment"
-                ).length
-              }
+              {stats.other}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -836,7 +881,7 @@ export default function StaffCourseMaterials() {
 
             <div>
               <CardTitle>
-                Learning Materials
+                Learning Materials - {currentSemester} Semester
               </CardTitle>
 
               <CardDescription>
@@ -851,34 +896,58 @@ export default function StaffCourseMaterials() {
 
         <CardContent>
 
-          {/* SEARCH */}
+          {/* SEARCH AND FILTERS */}
 
-          <div className="mb-5 flex flex-col gap-2 sm:flex-row">
+          <div className="mb-5 space-y-4">
 
-            <div className="relative flex-1">
+            <div className="flex flex-col gap-2 sm:flex-row">
 
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <div className="relative flex-1">
 
-              <Input
-                className="pl-9"
-                placeholder="Search materials..."
-                value={search}
-                onChange={(e) =>
-                  setSearch(e.target.value)
-                }
-              />
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+
+                <Input
+                  className="pl-9"
+                  placeholder="Search materials..."
+                  value={search}
+                  onChange={(e) =>
+                    setSearch(e.target.value)
+                  }
+                />
+
+              </div>
+
+              {search && (
+                <Button
+                  variant="outline"
+                  onClick={() => setSearch("")}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Clear
+                </Button>
+              )}
 
             </div>
 
-            {search && (
-              <Button
-                variant="outline"
-                onClick={() => setSearch("")}
-              >
-                <X className="mr-2 h-4 w-4" />
-                Clear
-              </Button>
-            )}
+            {/* CATEGORY FILTER */}
+
+            <div className="flex gap-2 overflow-x-auto pb-2">
+
+              {["All", "Lecture Note", "Lecture Slides", "Assignment", "Video", "Reading Material", "Past Question"].map((cat) => (
+
+                <Button
+                  key={cat}
+                  variant={categoryFilter === cat ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCategoryFilter(cat)}
+                  className={categoryFilter === cat ? "bg-[#006dcc]" : ""}
+                >
+                  {cat}
+                </Button>
+
+              ))}
+
+            </div>
 
           </div>
 
@@ -1145,7 +1214,7 @@ export default function StaffCourseMaterials() {
             <DialogDescription>
               {editingMaterial
                 ? "Update the details of this course material."
-                : "Upload a learning resource for this course."}
+                : `Upload a learning resource for ${currentSemester} Semester.`}
             </DialogDescription>
 
           </DialogHeader>
@@ -1171,6 +1240,40 @@ export default function StaffCourseMaterials() {
 
             </div>
 
+            {/* SEMESTER */}
+
+            <div className="space-y-2">
+
+              <label className="text-sm font-medium">
+                Semester *
+              </label>
+
+              <Select
+                value={semester}
+                onValueChange={(value: "First" | "Second") =>
+                  setSemester(value)
+                }
+              >
+
+                <SelectTrigger>
+                  <SelectValue placeholder="Select semester" />
+                </SelectTrigger>
+
+                <SelectContent>
+
+                  <SelectItem value="First">
+                    First Semester
+                  </SelectItem>
+
+                  <SelectItem value="Second">
+                    Second Semester
+                  </SelectItem>
+
+                </SelectContent>
+
+              </Select>
+
+            </div>
 
             {/* CATEGORY */}
 

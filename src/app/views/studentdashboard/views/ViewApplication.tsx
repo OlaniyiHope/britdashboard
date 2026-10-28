@@ -115,11 +115,12 @@ const ViewApplication = () => {
   }
 
   const user = app.user || {};
-  const applicantName =
-    user.fullName ||
-    [user.firstName, user.middleName, user.lastName].filter(Boolean).join(" ") ||
-    user.name ||
-    "—";
+ const applicantName =
+  user.studentName ||
+  user.fullName ||
+  [user.firstName, user.middleName, user.lastName].filter(Boolean).join(" ") ||
+  user.name ||
+  "—";
 
   const departmentName = app.department?.name || app.department?.code || "—";
   const sessionName = app.session?.name || "Current Session";

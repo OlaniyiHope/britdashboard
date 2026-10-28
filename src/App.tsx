@@ -168,6 +168,7 @@ import StudentCourseDetails from "./app/views/studentdashboard/views/StudentCour
 import AssignmentSubmissions from "./app/views/teacherdashboard/views/Assignment/AssignmentSubmissions";
 import PayApplicationFee from "./app/views/studentdashboard/views/payment/PayApplicationFee";
 import ViewApplication from "./app/views/studentdashboard/views/ViewApplication";
+import PayAcceptanceFee from "./app/views/studentdashboard/views/payment/PayAcceptanceFee";
 
 // ============================================================
 // Dashboard redirect by role
@@ -420,6 +421,10 @@ const App = () => (
                 <Route path="/student/dashboard/application/:applicationId" element={<ViewApplication />} />
                 <Route path="/student/dashboard/payment/make-payment" element={<MakePayment />} />
                    <Route path="/student/dashboard/payment/application/:applicationId" element={<PayApplicationFee />} />
+                   <Route
+  path="/student/dashboard/payment/acceptance/:applicationId"
+  element={<PayAcceptanceFee />}
+/>
                 <Route
   path="/student/dashboard/payment/callback"
   element={<PaymentCallback />}
