@@ -15,7 +15,7 @@ import useFetch from "@/hooks/useFetch";
 interface MyApplication {
   id: string;
   applicationName: string;
-  program: string;
+  department: string;
   applicationNumber: string;
   dateApplied: string;
 
@@ -40,7 +40,7 @@ const myApplications: MyApplication[] = (
   id: app._id,
   applicationName: `${app.session?.name || "Current Session"} Application`,
   // program: app.programme,
-  program: app.programme?.name || app.programme?.code || "—",
+ department: app.department?.name || app.department?.code || "—",
   applicationNumber: app.applicationNumber,
   dateApplied: app.createdAt
     ? new Date(app.createdAt).toLocaleDateString("en-US", {
@@ -287,7 +287,7 @@ const myApplications: MyApplication[] = (
                   </th>
 
                   <th className="border border-[#d5dbe2] px-4 py-4 text-left text-[12px] font-bold">
-                    PROGRAM
+                    DEPARTMENT
                   </th>
 
                   <th className="border border-[#d5dbe2] px-4 py-4 text-left text-[12px] font-bold">
@@ -339,7 +339,7 @@ const myApplications: MyApplication[] = (
 
                     <td className="border border-[#d5dbe2] px-4 py-4 align-top">
                       <p className="text-[12px] text-[#777]">
-                        {application.program}
+                         {application.department}
                       </p>
                     </td>
 

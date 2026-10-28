@@ -56,15 +56,14 @@ interface BackendUser {
   address?: string;
   gender?: string;
   birthday?: string;
-  programme?: string;
+  department?: string;
 }
 
-interface BackendProgramme {
+interface BackendDepartment {
   _id: string;
   name?: string;
-  programmeName?: string;
-  title?: string;
   code?: string;
+  title?: string;
 }
 
 interface BackendSession {
@@ -80,7 +79,7 @@ interface BackendApplication {
 
   user?: BackendUser | string;
 
-  programme?: BackendProgramme | string;
+  department?: BackendDepartment | string;
 
   session?:
     | BackendSession
@@ -145,9 +144,9 @@ interface Application {
 
   phone: string;
 
-  programme: string;
+  department: string;
 
-  programmeId?: string;
+  departmentId?: string;
 
   sessionId?: string;
 
@@ -238,56 +237,28 @@ const getReferenceId = (
 };
 
 /* ---------------------------------------------------------------
-   Programme name
+   Department name
 ---------------------------------------------------------------- */
 
-// const getProgrammeName = (
-//   programme:
-//     | BackendProgramme
-//     | string
-//     | undefined
-// ): string => {
-//   if (!programme) {
-//     return "Not specified";
-//   }
-
-//   if (typeof programme === "string") {
-//     /*
-//      * If the backend has not populated programme,
-//      * this will be the ObjectId.
-//      *
-//      * We don't display the raw ObjectId.
-//      */
-//     return "Programme not populated";
-//   }
-
-//   return (
-//     programme.name ||
-//     programme.programmeName ||
-//     programme.title ||
-//     programme.code ||
-//     "Not specified"
-//   );
-// };
-const getProgrammeName = (
-  programme?: BackendProgramme | string
+const getDepartmentName = (
+  department?: BackendDepartment | string
 ): string => {
-  if (!programme) {
+  if (!department) {
     return "Not specified";
   }
 
-  if (typeof programme === "string") {
-    return programme;
+  if (typeof department === "string") {
+    return department;
   }
 
   return (
-    programme.name ||
-    programme.programmeName ||
-    programme.title ||
-    programme.code ||
+    department.name ||
+    department.code ||
+    department.title ||
     "Not specified"
   );
 };
+
 /* ---------------------------------------------------------------
    Date
 ---------------------------------------------------------------- */
@@ -490,9 +461,9 @@ export default function ApplicationReview() {
             ? application.user
             : null;
 
-        const programmeId =
+        const departmentId =
           getReferenceId(
-            application.programme
+            application.department
           );
 
         const sessionId =
@@ -527,12 +498,12 @@ export default function ApplicationReview() {
                 )
               : "No phone provided",
 
-          programme:
-            getProgrammeName(
-              application.programme
+          department:
+            getDepartmentName(
+              application.department
             ),
 
-          programmeId,
+          departmentId,
 
           sessionId,
 
@@ -647,7 +618,7 @@ export default function ApplicationReview() {
               .includes(
                 searchValue
               ) ||
-            application.programme
+            application.department
               .toLowerCase()
               .includes(
                 searchValue
@@ -1047,7 +1018,7 @@ const handleApplicationAction = async () => {
                     e.target.value
                   )
                 }
-                placeholder="Search applicant, application number or programme..."
+                placeholder="Search applicant, application number or department..."
                 className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
               />
 
@@ -1151,7 +1122,7 @@ const handleApplicationAction = async () => {
                 </th>
 
                 <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Programme
+                  Department
                 </th>
 
                 <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
@@ -1229,13 +1200,13 @@ const handleApplicationAction = async () => {
 
                     </td>
 
-                    {/* PROGRAMME */}
+                    {/* DEPARTMENT */}
 
                     <td className="px-5 py-4">
 
                       <p className="text-sm font-medium text-slate-700">
                         {
-                          application.programme
+                          application.department
                         }
                       </p>
 
@@ -1586,9 +1557,9 @@ const handleApplicationAction = async () => {
 
                 <InfoItem
                   icon={GraduationCap}
-                  label="Programme Applied For"
+                  label="Department Applied For"
                   value={
-                    selectedApplication.programme
+                    selectedApplication.department
                   }
                 />
 

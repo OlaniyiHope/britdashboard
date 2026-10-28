@@ -49,7 +49,7 @@ type ApiCredential = {
   application?: {
     _id: string;
     applicationNumber?: string;
-    programme?: { name?: string; code?: string } | null;
+    department?: { name?: string; code?: string } | null;
   } | null;
 };
 
@@ -103,8 +103,8 @@ function StatusBadge({ status }: { status: CredentialStatus }) {
 const applicantName = (c: ApiCredential) =>
   c.user?.studentName || c.user?.username || "Unknown applicant";
 
-const programmeName = (c: ApiCredential) =>
-  c.application?.programme?.name || "—";
+const departmentName = (c: ApiCredential) =>
+  c.application?.department?.name || "—";
 
 const applicationNo = (c: ApiCredential) =>
   c.application?.applicationNumber || "—";
@@ -197,7 +197,7 @@ export default function AcademicsCredentials() {
         !q ||
         applicantName(c).toLowerCase().includes(q) ||
         applicationNo(c).toLowerCase().includes(q) ||
-        programmeName(c).toLowerCase().includes(q) ||
+        departmentName(c).toLowerCase().includes(q) ||
         c.credentialType.toLowerCase().includes(q);
 
       const matchesStatus = statusFilter === "All" || c.status === statusFilter;
@@ -371,7 +371,7 @@ export default function AcademicsCredentials() {
               <table className="w-full min-w-[1000px] text-sm">
                 <thead className="bg-slate-50">
                   <tr className="border-b border-slate-200 text-left">
-                    {["Applicant", "Programme", "Credential", "Document", "Submitted", "Status"].map(
+                    {["Applicant", "Department", "Credential", "Document", "Submitted", "Status"].map(
                       (h) => (
                         <th
                           key={h}
@@ -403,10 +403,10 @@ export default function AcademicsCredentials() {
                         </p>
                       </td>
 
-                      {/* PROGRAMME */}
+                      {/* DEPARTMENT */}
                       <td className="px-5 py-4">
                         <p className="font-medium text-slate-700">
-                          {programmeName(credential)}
+                          {departmentName(credential)}
                         </p>
                       </td>
 
@@ -653,7 +653,7 @@ function ReviewModal({
         <div className="space-y-5 p-5">
           {/* DETAILS */}
           <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2">
-            <Detail label="Programme" value={programmeName(credential)} />
+            <Detail label="Department" value={departmentName(credential)} />
             <Detail label="Document type" value={credential.credentialType} />
             <Detail label="Exam year" value={credential.examYear || "—"} />
             <Detail label="Exam number" value={credential.examNumber || "—"} />
