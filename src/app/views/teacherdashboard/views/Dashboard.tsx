@@ -1558,7 +1558,7 @@ export default function StaffDashboard() {
         const token = getToken();
         if (!token) throw new Error("You are not logged in.");
 
-        const response = await fetch(`${API_BASE_URL}/course-allocations/my`, {
+        const response = await fetch(`${API_BASE_URL}/api/course-allocations/my`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
