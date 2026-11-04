@@ -1201,8 +1201,7 @@ export default function StaffCourseMaterials() {
         }}
       >
 
-        <DialogContent className="sm:max-w-[600px]">
-
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
           <DialogHeader>
 
             <DialogTitle>
@@ -1429,7 +1428,7 @@ export default function StaffCourseMaterials() {
           </div>
 
 
-          <DialogFooter>
+      <DialogFooter className="sticky bottom-0 mt-0 border-t bg-background pt-4">
 
             <Button
               variant="outline"
