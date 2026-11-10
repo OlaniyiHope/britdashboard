@@ -26,7 +26,7 @@ const homeCards: HomeCard[] = [
     buttonText: "View",
     icon: BookOpen,
     buttonIcon: Eye,
-    path: "/courses",
+    path: "/student/dashboard/my-courses",
   },
   {
     title: "My Assignments",
@@ -34,7 +34,7 @@ const homeCards: HomeCard[] = [
     buttonText: "View",
     icon: ClipboardList,
     buttonIcon: Eye,
-    path: "/assignments",
+    path: "/student/dashboard/assignment",
   },
   {
     title: "Quizzes",
@@ -42,7 +42,7 @@ const homeCards: HomeCard[] = [
     buttonText: "View",
     icon: FileCheck,
     buttonIcon: Eye,
-    path: "/quiz",
+    path: "/student/dashboard/quiz-list",
   },
   {
     title: "Discussions",
@@ -50,7 +50,7 @@ const homeCards: HomeCard[] = [
     buttonText: "Manage",
     icon: MessageCircle,
     buttonIcon: MessageSquare,
-    path: "/forum",
+    path: "/student/dashboard/course-forum",
   },
   {
     title: "Profile",
@@ -58,7 +58,7 @@ const homeCards: HomeCard[] = [
     buttonText: "Manage",
     icon: UserRound,
     buttonIcon: UserCog,
-    path: "/profile",
+    path: "/student/dashboard/profile",
   },
 ];
 

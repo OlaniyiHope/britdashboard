@@ -169,6 +169,7 @@ import AssignmentSubmissions from "./app/views/teacherdashboard/views/Assignment
 import PayApplicationFee from "./app/views/studentdashboard/views/payment/PayApplicationFee";
 import ViewApplication from "./app/views/studentdashboard/views/ViewApplication";
 import PayAcceptanceFee from "./app/views/studentdashboard/views/payment/PayAcceptanceFee";
+import QuizDetails from "./app/views/teacherdashboard/views/Quiz/QuizDetails";
 
 // ============================================================
 // Dashboard redirect by role
@@ -359,6 +360,8 @@ const App = () => (
 
                 <Route path="/staff/dashboard/quiz/create" element={<StaffCreateQuiz />} />
                 <Route path="/staff/dashboard/quiz/manage" element={<StaffManageQuiz />} />
+                <Route path="/staff/dashboard/quiz/:quizId/edit" element={<StaffCreateQuiz />} />
+                <Route path="/staff/dashboard/quiz/:quizId" element={<QuizDetails />} />
                 <Route path="/staff/dashboard/quiz/results" element={<StaffQuizResults />} />
 
                 <Route path="/staff/dashboard/notification/send" element={<StaffSendNotification />} />

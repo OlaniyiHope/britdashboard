@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useContext } from "react";
 
 import {
   BookOpen,
@@ -17,6 +17,8 @@ import {
   X,
 } from "lucide-react";
 
+import { SessionContext } from "@/contexts/SessionContext";
+import { normalizeSemester } from "@/lib/semester";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -115,16 +117,21 @@ export default function Curriculum() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
+const { currentSemester, currentSession } = useContext(SessionContext);
   const [search, setSearch] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("All");
   const [levelFilter, setLevelFilter] = useState("All");
-  const [semesterFilter, setSemesterFilter] = useState("All");
-
+ 
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [expandedDepartment, setExpandedDepartment] = useState<string | null>(null);
-
+const semesterCourses = useMemo(
+  () =>
+    courses.filter(
+      (course) => normalizeSemester(course.semester) === currentSemester
+    ),
+  [courses, currentSemester]
+);
   /* ---------------- FETCH ---------------- */
 
   const fetchDepartments = async () => {
@@ -174,42 +181,38 @@ export default function Curriculum() {
 
   /* ---------------- FILTER ---------------- */
 
-  const filteredCourses = useMemo(() => {
-    const searchValue = search.toLowerCase().trim();
+ const filteredCourses = useMemo(() => {
+  const searchValue = search.toLowerCase().trim();
 
-    return courses.filter((course) => {
-      const departmentId = getDepartmentId(course.department);
-      const departmentName =
-        departments.find((d) => d._id === departmentId)?.name || "";
+  return semesterCourses.filter((course) => {
+    const departmentId = getDepartmentId(course.department);
+    const departmentName =
+      departments.find((d) => d._id === departmentId)?.name || "";
 
-      const searchMatch =
-        !searchValue ||
-        course.code?.toLowerCase().includes(searchValue) ||
-        course.title?.toLowerCase().includes(searchValue) ||
-        departmentName.toLowerCase().includes(searchValue);
+    const searchMatch =
+      !searchValue ||
+      course.code?.toLowerCase().includes(searchValue) ||
+      course.title?.toLowerCase().includes(searchValue) ||
+      departmentName.toLowerCase().includes(searchValue);
 
-      const departmentMatch =
-        departmentFilter === "All" || departmentId === departmentFilter;
+    const departmentMatch =
+      departmentFilter === "All" || departmentId === departmentFilter;
 
-      const levelMatch = levelFilter === "All" || course.level === levelFilter;
+    const levelMatch = levelFilter === "All" || course.level === levelFilter;
 
-      const semesterMatch =
-        semesterFilter === "All" || course.semester === semesterFilter;
-
-      return searchMatch && departmentMatch && levelMatch && semesterMatch;
-    });
-  }, [courses, departments, search, departmentFilter, levelFilter, semesterFilter]);
-
+    return searchMatch && departmentMatch && levelMatch;
+  });
+}, [semesterCourses, departments, search, departmentFilter, levelFilter]);
   /* ---------------- STATISTICS ---------------- */
 
-  const departmentCount = departments.length;
-  const courseCount = courses.length;
-  const draftCount = courses.filter((c) => c.status === "Draft").length;
-  const approvedCount = courses.filter((c) => c.status === "Approved").length;
-  const totalCredits = courses.reduce(
-    (total, course) => total + (Number(course.credits) || 0),
-    0
-  );
+const departmentCount = departments.length;
+const courseCount = semesterCourses.length;
+const draftCount = semesterCourses.filter((c) => c.status === "Draft").length;
+const approvedCount = semesterCourses.filter((c) => c.status === "Approved").length;
+const totalCredits = semesterCourses.reduce(
+  (total, course) => total + (Number(course.credits) || 0),
+  0
+);
 
   /* ---------------- MODAL ---------------- */
 
@@ -364,7 +367,12 @@ export default function Curriculum() {
           </Button>
         </div>
       </div>
-
+<div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+        Showing courses for{" "}
+        <span className="font-bold">{currentSemester} Semester</span>
+        {currentSession?.name ? ` · ${currentSession.name}` : ""}. Change the semester in
+        the header to view another semester.
+      </div>
       {/* STATISTICS */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard
@@ -462,7 +470,7 @@ export default function Curriculum() {
                 </option>
               ))}
             </select>
-
+{/* 
             <select
               value={semesterFilter}
               onChange={(event) => setSemesterFilter(event.target.value)}
@@ -474,7 +482,7 @@ export default function Curriculum() {
                   {semester}
                 </option>
               ))}
-            </select>
+            </select> */}
           </div>
         </CardContent>
       </Card>
@@ -697,15 +705,18 @@ export default function Curriculum() {
       )}
 
       {/* COURSE MODAL */}
-      {(showAddModal || editingCourse) && (
-        <CourseModal
-          course={editingCourse}
-          departments={departments}
-          saving={saving}
-          onClose={closeModal}
-          onSave={saveCourse}
-        />
-      )}
+{(showAddModal || editingCourse) && (
+  <CourseModal
+    course={editingCourse}
+    departments={departments}
+    saving={saving}
+    defaultSemester={
+      currentSemester === "Second" ? "Second Semester" : "First Semester"
+    }
+    onClose={closeModal}
+    onSave={saveCourse}
+  />
+)}
     </div>
   );
 }
@@ -750,12 +761,14 @@ function CourseModal({
   course,
   departments,
   saving,
+  defaultSemester,
   onClose,
   onSave,
 }: {
   course: Course | null;
   departments: Department[];
   saving: boolean;
+  defaultSemester: CourseSemester;
   onClose: () => void;
   onSave: (form: CourseForm) => void;
 }) {
@@ -764,7 +777,7 @@ function CourseModal({
     title: course?.title || "",
     department: getDepartmentId(course?.department),
     level: course?.level || "ND 1",
-    semester: course?.semester || "First Semester",
+    semester: course?.semester || defaultSemester,
     credits: course?.credits || 3,
     type: course?.type || "Compulsory",
     status: course?.status || "Draft",

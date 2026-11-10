@@ -166,43 +166,77 @@ const PaymentCallback = () => {
       return;
     }
 
-    const verify = async () => {
-      try {
-        // ✅ TRY APPLICATION FEE FIRST
-        let res = await fetch(
-          `${API_URL}/api/payments/application-fee/verify/${encodeURIComponent(reference)}`,
-          { headers: { Authorization: `Bearer ${getToken()}` } }
-        );
+    // const verify = async () => {
+    //   try {
+    //     // ✅ TRY APPLICATION FEE FIRST
+    //     let res = await fetch(
+    //       `${API_URL}/api/payments/application-fee/verify/${encodeURIComponent(reference)}`,
+    //       { headers: { Authorization: `Bearer ${getToken()}` } }
+    //     );
 
-        let json = await res.json();
+    //     let json = await res.json();
 
-        // If application fee verification fails, try tuition payment
-        if (!res.ok) {
-          res = await fetch(
-            `${API_URL}/api/payments/verify/${encodeURIComponent(reference)}`,
-            { headers: { Authorization: `Bearer ${getToken()}` } }
-          );
-          json = await res.json();
-        } else {
-          setIsApplicationFee(true);
-        }
+    //     // If application fee verification fails, try tuition payment
+    //     if (!res.ok) {
+    //       res = await fetch(
+    //         `${API_URL}/api/payments/verify/${encodeURIComponent(reference)}`,
+    //         { headers: { Authorization: `Bearer ${getToken()}` } }
+    //       );
+    //       json = await res.json();
+    //     } else {
+    //       setIsApplicationFee(true);
+    //     }
 
-        if (!res.ok) {
-          throw new Error(json.message || json.error || "Could not verify payment.");
-        }
+    //     if (!res.ok) {
+    //       throw new Error(json.message || json.error || "Could not verify payment.");
+    //     }
 
-        if (json.status === "success") {
-          setOutcome({ state: "success", title: json.title, amount: json.amount });
-        } else if (json.status === "failed") {
-          setOutcome({ state: "failed" });
-        } else {
-          setOutcome({ state: "pending" });
-        }
-      } catch (err: any) {
-        setOutcome({ state: "error", message: err.message || "Something went wrong." });
-      }
-    };
+    //     if (json.status === "success") {
+    //       setOutcome({ state: "success", title: json.title, amount: json.amount });
+    //     } else if (json.status === "failed") {
+    //       setOutcome({ state: "failed" });
+    //     } else {
+    //       setOutcome({ state: "pending" });
+    //     }
+    //   } catch (err: any) {
+    //     setOutcome({ state: "error", message: err.message || "Something went wrong." });
+    //   }
+    // };
+const verify = async () => {
+  try {
+    const res = await fetch(
+      `${API_URL}/api/payments/verify/${encodeURIComponent(reference)}`,
+      { headers: { Authorization: `Bearer ${getToken()}` } }
+    );
+    const json = await res.json();
 
+    if (!res.ok) {
+      throw new Error(json.message || json.error || "Could not verify payment.");
+    }
+
+    const items: any[] = json.items ?? [];
+
+    setIsApplicationFee(
+      items.some(
+        (i) => i.feeCode === "APPLICATION_FEE" || i.feeCode === "ACCEPTANCE_FEE"
+      )
+    );
+
+    if (json.status === "success") {
+      setOutcome({
+        state: "success",
+        title: items.length > 1 ? `${items.length} fees` : items[0]?.title || "Payment",
+        amount: Number(json.total) || 0,
+      });
+    } else if (json.status === "failed") {
+      setOutcome({ state: "failed" });
+    } else {
+      setOutcome({ state: "pending" });
+    }
+  } catch (err: any) {
+    setOutcome({ state: "error", message: err.message || "Something went wrong." });
+  }
+};
     verify();
   }, [reference]);
 

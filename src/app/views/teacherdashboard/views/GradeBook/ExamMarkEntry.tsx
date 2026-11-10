@@ -1,16 +1,17 @@
-import { useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
-  Search,
-  Save,
-  Download,
-  RefreshCw,
   BookOpen,
-  Users,
   CheckCircle2,
   Clock,
-  AlertCircle,
+  Download,
   FileSpreadsheet,
+  Loader2,
+  RefreshCw,
+  Save,
+  Search,
+  Send,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   Card,
@@ -19,11 +20,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-
 import {
   Select,
   SelectContent,
@@ -31,7 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
 import {
   Table,
   TableBody,
@@ -41,1013 +39,674 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { toast } from "sonner";
+import { SessionContext } from "@/contexts/SessionContext";
+import { normalizeSemester } from "@/lib/semester";
+import { API_BASE_URL, getToken } from "@/lib/api";
 
-// ============================================================
-// TYPES
-// ============================================================
+/* ------------------------------------------------------------------ */
+/* TYPES                                                               */
+/* ------------------------------------------------------------------ */
 
-type StudentMark = {
-  id: string;
+const CA_MAX = 30;
+const EXAM_MAX = 70;
+
+type Status = "not_entered" | "draft" | "submitted" | "approved" | "published";
+type Field = "caScore" | "examScore" | "comment";
+
+type Student = {
+  resultId: string | null;
+  studentId: string;
+  name: string;
   matricNumber: string;
-  name: string;
-  ca: number | "";
-  exam: number | "";
-  submitted: boolean;
+  caScore: number | null;
+  examScore: number | null;
+  total: number | null;
+  grade: string | null;
+  comment: string;
+  status: Status;
 };
 
-type Course = {
-  id: string;
-  code: string;
-  name: string;
-  students: number;
+type Allocation = {
+  _id: string;
+  status: string;
+  semester: string;
+  level?: string;
+  course?: { code?: string; title?: string };
+  academicSession?: { name?: string };
 };
 
-// ============================================================
-// DEMO COURSES
-// ============================================================
+type RosterResponse = {
+  allocation: {
+    id: string;
+    course: { code?: string; title?: string };
+    semester: string;
+    session: string;
+    level: string;
+    editable: boolean;
+  };
+  students: Student[];
+  summary: Record<string, number>;
+};
 
-const courses: Course[] = [
-  {
-    id: "1",
-    code: "BTE 301",
-    name: "Digital Electronics",
-    students: 5,
-  },
-  {
-    id: "2",
-    code: "CPE 302",
-    name: "Computer Engineering",
-    students: 4,
-  },
-  {
-    id: "3",
-    code: "EEE 305",
-    name: "Electrical Measurements",
-    students: 6,
-  },
-];
+type Draft = Partial<Record<Field, string>>;
 
-// ============================================================
-// DEMO STUDENTS
-// ============================================================
+/* ------------------------------------------------------------------ */
+/* HELPERS                                                             */
+/* ------------------------------------------------------------------ */
 
-const initialStudents: StudentMark[] = [
-  {
-    id: "1",
-    matricNumber: "BTP/2024/001",
-    name: "John Adewale",
-    ca: 18,
-    exam: 62,
-    submitted: true,
-  },
-  {
-    id: "2",
-    matricNumber: "BTP/2024/002",
-    name: "Mary Johnson",
-    ca: 16,
-    exam: 55,
-    submitted: true,
-  },
-  {
-    id: "3",
-    matricNumber: "BTP/2024/003",
-    name: "David Williams",
-    ca: 14,
-    exam: "",
-    submitted: false,
-  },
-  {
-    id: "4",
-    matricNumber: "BTP/2024/004",
-    name: "Sarah Ibrahim",
-    ca: 19,
-    exam: 68,
-    submitted: true,
-  },
-  {
-    id: "5",
-    matricNumber: "BTP/2024/005",
-    name: "Michael Okoro",
-    ca: "",
-    exam: "",
-    submitted: false,
-  },
-];
+// Same scale as the server. Used only for the live preview; the server's value is final.
+const previewGrade = (total: number) => {
+  if (total >= 70) return { grade: "A", point: 4 };
+  if (total >= 60) return { grade: "B", point: 3 };
+  if (total >= 50) return { grade: "C", point: 2 };
+  if (total >= 45) return { grade: "D", point: 1 };
+  return { grade: "F", point: 0 };
+};
 
-// ============================================================
-// HELPERS
-// ============================================================
+const parseScore = (
+  raw: string,
+  max: number
+): { ok: true; value: number | null } | { ok: false; message: string } => {
+  if (raw.trim() === "") return { ok: true, value: null };
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0 || n > max) {
+    return { ok: false, message: `must be between 0 and ${max}.` };
+  }
+  return { ok: true, value: n };
+};
 
-function getTotal(student: StudentMark) {
-  const ca = Number(student.ca) || 0;
-  const exam = Number(student.exam) || 0;
-
-  return ca + exam;
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+      ...(init?.headers || {}),
+    },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data?.message || "Request failed.") as Error & { data?: any };
+    err.data = data;
+    throw err;
+  }
+  return data as T;
 }
 
-function getGrade(total: number) {
-  if (total >= 70) return "A";
-  if (total >= 60) return "B";
-  if (total >= 50) return "C";
-  if (total >= 45) return "D";
-  if (total >= 40) return "E";
-  return "F";
+const STATUS_BADGE: Record<Status, { label: string; className: string }> = {
+  not_entered: { label: "Not entered", className: "bg-slate-100 text-slate-700" },
+  draft: { label: "Draft", className: "bg-amber-100 text-amber-800" },
+  submitted: { label: "Submitted", className: "bg-blue-100 text-blue-800" },
+  approved: { label: "Approved", className: "bg-indigo-100 text-indigo-800" },
+  published: { label: "Published", className: "bg-green-100 text-green-800" },
+};
+
+function StatusPill({ status }: { status: Status }) {
+  const s = STATUS_BADGE[status];
+  return <Badge className={`${s.className} hover:${s.className}`}>{s.label}</Badge>;
 }
 
-function getGradeBadge(total: number) {
-  const grade = getGrade(total);
-
-  if (grade === "A") {
-    return (
-      <Badge className="bg-green-600 hover:bg-green-600">
-        A
-      </Badge>
-    );
-  }
-
-  if (grade === "B") {
-    return (
-      <Badge className="bg-blue-600 hover:bg-blue-600">
-        B
-      </Badge>
-    );
-  }
-
-  if (grade === "C") {
-    return (
-      <Badge variant="secondary">
-        C
-      </Badge>
-    );
-  }
-
-  if (grade === "D" || grade === "E") {
-    return (
-      <Badge variant="outline">
-        {grade}
-      </Badge>
-    );
-  }
-
-  return (
-    <Badge variant="destructive">
-      F
-    </Badge>
-  );
-}
-
-// ============================================================
-// COMPONENT
-// ============================================================
+/* ------------------------------------------------------------------ */
+/* PAGE                                                                */
+/* ------------------------------------------------------------------ */
 
 export default function ExamMarkEntrySheet() {
-  const [selectedCourse, setSelectedCourse] =
-    useState("");
+  const { currentSemester, currentSession } = useContext(SessionContext);
 
-  const [search, setSearch] =
-    useState("");
+  const [allocations, setAllocations] = useState<Allocation[]>([]);
+  const [allocationId, setAllocationId] = useState("");
+  const [roster, setRoster] = useState<RosterResponse | null>(null);
+  const [loadingRoster, setLoadingRoster] = useState(false);
+  const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+  const [search, setSearch] = useState("");
+  const [busy, setBusy] = useState<"save" | "submit" | null>(null);
 
-  const [students, setStudents] =
-    useState<StudentMark[]>(initialStudents);
+  /* ----------------------------- COURSES -------------------------- */
 
-  const [saving, setSaving] =
-    useState(false);
-
-  // ============================================================
-  // SELECTED COURSE
-  // ============================================================
-
-  const course = courses.find(
-    (item) => item.id === selectedCourse
+  const eligible = useMemo(
+    () =>
+      allocations.filter(
+        (a) => a.status === "Active" && normalizeSemester(a.semester) === currentSemester
+      ),
+    [allocations, currentSemester]
   );
 
-  // ============================================================
-  // FILTER STUDENTS
-  // ============================================================
+  useEffect(() => {
+    request<{ allocations: Allocation[] }>("/course-allocations/my")
+      .then((data) => setAllocations(data.allocations || []))
+      .catch((err) => toast.error(err.message));
+  }, []);
+
+  // Drop the selected course if the semester changes and it no longer applies
+  useEffect(() => {
+    if (allocationId && !eligible.some((a) => a._id === allocationId)) {
+      setAllocationId("");
+      setDrafts({});
+    }
+  }, [eligible, allocationId]);
+
+  /* ----------------------------- ROSTER --------------------------- */
+
+  const loadRoster = useCallback(async (id: string) => {
+    if (!id) {
+      setRoster(null);
+      return;
+    }
+    try {
+      setLoadingRoster(true);
+      setRoster(await request<RosterResponse>(`/results/allocation/${id}`));
+    } catch (err) {
+      setRoster(null);
+      toast.error((err as Error).message);
+    } finally {
+      setLoadingRoster(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRoster(allocationId);
+  }, [allocationId, loadRoster]);
+
+  const canEdit = (s: Student) =>
+    Boolean(roster?.allocation.editable) && (s.status === "not_entered" || s.status === "draft");
+
+  /* ----------------------------- VALUES --------------------------- */
+
+  const valueOf = (s: Student, field: Field): string => {
+    const draft = drafts[s.studentId]?.[field];
+    if (draft !== undefined) return draft;
+    const v = s[field];
+    return v == null ? "" : String(v);
+  };
+
+  const setDraft = (studentId: string, field: Field, value: string) => {
+    if (field !== "comment") {
+      const max = field === "caScore" ? CA_MAX : EXAM_MAX;
+      const parsed = parseScore(value, max);
+      if (!parsed.ok) {
+        toast.error(`${field === "caScore" ? "CA" : "Exam"} score ${parsed.message}`);
+        return;
+      }
+    }
+    setDrafts((prev) => ({
+      ...prev,
+      [studentId]: { ...prev[studentId], [field]: value },
+    }));
+  };
+
+  const dirtyCount = Object.keys(drafts).length;
 
   const filteredStudents = useMemo(() => {
-    const query = search.toLowerCase().trim();
-
-    if (!query) {
-      return students;
-    }
-
-    return students.filter(
-      (student) =>
-        student.name
-          .toLowerCase()
-          .includes(query) ||
-        student.matricNumber
-          .toLowerCase()
-          .includes(query)
+    const q = search.trim().toLowerCase();
+    const list = roster?.students ?? [];
+    if (!q) return list;
+    return list.filter(
+      (s) => s.name.toLowerCase().includes(q) || s.matricNumber.toLowerCase().includes(q)
     );
-  }, [students, search]);
+  }, [roster, search]);
 
-  // ============================================================
-  // UPDATE MARK
-  // ============================================================
+  const averageTotal = useMemo(() => {
+    const totals = (roster?.students ?? [])
+      .map((s) => s.total)
+      .filter((t): t is number => t !== null);
+    return totals.length ? totals.reduce((a, b) => a + b, 0) / totals.length : null;
+  }, [roster]);
 
-  const updateMark = (
-    id: string,
-    field: "ca" | "exam",
-    value: string
-  ) => {
-    if (value === "") {
-      setStudents((prev) =>
-        prev.map((student) =>
-          student.id === id
-            ? {
-                ...student,
-                [field]: "",
-                submitted: false,
-              }
-            : student
-        )
-      );
+  /* ----------------------------- SAVE / SUBMIT -------------------- */
 
-      return;
+  // Returns the number of rows the server rejected
+  const saveDrafts = async (): Promise<number> => {
+    const scores: {
+      studentId: string;
+      caScore: number | null;
+      examScore: number | null;
+      comment: string;
+    }[] = [];
+
+    for (const s of roster?.students ?? []) {
+      if (!drafts[s.studentId] || !canEdit(s)) continue;
+      const ca = parseScore(valueOf(s, "caScore"), CA_MAX);
+      const ex = parseScore(valueOf(s, "examScore"), EXAM_MAX);
+      scores.push({
+        studentId: s.studentId,
+        caScore: ca.ok ? ca.value : null,
+        examScore: ex.ok ? ex.value : null,
+        comment: valueOf(s, "comment"),
+      });
     }
 
-    const numericValue = Number(value);
+    if (scores.length === 0) return 0;
 
-    const max =
-      field === "ca"
-        ? 30
-        : 70;
+    const res = await request<{
+      message: string;
+      errors: { studentId: string; message: string }[];
+    }>(`/results/allocation/${allocationId}/scores`, {
+      method: "PUT",
+      body: JSON.stringify({ scores }),
+    });
 
-    if (
-      numericValue < 0 ||
-      numericValue > max
-    ) {
-      toast.error(
-        `${field === "ca" ? "CA" : "Exam"} mark must be between 0 and ${max}`
-      );
+    const names = new Map((roster?.students ?? []).map((s) => [s.studentId, s.name]));
+    const failed = new Set(res.errors.map((e) => e.studentId));
 
-      return;
-    }
-
-    setStudents((prev) =>
-      prev.map((student) =>
-        student.id === id
-          ? {
-              ...student,
-              [field]: numericValue,
-              submitted: false,
-            }
-          : student
-      )
+    res.errors.forEach((e) =>
+      toast.error(`${names.get(e.studentId) ?? "Student"}: ${e.message}`)
     );
+
+    // Keep drafts for rows that failed so the lecturer can fix them
+    setDrafts((prev) => {
+      const next: Record<string, Draft> = {};
+      for (const id of Object.keys(prev)) {
+        if (failed.has(id)) next[id] = prev[id];
+      }
+      return next;
+    });
+
+    if (res.saved > 0) toast.success(res.message);
+    await loadRoster(allocationId);
+    return res.errors.length;
   };
 
-  // ============================================================
-  // SAVE MARKS
-  // ============================================================
-
-  const saveMarks = () => {
-    if (!selectedCourse) {
-      toast.error(
-        "Please select a course first"
-      );
-
-      return;
+  const handleSave = async () => {
+    try {
+      setBusy("save");
+      await saveDrafts();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(null);
     }
-
-    const incomplete = students.some(
-      (student) =>
-        student.ca === "" ||
-        student.exam === ""
-    );
-
-    if (incomplete) {
-      toast.error(
-        "Please enter all CA and examination marks before submitting."
-      );
-
-      return;
-    }
-
-    setSaving(true);
-
-    setTimeout(() => {
-      setStudents((prev) =>
-        prev.map((student) => ({
-          ...student,
-          submitted: true,
-        }))
-      );
-
-      setSaving(false);
-
-      toast.success(
-        "Examination marks saved successfully"
-      );
-    }, 800);
   };
 
-  // ============================================================
-  // REFRESH
-  // ============================================================
-
-  const refresh = () => {
-    toast.success(
-      "Mark sheet refreshed"
+  const handleSubmit = async () => {
+    const confirmed = window.confirm(
+      "Submit these results to the administrator? You won't be able to change them unless the administrator returns them."
     );
+    if (!confirmed) return;
+
+    try {
+      setBusy("submit");
+
+      // Save any pending edits first. Stop if the server rejected any of them.
+      const rejected = await saveDrafts();
+      if (rejected > 0) return;
+
+      const res = await request<{ message: string }>(
+        `/results/allocation/${allocationId}/submit`,
+        { method: "POST" }
+      );
+      toast.success(res.message);
+      await loadRoster(allocationId);
+    } catch (err) {
+      const e = err as Error & { data?: { incomplete?: string[] } };
+      toast.error(e.message);
+      if (e.data?.incomplete?.length) {
+        toast.message(`Missing: ${e.data.incomplete.slice(0, 5).join(", ")}`);
+      }
+    } finally {
+      setBusy(null);
+    }
   };
 
-  // ============================================================
-  // STATISTICS
-  // ============================================================
+  /* ----------------------------- EXPORT --------------------------- */
 
-  const totalStudents =
-    students.length;
-
-  const submittedStudents =
-    students.filter(
-      (student) =>
-        student.submitted
-    ).length;
-
-  const pendingStudents =
-    students.filter(
-      (student) =>
-        !student.submitted
-    ).length;
-
-  const average =
-    students.length > 0
-      ? students.reduce(
-          (sum, student) =>
-            sum +
-            getTotal(student),
-          0
-        ) / students.length
-      : 0;
-
-  // ============================================================
-  // EXPORT
-  // ============================================================
-
-  const exportMarks = () => {
-    if (!selectedCourse) {
-      toast.error(
-        "Please select a course first"
-      );
-
-      return;
-    }
-
-    const header =
-      "Matric Number,Student Name,CA,Exam,Total,Grade\n";
-
-    const rows = students
-      .map(
-        (student) =>
-          `${student.matricNumber},"${student.name}",${student.ca},${student.exam},${getTotal(student)},${getGrade(getTotal(student))}`
-      )
+  const exportCsv = () => {
+    if (!roster) return;
+    const header = "Matric Number,Student Name,CA,Exam,Total,Grade,Comment\n";
+    const rows = roster.students
+      .map((s) => {
+        const ca = valueOf(s, "caScore");
+        const ex = valueOf(s, "examScore");
+        const total = ca !== "" && ex !== "" ? Number(ca) + Number(ex) : s.total ?? "";
+        const grade = typeof total === "number" ? previewGrade(total).grade : s.grade ?? "";
+        const comment = valueOf(s, "comment").replace(/"/g, '""');
+        return `${s.matricNumber},"${s.name}",${ca},${ex},${total},${grade},"${comment}"`;
+      })
       .join("\n");
 
-    const csv =
-      header + rows;
-
-    const blob =
-      new Blob([csv], {
-        type: "text/csv;charset=utf-8;",
-      });
-
-    const url =
-      URL.createObjectURL(blob);
-
-    const link =
-      document.createElement("a");
-
+    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
     link.href = url;
-
-    link.download =
-      `${course?.code || "exam"}-mark-sheet.csv`;
-
+    link.download = `${roster.allocation.course.code || "results"}-mark-sheet.csv`;
     link.click();
-
     URL.revokeObjectURL(url);
-
-    toast.success(
-      "Mark sheet exported"
-    );
   };
 
-  // ============================================================
-  // RENDER
-  // ============================================================
+  /* ----------------------------- RENDER --------------------------- */
+
+  const course = roster?.allocation.course;
+  const summary = roster?.summary ?? {};
+  const totalStudents = roster?.students.length ?? 0;
 
   return (
     <div className="min-h-full space-y-6 p-4 md:p-6">
-
-      {/* ====================================================== */}
       {/* HEADER */}
-      {/* ====================================================== */}
-
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-
-        <div>
-
-          <div className="flex items-center gap-3">
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#006dcc]/10">
-
-              <FileSpreadsheet className="h-5 w-5 text-[#006dcc]" />
-
-            </div>
-
-            <div>
-
-              <h1 className="text-2xl font-bold tracking-tight">
-                Exam Mark Entry Sheet
-              </h1>
-
-              <p className="text-sm text-muted-foreground">
-                Enter, review and submit examination marks for your assigned courses.
-              </p>
-
-            </div>
-
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#006dcc]/10">
+            <FileSpreadsheet className="h-5 w-5 text-[#006dcc]" />
           </div>
-
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Exam Mark Entry Sheet</h1>
+            <p className="text-sm text-muted-foreground">
+              Enter CA, exam and comments for your course in the{" "}
+              {currentSemester} Semester
+              {currentSession?.name ? ` · ${currentSession.name}` : ""}.
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
-
-          <Button
-            variant="outline"
-            onClick={refresh}
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
+          <Button variant="outline" onClick={() => loadRoster(allocationId)} disabled={!allocationId || loadingRoster}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${loadingRoster ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-
-          <Button
-            variant="outline"
-            onClick={exportMarks}
-          >
+          <Button variant="outline" onClick={exportCsv} disabled={!roster}>
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-
-          <Button
-            className="bg-[#006dcc] hover:bg-[#005ca8]"
-            onClick={saveMarks}
-            disabled={saving}
-          >
-            <Save className="mr-2 h-4 w-4" />
-
-            {saving
-              ? "Saving..."
-              : "Save Marks"}
-          </Button>
-
         </div>
-
       </div>
 
-      {/* ====================================================== */}
       {/* COURSE SELECTION */}
-      {/* ====================================================== */}
-
       <Card>
-
         <CardHeader>
-
-          <CardTitle>
-            Select Course
-          </CardTitle>
-
+          <CardTitle>Select Course</CardTitle>
           <CardDescription>
-            Select the course and examination you want to enter marks for.
+            Only your active courses for the current semester are listed.
           </CardDescription>
-
         </CardHeader>
-
         <CardContent>
-
-          <div className="grid gap-4 md:grid-cols-2">
-
-            <div className="space-y-2">
-
-              <label className="text-sm font-medium">
-                Course
-              </label>
-
-              <Select
-                value={selectedCourse}
-                onValueChange={
-                  setSelectedCourse
-                }
-              >
-
-                <SelectTrigger>
-
-                  <SelectValue placeholder="Select a course" />
-
-                </SelectTrigger>
-
-                <SelectContent>
-
-                  {courses.map(
-                    (item) => (
-
-                      <SelectItem
-                        key={item.id}
-                        value={item.id}
-                      >
-                        {item.code} — {item.name}
-                      </SelectItem>
-
-                    )
-                  )}
-
-                </SelectContent>
-
-              </Select>
-
+          {eligible.length === 0 ? (
+            <div className="rounded-lg border border-dashed p-6 text-center">
+              <BookOpen className="mx-auto mb-3 h-8 w-8 text-muted-foreground/60" />
+              <p className="font-medium">No courses for {currentSemester} Semester</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Courses assigned to you by the administrator for this semester will appear here.
+              </p>
             </div>
-
-            <div className="flex items-end">
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Course</label>
+                <Select
+                  value={allocationId}
+                  onValueChange={(value) => {
+                    setAllocationId(value);
+                    setDrafts({});
+                    setSearch("");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a course" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {eligible.map((a) => (
+                      <SelectItem key={a._id} value={a._id}>
+                        {a.course?.code ? `${a.course.code} — ` : ""}
+                        {a.course?.title || "Untitled Course"}
+                        {a.level ? ` (${a.level})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
               {course && (
-
-                <div className="flex w-full items-center gap-3 rounded-lg border bg-muted/40 p-3">
-
-                  <BookOpen className="h-5 w-5 text-[#006dcc]" />
-
-                  <div>
-
-                    <p className="text-sm font-medium">
-                      {course.code}
-                    </p>
-
-                    <p className="text-xs text-muted-foreground">
-                      {course.name}
-                    </p>
-
+                <div className="flex items-end">
+                  <div className="flex w-full items-center gap-3 rounded-lg border bg-muted/40 p-3">
+                    <BookOpen className="h-5 w-5 text-[#006dcc]" />
+                    <div>
+                      <p className="text-sm font-medium">{course.code}</p>
+                      <p className="text-xs text-muted-foreground">{course.title}</p>
+                    </div>
                   </div>
-
                 </div>
-
               )}
-
             </div>
-
-          </div>
-
+          )}
         </CardContent>
-
       </Card>
 
-      {/* ====================================================== */}
-      {/* STATISTICS */}
-      {/* ====================================================== */}
+      {/* SUMMARY */}
+      {roster && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <SummaryCard label="Registered Students" value={totalStudents} icon={<Clock className="h-4 w-4" />} note="Enrolled this semester" />
+          <SummaryCard
+            label="Not Yet Entered"
+            value={(summary.not_entered ?? 0) + (summary.draft ?? 0)}
+            icon={<Clock className="h-4 w-4" />}
+            note="Draft or missing"
+            tone="text-orange-600"
+          />
+          <SummaryCard
+            label="Submitted"
+            value={(summary.submitted ?? 0) + (summary.approved ?? 0) + (summary.published ?? 0)}
+            icon={<CheckCircle2 className="h-4 w-4" />}
+            note="With the administrator"
+            tone="text-blue-600"
+          />
+          <SummaryCard
+            label="Class Average"
+            value={averageTotal === null ? "—" : averageTotal.toFixed(1)}
+            icon={<CheckCircle2 className="h-4 w-4" />}
+            note="Out of 100"
+          />
+        </div>
+      )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-        <Card>
-
-          <CardHeader className="pb-2">
-
-            <CardDescription>
-              Total Students
-            </CardDescription>
-
-            <CardTitle className="text-2xl">
-              {totalStudents}
-            </CardTitle>
-
-          </CardHeader>
-
-          <CardContent>
-
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-
-              <Users className="h-4 w-4" />
-
-              Students enrolled
-
-            </div>
-
-          </CardContent>
-
-        </Card>
-
-        <Card>
-
-          <CardHeader className="pb-2">
-
-            <CardDescription>
-              Marks Entered
-            </CardDescription>
-
-            <CardTitle className="text-2xl text-green-600">
-              {submittedStudents}
-            </CardTitle>
-
-          </CardHeader>
-
-          <CardContent>
-
-            <div className="flex items-center gap-2 text-xs text-green-600">
-
-              <CheckCircle2 className="h-4 w-4" />
-
-              Completed
-
-            </div>
-
-          </CardContent>
-
-        </Card>
-
-        <Card>
-
-          <CardHeader className="pb-2">
-
-            <CardDescription>
-              Pending
-            </CardDescription>
-
-            <CardTitle className="text-2xl text-orange-600">
-              {pendingStudents}
-            </CardTitle>
-
-          </CardHeader>
-
-          <CardContent>
-
-            <div className="flex items-center gap-2 text-xs text-orange-600">
-
-              <Clock className="h-4 w-4" />
-
-              Awaiting marks
-
-            </div>
-
-          </CardContent>
-
-        </Card>
-
-        <Card>
-
-          <CardHeader className="pb-2">
-
-            <CardDescription>
-              Class Average
-            </CardDescription>
-
-            <CardTitle className="text-2xl">
-              {average.toFixed(1)}
-            </CardTitle>
-
-          </CardHeader>
-
-          <CardContent>
-
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-
-              <AlertCircle className="h-4 w-4" />
-
-              Out of 100
-
-            </div>
-
-          </CardContent>
-
-        </Card>
-
-      </div>
-
-      {/* ====================================================== */}
       {/* MARK SHEET */}
-      {/* ====================================================== */}
-
       <Card>
-
         <CardHeader>
-
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-
             <div>
-
-              <CardTitle>
-                Examination Marks
-              </CardTitle>
-
+              <CardTitle>Examination Marks</CardTitle>
               <CardDescription>
-                CA is out of 30 marks and Examination is out of 70 marks.
+                CA is out of {CA_MAX}, exam is out of {EXAM_MAX}. Grades shown while typing are a preview;
+                the server calculates the final grade.
               </CardDescription>
-
             </div>
-
             <div className="relative w-full md:w-80">
-
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-
               <Input
                 className="pl-9"
-                placeholder="Search student..."
+                placeholder="Search name or matric number..."
                 value={search}
-                onChange={(e) =>
-                  setSearch(
-                    e.target.value
-                  )
-                }
+                onChange={(e) => setSearch(e.target.value)}
+                disabled={!roster}
               />
-
             </div>
-
           </div>
-
         </CardHeader>
 
         <CardContent>
-
-          {!selectedCourse ? (
-
-            <div className="flex min-h-[300px] flex-col items-center justify-center rounded-lg border border-dashed text-center">
-
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-
-                <BookOpen className="h-7 w-7 text-muted-foreground" />
-
-              </div>
-
-              <h3 className="font-semibold">
-                Select a course
-              </h3>
-
+          {!allocationId ? (
+            <div className="flex min-h-[260px] flex-col items-center justify-center rounded-lg border border-dashed text-center">
+              <BookOpen className="mb-3 h-7 w-7 text-muted-foreground" />
+              <h3 className="font-semibold">Select a course</h3>
               <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                Select one of your assigned courses above to view the students and enter their examination marks.
+                Choose one of your courses above to enter scores.
               </p>
-
             </div>
-
-          ) : (
-
+          ) : loadingRoster && !roster ? (
+            <div className="flex min-h-[260px] items-center justify-center">
+              <Loader2 className="h-7 w-7 animate-spin text-[#006dcc]" />
+            </div>
+          ) : roster ? (
             <>
-
-              <div className="mb-4 rounded-lg border bg-[#006dcc]/5 p-4">
-
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-
-                  <div className="flex items-center gap-3">
-
-                    <BookOpen className="h-5 w-5 text-[#006dcc]" />
-
-                    <div>
-
-                      <p className="font-semibold">
-                        {course?.code}
-                      </p>
-
-                      <p className="text-sm text-muted-foreground">
-                        {course?.name}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                  <Badge variant="outline">
-                    {students.length} Students
-                  </Badge>
-
+              {!roster.allocation.editable && (
+                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  This course is not in the current semester, so its results are read-only.
                 </div>
-
-              </div>
+              )}
 
               <div className="overflow-x-auto rounded-md border">
-
                 <Table>
-
                   <TableHeader>
-
                     <TableRow>
-
-                      <TableHead>
-                        #
-                      </TableHead>
-
-                      <TableHead>
-                        Matric Number
-                      </TableHead>
-
-                      <TableHead>
-                        Student Name
-                      </TableHead>
-
-                      <TableHead className="w-[130px]">
-                        CA / 30
-                      </TableHead>
-
-                      <TableHead className="w-[130px]">
-                        Exam / 70
-                      </TableHead>
-
-                      <TableHead>
-                        Total / 100
-                      </TableHead>
-
-                      <TableHead>
-                        Grade
-                      </TableHead>
-
-                      <TableHead>
-                        Status
-                      </TableHead>
-
+                      <TableHead className="w-12">#</TableHead>
+                      <TableHead>Matric No.</TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead className="w-28">CA / {CA_MAX}</TableHead>
+                      <TableHead className="w-28">Exam / {EXAM_MAX}</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Grade</TableHead>
+                      <TableHead className="min-w-[220px]">Comment</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
-
                   </TableHeader>
 
                   <TableBody>
+                    {filteredStudents.map((s, index) => {
+                      const editable = canEdit(s);
+                      const caText = valueOf(s, "caScore");
+                      const exText = valueOf(s, "examScore");
+                      const previewTotal =
+                        caText !== "" && exText !== "" ? Number(caText) + Number(exText) : s.total;
+                      const grade =
+                        previewTotal === null ? null : previewGrade(previewTotal).grade;
+                      const dirty = Boolean(drafts[s.studentId]);
 
-                    {filteredStudents.map(
-                      (student, index) => {
+                      return (
+                        <TableRow key={s.studentId} className={dirty ? "bg-amber-50/50" : ""}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell className="font-medium">{s.matricNumber || "—"}</TableCell>
+                          <TableCell>{s.name}</TableCell>
 
-                        const total =
-                          getTotal(student);
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min={0}
+                              max={CA_MAX}
+                              className="w-24"
+                              value={caText}
+                              disabled={!editable}
+                              onChange={(e) => setDraft(s.studentId, "caScore", e.target.value)}
+                            />
+                          </TableCell>
 
-                        return (
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min={0}
+                              max={EXAM_MAX}
+                              className="w-24"
+                              value={exText}
+                              disabled={!editable}
+                              onChange={(e) => setDraft(s.studentId, "examScore", e.target.value)}
+                            />
+                          </TableCell>
 
-                          <TableRow
-                            key={student.id}
-                          >
+                          <TableCell className="font-semibold">{previewTotal ?? "—"}</TableCell>
 
-                            <TableCell>
-                              {index + 1}
-                            </TableCell>
+                          <TableCell>
+                            {grade ? <Badge variant="outline">{grade}</Badge> : <span className="text-muted-foreground">—</span>}
+                          </TableCell>
 
-                            <TableCell className="font-medium">
-                              {student.matricNumber}
-                            </TableCell>
+                          <TableCell>
+                            <Input
+                              placeholder="Optional remark"
+                              value={valueOf(s, "comment")}
+                              disabled={!editable}
+                              onChange={(e) => setDraft(s.studentId, "comment", e.target.value)}
+                            />
+                          </TableCell>
 
-                            <TableCell>
-                              {student.name}
-                            </TableCell>
+                          <TableCell>
+                            <StatusPill status={s.status} />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
 
-                            <TableCell>
-
-                              <Input
-                                type="number"
-                                min={0}
-                                max={30}
-                                value={
-                                  student.ca
-                                }
-                                onChange={(e) =>
-                                  updateMark(
-                                    student.id,
-                                    "ca",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-24"
-                              />
-
-                            </TableCell>
-
-                            <TableCell>
-
-                              <Input
-                                type="number"
-                                min={0}
-                                max={70}
-                                value={
-                                  student.exam
-                                }
-                                onChange={(e) =>
-                                  updateMark(
-                                    student.id,
-                                    "exam",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-24"
-                              />
-
-                            </TableCell>
-
-                            <TableCell className="font-semibold">
-                              {total}
-                            </TableCell>
-
-                            <TableCell>
-                              {getGradeBadge(
-                                total
-                              )}
-                            </TableCell>
-
-                            <TableCell>
-
-                              {student.submitted ? (
-
-                                <Badge
-                                  variant="outline"
-                                  className="gap-1 text-green-600"
-                                >
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  Saved
-                                </Badge>
-
-                              ) : (
-
-                                <Badge
-                                  variant="secondary"
-                                  className="gap-1"
-                                >
-                                  <Clock className="h-3 w-3" />
-                                  Pending
-                                </Badge>
-
-                              )}
-
-                            </TableCell>
-
-                          </TableRow>
-
-                        );
-                      }
-                    )}
-
-                    {!filteredStudents.length && (
-
+                    {filteredStudents.length === 0 && (
                       <TableRow>
-
-                        <TableCell
-                          colSpan={8}
-                          className="h-24 text-center"
-                        >
-                          No students found.
+                        <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
+                          {totalStudents === 0
+                            ? "No students are registered for this course this semester."
+                            : "No students match your search."}
                         </TableCell>
-
                       </TableRow>
-
                     )}
-
                   </TableBody>
-
                 </Table>
-
               </div>
 
-              {/* ================================================= */}
-              {/* FOOTER ACTION */}
-              {/* ================================================= */}
-
-              <div className="mt-5 flex flex-col gap-3 rounded-lg border bg-muted/30 p-4 md:flex-row md:items-center md:justify-between">
-
-                <div>
-
-                  <p className="text-sm font-medium">
-                    Ready to submit marks?
-                  </p>
-
-                  <p className="text-xs text-muted-foreground">
-                    Make sure all CA and examination marks are correct before saving.
-                  </p>
-
+              {/* FOOTER ACTIONS */}
+              {roster.allocation.editable && totalStudents > 0 && (
+                <div className="mt-5 flex flex-col gap-3 rounded-lg border bg-muted/30 p-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-sm font-medium">
+                      {dirtyCount > 0
+                        ? `${dirtyCount} unsaved change${dirtyCount === 1 ? "" : "s"}`
+                        : "All changes saved"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Save as draft to keep working. Submit when every student has both scores; after that,
+                      the administrator reviews the results.
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleSave} disabled={busy !== null || dirtyCount === 0}>
+                      {busy === "save" ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="mr-2 h-4 w-4" />
+                      )}
+                      Save Draft
+                    </Button>
+                    <Button
+                      className="bg-[#006dcc] hover:bg-[#005ca8]"
+                      onClick={handleSubmit}
+                      disabled={busy !== null}
+                    >
+                      {busy === "submit" ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="mr-2 h-4 w-4" />
+                      )}
+                      Submit to Administrator
+                    </Button>
+                  </div>
                 </div>
-
-                <div className="flex gap-2">
-
-                  <Button
-                    variant="outline"
-                    onClick={exportMarks}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Export Sheet
-                  </Button>
-
-                  <Button
-                    className="bg-[#006dcc] hover:bg-[#005ca8]"
-                    onClick={saveMarks}
-                    disabled={saving}
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-
-                    {saving
-                      ? "Saving..."
-                      : "Save Examination Marks"}
-                  </Button>
-
-                </div>
-
-              </div>
-
+              )}
             </>
-
-          )}
-
+          ) : null}
         </CardContent>
-
       </Card>
-
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* SUMMARY CARD                                                        */
+/* ------------------------------------------------------------------ */
+
+function SummaryCard({
+  label,
+  value,
+  icon,
+  note,
+  tone = "",
+}: {
+  label: string;
+  value: number | string;
+  icon: React.ReactNode;
+  note: string;
+  tone?: string;
+}) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardDescription>{label}</CardDescription>
+        <CardTitle className={`text-2xl ${tone}`}>{value}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          {icon}
+          {note}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

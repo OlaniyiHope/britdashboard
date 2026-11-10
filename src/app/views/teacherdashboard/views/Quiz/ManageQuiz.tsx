@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock3,
+   EyeOff, 
   Copy,
   FileQuestion,
   Users,
@@ -60,6 +61,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+import { API_BASE_URL, getToken } from "@/lib/api";
 
 // ============================================================
 // TYPES
@@ -67,94 +69,106 @@ import {
 
 type QuizStatus = "draft" | "published" | "closed" | "active";
 
+// type Quiz = {
+//   _id: string;
+//   title: string;
+//   description?: string;
+
+//   course?: {
+//     _id?: string;
+//     name?: string;
+//     code?: string;
+//   };
+
+//   courseId?: string;
+
+//   questions?: any[];
+
+//   questionCount?: number;
+
+//   duration?: number;
+
+//   durationMinutes?: number;
+
+//   totalMarks?: number;
+
+//   status?: QuizStatus | string;
+
+//   startDate?: string;
+//   endDate?: string;
+
+//   createdAt?: string;
+//   updatedAt?: string;
+
+//   attempts?: number;
+//   submissions?: number;
+// };
+
 type Quiz = {
   _id: string;
   title: string;
-  description?: string;
-
+  instructions?: string;
   course?: {
     _id?: string;
-    name?: string;
     code?: string;
+    title?: string;
   };
-
-  courseId?: string;
-
-  questions?: any[];
-
   questionCount?: number;
-
   duration?: number;
-
-  durationMinutes?: number;
-
   totalMarks?: number;
-
+  passMark?: number;
+  type?: "Test" | "Exam";
+  semester?: "First" | "Second";
   status?: QuizStatus | string;
-
-  startDate?: string;
-  endDate?: string;
-
   createdAt?: string;
   updatedAt?: string;
-
-  attempts?: number;
-  submissions?: number;
 };
-
 
 // ============================================================
 // API
 // ============================================================
 
-const API_URL =
-  import.meta.env.VITE_NODE_API_URL || "http://localhost:5001";
 
 
 // ============================================================
 // HELPERS
 // ============================================================
 
-const getToken = () => {
-  return localStorage.getItem("jwtToken");
-};
+
 
 
 const getQuizQuestionCount = (quiz: Quiz) => {
-  if (typeof quiz.questionCount === "number") {
-    return quiz.questionCount;
-  }
-
-  if (Array.isArray(quiz.questions)) {
-    return quiz.questions.length;
-  }
-
-  return 0;
+  return quiz.questionCount ?? 0;
 };
 
 
-const getQuizDuration = (quiz: Quiz) => {
-  return quiz.durationMinutes ?? quiz.duration ?? 0;
-};
+// const getQuizDuration = (quiz: Quiz) => {
+//   return quiz.durationMinutes ?? quiz.duration ?? 0;
+// };
 
+
+// const getCourseName = (quiz: Quiz) => {
+//   if (quiz.course?.name) {
+//     return quiz.course.name;
+//   }
+
+//   if (quiz.course?.code) {
+//     return quiz.course.code;
+//   }
+
+//   if (quiz.courseId) {
+//     return quiz.courseId;
+//   }
+
+//   return "No course";
+// };
 
 const getCourseName = (quiz: Quiz) => {
-  if (quiz.course?.name) {
-    return quiz.course.name;
-  }
-
-  if (quiz.course?.code) {
-    return quiz.course.code;
-  }
-
-  if (quiz.courseId) {
-    return quiz.courseId;
-  }
-
+  if (quiz.course?.title) return quiz.course.title;
+  if (quiz.course?.code) return quiz.course.code;
   return "No course";
 };
-
-
+const isLive = (status?: string) => status === "published" || status === "active";
 const formatDate = (date?: string) => {
   if (!date) return "—";
 
@@ -253,17 +267,13 @@ export default function ManageQuiz() {
           setLoading(true);
         }
 
-        const response = await fetch(
-          `${API_URL}/api/quizzes/my`,
-          {
-            method: "GET",
-
-            headers: {
-              Authorization: `Bearer ${jwtToken}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+  const response = await fetch(`${API_BASE_URL}/quizzes/my`, {
+  method: "GET",
+  headers: {
+    Authorization: `Bearer ${jwtToken}`,
+    "Content-Type": "application/json",
+  },
+});
 
         const contentType =
           response.headers.get("content-type") || "";
@@ -327,17 +337,17 @@ export default function ManageQuiz() {
     }
 
     return quizzes.filter((quiz) => {
-      const searchable = [
-        quiz.title,
-        quiz.description,
-        getCourseName(quiz),
-        quiz.course?.code,
-        quiz.status,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
+    const searchable = [
+  quiz.title,
+  quiz.instructions,
+  getCourseName(quiz),
+  quiz.course?.code,
+  quiz.status,
+  quiz.type,
+]
+  .filter(Boolean)
+  .join(" ")
+  .toLowerCase();
       return searchable.includes(query);
     });
   }, [quizzes, search]);
@@ -366,7 +376,9 @@ export default function ManageQuiz() {
       total + getQuizQuestionCount(quiz),
     0
   );
-
+const getQuizDuration = (quiz: Quiz) => {
+  return quiz.duration ?? 0;
+};
 
   // ============================================================
   // DELETE
@@ -376,7 +388,39 @@ export default function ManageQuiz() {
     setSelectedQuiz(quiz);
     setDeleteDialogOpen(true);
   };
+const handleSetStatus = async (quiz: Quiz, status: "draft" | "published") => {
+  const jwtToken = getToken();
 
+  if (!jwtToken) {
+    toast.error("Authentication token not found.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/quizzes/${quiz._id}/status`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${jwtToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data?.message || "Failed to update quiz status.");
+    }
+
+    setQuizzes((prev) =>
+      prev.map((q) => (q._id === quiz._id ? { ...q, status } : q))
+    );
+
+    toast.success(status === "draft" ? "Quiz unpublished." : "Quiz published.");
+  } catch (error: any) {
+    toast.error(error?.message || "Unable to update quiz status.");
+  }
+};
 
   const handleDelete = async () => {
     if (!selectedQuiz?._id) {
@@ -393,17 +437,13 @@ export default function ManageQuiz() {
     try {
       setDeleting(true);
 
-      const response = await fetch(
-        `${API_URL}/api/quizzes/${selectedQuiz._id}`,
-        {
-          method: "DELETE",
-
-          headers: {
-            Authorization: `Bearer ${jwtToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+const response = await fetch(`${API_BASE_URL}/quizzes/${selectedQuiz._id}`, {
+  method: "DELETE",
+  headers: {
+    Authorization: `Bearer ${jwtToken}`,
+    "Content-Type": "application/json",
+  },
+});
 
       const contentType =
         response.headers.get("content-type") || "";
@@ -456,7 +496,7 @@ export default function ManageQuiz() {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/quizzes/${quiz._id}/duplicate`,
+        `${API_BASE_URL}/api/quizzes/${quiz._id}/duplicate`,
         {
           method: "POST",
 
@@ -841,9 +881,9 @@ export default function ManageQuiz() {
                             {quiz.title || "Untitled Quiz"}
                           </div>
 
-                          {quiz.description && (
+                          {quiz.instructions && (
                             <div className="mt-1 truncate text-xs text-muted-foreground">
-                              {quiz.description}
+                              {quiz.instructions}
                             </div>
                           )}
 
@@ -999,7 +1039,17 @@ export default function ManageQuiz() {
                               Duplicate
                             </DropdownMenuItem>
 
-
+{isLive(quiz.status) ? (
+  <DropdownMenuItem onClick={() => handleSetStatus(quiz, "draft")}>
+    <EyeOff className="mr-2 h-4 w-4" />
+    Unpublish
+  </DropdownMenuItem>
+) : (
+  <DropdownMenuItem onClick={() => handleSetStatus(quiz, "published")}>
+    <CheckCircle2 className="mr-2 h-4 w-4" />
+    Publish
+  </DropdownMenuItem>
+)}
                             <DropdownMenuSeparator />
 
 

@@ -11,6 +11,7 @@ import {
   FileText,
   FileVideo,
   Loader2,
+  Eye,
   Pencil,
   Plus,
   RefreshCw,
@@ -90,6 +91,7 @@ type Material = {
   title: string;
   description?: string;
   category?: string;
+    hasFile?: boolean;  
   fileName?: string;
   originalName?: string;
   fileUrl?: string;
@@ -159,8 +161,15 @@ const formatDate = (date?: string) => {
     day: "numeric",
   });
 };
-
+const hasFile = (material: Material) =>
+  material.hasFile ??
+  Boolean(
+    material.fileUrl || material.url || material.fileName || material.originalName
+  );
 const getFileIcon = (material: Material) => {
+    if (!hasFile(material)) {
+    return <FileText className="h-5 w-5 text-emerald-600" />;
+  }
   const type = (
     material.mimeType ||
     material.fileType ||
@@ -228,7 +237,7 @@ export default function StaffCourseMaterials() {
 
   const [editingMaterial, setEditingMaterial] =
     useState<Material | null>(null);
-
+const [viewingMaterial, setViewingMaterial] = useState<Material | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Lecture Note");
@@ -472,10 +481,12 @@ export default function StaffCourseMaterials() {
       return;
     }
 
-    if (!editingMaterial && !selectedFile) {
-      toast.error("Please select a file to upload.");
-      return;
-    }
+  const alreadyHasFile = Boolean(editingMaterial && hasFile(editingMaterial));
+
+if (!selectedFile && !alreadyHasFile && !description.trim()) {
+  toast.error("Add a description or attach a file.");
+  return;
+}
 
     try {
       setUploading(true);
@@ -593,17 +604,36 @@ export default function StaffCourseMaterials() {
    * ---------------------------------------------------------
    */
 
-  const handleOpenMaterial = (material: Material) => {
-    const url = material.fileUrl || material.url;
+const handleOpenMaterial = async (material: Material) => {
+  try {
+    const token = getToken();
+
+    const response = await axios.get(
+      `${API_URL}/api/course-materials/${material._id}/download`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const url = response.data?.url;
 
     if (!url) {
-      toast.error("File URL is not available.");
+      toast.error("Download link was not returned.");
       return;
     }
 
     window.open(url, "_blank", "noopener,noreferrer");
-  };
+  } catch (error: any) {
+    console.error("Open material error:", error);
 
+    toast.error(
+      error?.response?.data?.message ||
+        "Unable to open this file."
+    );
+  }
+};
   /*
    * ---------------------------------------------------------
    * COURSE NOT FOUND
@@ -1099,7 +1129,7 @@ export default function StaffCourseMaterials() {
 
                       </TableCell>
 
-                      <TableCell>
+                      {/* <TableCell>
 
                         <span className="text-sm">
 
@@ -1109,7 +1139,16 @@ export default function StaffCourseMaterials() {
 
                         </span>
 
-                      </TableCell>
+                      </TableCell> */}
+                      <TableCell>
+  {hasFile(material) ? (
+    <span className="text-sm">
+      {material.originalName || material.fileName || "File"}
+    </span>
+  ) : (
+    <Badge variant="outline">Text only</Badge>
+  )}
+</TableCell>
 
                       <TableCell>
 
@@ -1127,7 +1166,7 @@ export default function StaffCourseMaterials() {
 
                         <div className="flex justify-end gap-1">
 
-                          <Button
+                          {/* <Button
                             size="icon"
                             variant="ghost"
                             title="Open material"
@@ -1136,8 +1175,26 @@ export default function StaffCourseMaterials() {
                             }
                           >
                             <Download className="h-4 w-4" />
-                          </Button>
+                          </Button> */}
+<Button
+  size="icon"
+  variant="ghost"
+  title="View material"
+  onClick={() => setViewingMaterial(material)}
+>
+  <Eye className="h-4 w-4" />
+</Button>
 
+{hasFile(material) && (
+  <Button
+    size="icon"
+    variant="ghost"
+    title="Open file"
+    onClick={() => handleOpenMaterial(material)}
+  >
+    <Download className="h-4 w-4" />
+  </Button>
+)}
                           <Button
                             size="icon"
                             variant="ghost"
@@ -1210,12 +1267,16 @@ export default function StaffCourseMaterials() {
                 : "Upload Course Material"}
             </DialogTitle>
 
-            <DialogDescription>
+            {/* <DialogDescription>
               {editingMaterial
                 ? "Update the details of this course material."
                 : `Upload a learning resource for ${currentSemester} Semester.`}
-            </DialogDescription>
-
+            </DialogDescription> */}
+<DialogDescription>
+  {editingMaterial
+    ? "Update the details of this course material."
+    : `Add a material for ${currentSemester} Semester. Attach a file, type the content in the description, or do both.`}
+</DialogDescription>
           </DialogHeader>
 
 
@@ -1334,7 +1395,7 @@ export default function StaffCourseMaterials() {
 
             {/* DESCRIPTION */}
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
 
               <label className="text-sm font-medium">
                 Description
@@ -1349,9 +1410,20 @@ export default function StaffCourseMaterials() {
                 rows={4}
               />
 
-            </div>
+            </div> */}
 
-
+<div className="space-y-2">
+  <label className="text-sm font-medium">Description / Content</label>
+  <Textarea
+    placeholder="Type notes or questions here, or describe the attached file..."
+    value={description}
+    onChange={(e) => setDescription(e.target.value)}
+    rows={8}
+  />
+  <p className="text-xs text-muted-foreground">
+    You can use this on its own, with no file, or alongside a file.
+  </p>
+</div>
             {/* FILE */}
 
             <div className="space-y-2">
@@ -1368,7 +1440,7 @@ export default function StaffCourseMaterials() {
               >
 
                 <Upload className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
-
+{/* 
                 {selectedFile ? (
 
                   <>
@@ -1412,8 +1484,29 @@ export default function StaffCourseMaterials() {
 
                   </>
 
-                )}
-
+                )} */}
+{selectedFile ? (
+  <>
+    <p className="font-medium">{selectedFile.name}</p>
+    <p className="mt-1 text-xs text-muted-foreground">
+      {formatFileSize(selectedFile.size)}
+    </p>
+  </>
+) : editingMaterial && hasFile(editingMaterial) ? (
+  <>
+    <p className="font-medium">Current file will be kept</p>
+    <p className="mt-1 text-xs text-muted-foreground">
+      Select a new file if you want to replace it.
+    </p>
+  </>
+) : (
+  <>
+    <p className="font-medium">Click to select a file (optional)</p>
+    <p className="mt-1 text-xs text-muted-foreground">
+      PDF, Word, PowerPoint, Excel, images, videos, ZIP and other supported files
+    </p>
+  </>
+)}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1475,6 +1568,44 @@ export default function StaffCourseMaterials() {
         </DialogContent>
 
       </Dialog>
+      <Dialog
+  open={Boolean(viewingMaterial)}
+  onOpenChange={(open) => {
+    if (!open) setViewingMaterial(null);
+  }}
+>
+  <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[640px]">
+    <DialogHeader>
+      <DialogTitle>{viewingMaterial?.title}</DialogTitle>
+      <DialogDescription>
+        {[
+          viewingMaterial?.category,
+          viewingMaterial?.semester && `${viewingMaterial.semester} Semester`,
+        ]
+          .filter(Boolean)
+          .join(" • ")}
+      </DialogDescription>
+    </DialogHeader>
+
+    {viewingMaterial?.description ? (
+      <div className="whitespace-pre-wrap rounded-md border bg-muted/30 p-4 text-sm leading-6">
+        {viewingMaterial.description}
+      </div>
+    ) : (
+      <p className="text-sm text-muted-foreground">No description was added.</p>
+    )}
+
+    <DialogFooter>
+      {viewingMaterial && hasFile(viewingMaterial) && (
+        <Button variant="outline" onClick={() => handleOpenMaterial(viewingMaterial)}>
+          <Download className="mr-2 h-4 w-4" />
+          Open file
+        </Button>
+      )}
+      <Button onClick={() => setViewingMaterial(null)}>Close</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
 
     </div>
   );
