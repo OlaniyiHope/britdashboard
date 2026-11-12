@@ -227,48 +227,7 @@ const activeLive = liveClasses.find((c) => c.status === "live");
     return (
       <div className="min-h-full space-y-6 bg-slate-50 p-4 md:p-6">
         {/* HEADER */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#006dcc]">Staff Portal</p>
-            <h1 className="mt-1 text-2xl font-black tracking-tight text-[#081022] md:text-3xl">Welcome, {staffName}</h1>
-            <p className="mt-1 text-sm text-slate-500">Your academic, teaching and staff management overview.</p>
-          </div>
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm">
-            <CalendarDays className="h-4 w-4 text-slate-500" />
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Academic Session</p>
-              <p className="text-sm font-bold text-[#081022]">{academicSession}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* STATISTICS */}
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {statCard("My Courses", activeAllocations.length, "Active courses assigned to you", <BookOpen className="h-5 w-5" />, "bg-blue-50 text-[#006dcc]")}
-          {statCard("Departments", departmentCount, "Departments containing your courses", <Users className="h-5 w-5" />, "bg-emerald-50 text-emerald-600")}
-          {statCard("Levels", levelCount, "Student levels you teach", <Users className="h-5 w-5" />, "bg-purple-50 text-purple-600")}
-          {statCard("To Grade", 0, "Assignments awaiting grading", <FileText className="h-5 w-5" />, "bg-amber-50 text-amber-600")}
-          {statCard("Quiz Results", 0, "Quiz attempts awaiting review", <ClipboardCheck className="h-5 w-5" />, "bg-blue-50 text-[#006dcc]")}
-          {statCard("Payroll", "Current", "Latest payroll status", <Wallet className="h-5 w-5" />, "bg-green-50 text-green-600")}
-        </div>
-
-        {/* QUICK ACTIONS */}
-        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
-          <CardHeader>
-            <CardTitle className="text-base text-[#081022]">Quick Actions</CardTitle>
-            <CardDescription>Quickly access the tools you use most.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Button className="h-11 justify-start gap-2 bg-[#006dcc] hover:bg-[#005ca8]"><FileEdit className="h-4 w-4" />Create Quiz</Button>
-              <Button variant="outline" className="h-11 justify-start gap-2"><FileText className="h-4 w-4" />Create Assignment</Button>
-              <Button variant="outline" className="h-11 justify-start gap-2"><Video className="h-4 w-4" />Start Live Class</Button>
-              <Button variant="outline" className="h-11 justify-start gap-2"><BookOpen className="h-4 w-4" />Upload Material</Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* LIVE CLASS + TEACHING LOAD */}
+            {/* LIVE CLASS + TEACHING LOAD */}
         {/* <div className="grid gap-4 lg:grid-cols-2">
           <Card className="overflow-hidden border-none bg-white shadow-sm ring-1 ring-slate-200">
             <CardHeader className="border-b border-slate-100">
@@ -348,6 +307,48 @@ const activeLive = liveClasses.find((c) => c.status === "live");
     </div>
   </CardContent>
 </Card>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#006dcc]">Staff Portal</p>
+            <h1 className="mt-1 text-2xl font-black tracking-tight text-[#081022] md:text-3xl">Welcome, {staffName}</h1>
+            <p className="mt-1 text-sm text-slate-500">Your academic, teaching and staff management overview.</p>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm">
+            <CalendarDays className="h-4 w-4 text-slate-500" />
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Academic Session</p>
+              <p className="text-sm font-bold text-[#081022]">{academicSession}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* STATISTICS */}
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {statCard("My Courses", activeAllocations.length, "Active courses assigned to you", <BookOpen className="h-5 w-5" />, "bg-blue-50 text-[#006dcc]")}
+          {statCard("Departments", departmentCount, "Departments containing your courses", <Users className="h-5 w-5" />, "bg-emerald-50 text-emerald-600")}
+          {statCard("Levels", levelCount, "Student levels you teach", <Users className="h-5 w-5" />, "bg-purple-50 text-purple-600")}
+          {statCard("To Grade", 0, "Assignments awaiting grading", <FileText className="h-5 w-5" />, "bg-amber-50 text-amber-600")}
+          {statCard("Quiz Results", 0, "Quiz attempts awaiting review", <ClipboardCheck className="h-5 w-5" />, "bg-blue-50 text-[#006dcc]")}
+          {statCard("Payroll", "Current", "Latest payroll status", <Wallet className="h-5 w-5" />, "bg-green-50 text-green-600")}
+        </div>
+
+        {/* QUICK ACTIONS */}
+        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
+          <CardHeader>
+            <CardTitle className="text-base text-[#081022]">Quick Actions</CardTitle>
+            <CardDescription>Quickly access the tools you use most.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Button className="h-11 justify-start gap-2 bg-[#006dcc] hover:bg-[#005ca8]"><FileEdit className="h-4 w-4" />Create Quiz</Button>
+              <Button variant="outline" className="h-11 justify-start gap-2"><FileText className="h-4 w-4" />Create Assignment</Button>
+              <Button variant="outline" className="h-11 justify-start gap-2"><Video className="h-4 w-4" />Start Live Class</Button>
+              <Button variant="outline" className="h-11 justify-start gap-2"><BookOpen className="h-4 w-4" />Upload Material</Button>
+            </div>
+          </CardContent>
+        </Card>
+
+    
         {/* MY COURSES */}
         <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
           <CardHeader><div className="flex items-center justify-between"><div><CardTitle className="text-base text-[#081022]">My Courses</CardTitle><CardDescription>Courses currently assigned to you by the administrator.</CardDescription></div><span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-[#006dcc]">{activeAllocations.length} {activeAllocations.length === 1 ? "Course" : "Courses"}</span></div></CardHeader>
