@@ -144,7 +144,31 @@ interface CourseAllocation {
         })),
       [activeAllocations]
     );
+const [liveClasses, setLiveClasses] = useState<
+  { _id: string; title: string; status: string; scheduledAt?: string; course?: { code?: string; title?: string } }[]
+>([]);
 
+useEffect(() => {
+  const loadLive = async () => {
+    try {
+      const token = getToken();
+      if (!token) return;
+      const res = await fetch(`${API_BASE_URL}/live/mine`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) setLiveClasses(data?.liveClasses || []);
+    } catch (err) {
+      console.error("Live class check failed:", err);
+    }
+  };
+
+  loadLive();
+  const timer = setInterval(loadLive, 30000);
+  return () => clearInterval(timer);
+}, []);
+
+const activeLive = liveClasses.find((c) => c.status === "live");
     if (loading) {
       return (
         <div className="min-h-full bg-slate-50 p-4 md:p-6">
@@ -245,7 +269,7 @@ interface CourseAllocation {
         </Card>
 
         {/* LIVE CLASS + TEACHING LOAD */}
-        <div className="grid gap-4 lg:grid-cols-2">
+        {/* <div className="grid gap-4 lg:grid-cols-2">
           <Card className="overflow-hidden border-none bg-white shadow-sm ring-1 ring-slate-200">
             <CardHeader className="border-b border-slate-100">
               <div className="flex items-center justify-between">
@@ -274,8 +298,56 @@ interface CourseAllocation {
               ))}
             </CardContent>
           </Card>
+        </div> */}
+<Card className="overflow-hidden border-none bg-white shadow-sm ring-1 ring-slate-200">
+  <CardHeader className="border-b border-slate-100">
+    <div className="flex items-center justify-between">
+      <div>
+        <CardTitle className="text-base text-[#081022]">Live Class</CardTitle>
+        <CardDescription>Monitor your active live teaching session.</CardDescription>
+      </div>
+      {activeLive ? (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-2.5 py-1 text-[11px] font-bold text-white">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+          LIVE NOW
+        </span>
+      ) : (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-500">
+          <span className="h-2 w-2 rounded-full bg-slate-400" />
+          NO ACTIVE CLASS
+        </span>
+      )}
+    </div>
+  </CardHeader>
+  <CardContent className="p-5">
+    <div className="rounded-xl bg-[#081022] p-5 text-white">
+      <div className="flex items-center gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
+          <Video className={`h-6 w-6 ${activeLive ? "text-red-400" : "text-blue-300"}`} />
         </div>
-
+        <div className="min-w-0">
+          <h3 className="truncate text-lg font-bold">
+            {activeLive ? activeLive.title : "No live class"}
+          </h3>
+          <p className="mt-1 truncate text-xs text-slate-400">
+            {activeLive
+              ? [activeLive.course?.code, activeLive.course?.title].filter(Boolean).join(" — ")
+              : "You currently have no active live teaching session."}
+          </p>
+        </div>
+      </div>
+      <Button
+        className={`mt-5 w-full ${
+          activeLive ? "bg-red-600 text-white hover:bg-red-700" : "bg-white text-[#081022] hover:bg-slate-100"
+        }`}
+        onClick={() => window.location.assign("/staff/dashboard/studio/live-stream")}
+      >
+        {activeLive ? "Open Live Stream" : "Start Live Class"}
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </Button>
+    </div>
+  </CardContent>
+</Card>
         {/* MY COURSES */}
         <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
           <CardHeader><div className="flex items-center justify-between"><div><CardTitle className="text-base text-[#081022]">My Courses</CardTitle><CardDescription>Courses currently assigned to you by the administrator.</CardDescription></div><span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-[#006dcc]">{activeAllocations.length} {activeAllocations.length === 1 ? "Course" : "Courses"}</span></div></CardHeader>
