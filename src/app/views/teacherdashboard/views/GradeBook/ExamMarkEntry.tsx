@@ -83,6 +83,7 @@ type RosterResponse = {
     session: string;
     level: string;
     editable: boolean;
+     returnNote?: string;
   };
   students: Student[];
   summary: Record<string, number>;
@@ -539,6 +540,17 @@ export default function ExamMarkEntrySheet() {
                   This course is not in the current semester, so its results are read-only.
                 </div>
               )}
+
+              {roster.allocation.returnNote && (
+  <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
+    <p className="text-sm font-semibold text-amber-800">
+      Returned by the administrator
+    </p>
+    <p className="mt-1 text-sm text-amber-700">
+      {roster.allocation.returnNote}
+    </p>
+  </div>
+)}
 
               <div className="overflow-x-auto rounded-md border">
                 <Table>

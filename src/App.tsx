@@ -170,6 +170,7 @@ import PayApplicationFee from "./app/views/studentdashboard/views/payment/PayApp
 import ViewApplication from "./app/views/studentdashboard/views/ViewApplication";
 import PayAcceptanceFee from "./app/views/studentdashboard/views/payment/PayAcceptanceFee";
 import QuizDetails from "./app/views/teacherdashboard/views/Quiz/QuizDetails";
+import StudentResultStatement from "./app/views/admindashboard/views/admin/StudentResultStatement";
 
 // ============================================================
 // Dashboard redirect by role
@@ -257,6 +258,7 @@ const App = () => (
                 <Route path="/admin/students/course-reg-printout" element={<CourseRegistrationPrintout />} />
                 <Route path="/admin/students/registration-printout" element={<RegistrationPrintout />} />
                 <Route path="/admin/students/result-approval" element={<ResultApproval />} />
+                <Route path="/admin/students/results" element={<StudentResultStatement />} />
                 <Route path="/admin/students/siwes-tracker" element={<SiwesTracker />} />
 
                 <Route path="/admin/quiz/all" element={<AllQuizzes />} />

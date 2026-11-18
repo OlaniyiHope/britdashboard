@@ -1,245 +1,186 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { API_BASE_URL, getToken } from "@/lib/api";
 
-interface Course {
-  id: number;
-  name: string;
-  code: string;
-  assignment: string;
-  quiz: string;
-  forum: string;
+type PublishedResult = {
+  id: string;
+  courseCode: string;
+  courseTitle: string;
+  session: string;
+  semester: string;
+  level: string;
+  creditUnits: number;
+  caScore: number | null;
+  examScore: number | null;
+  total: number | null;
+  grade: string | null;
+  gradePoint: number | null;
+  comment: string;
+  publishedAt: string | null;
+};
+
+async function request<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.message || "Request failed.");
+  return data as T;
 }
 
-const courses: Course[] = [
-  {
-    id: 1,
-    name: "Nationalism",
-    code: "GENS 101",
-    assignment: "4.00 / 5.00",
-    quiz: "0.00 / 0.00",
-    forum: "0.00 / 0.00",
-  },
-  {
-    id: 2,
-    name: "ENGLISH AND COMMUNICATION SKILLS",
-    code: "GENS 103",
-    assignment: "4.20 / 10.00",
-    quiz: "16.50 / 25.00",
-    forum: "1.00 / 3.00",
-  },
-  {
-    id: 3,
-    name: "Introduction to Computing",
-    code: "COSC 101",
-    assignment: "0.00 / 0.00",
-    quiz: "0.00 / 0.00",
-    forum: "0.00 / 0.00",
-  },
-  {
-    id: 4,
-    name: "Sets and Number System",
-    code: "MATH 101",
-    assignment: "0.00 / 5.00",
-    quiz: "0.00 / 0.00",
-    forum: "0.00 / 0.00",
-  },
-  {
-    id: 5,
-    name: "Trigonometry and Co-ordinate Geometry",
-    code: "MATH 103",
-    assignment: "0.00 / 10.00",
-    quiz: "0.00 / 0.00",
-    forum: "0.00 / 0.00",
-  },
-  {
-    id: 6,
-    name: "Differential and Integral Calculus",
-    code: "MATH 105",
-    assignment: "0.00 / 0.00",
-    quiz: "0.00 / 0.00",
-    forum: "0.00 / 0.00",
-  },
-  {
-    id: 7,
-    name: "Mechanics",
-    code: "PHYS 111",
-    assignment: "0.00 / 0.00",
-    quiz: "0.00 / 0.00",
-    forum: "0.00 / 4.00",
-  },
-  {
-    id: 8,
-    name: "Heat and properties of matter",
-    code: "PHYS 131",
-    assignment: "0.00 / 0.00",
-    quiz: "0.00 / 0.00",
-    forum: "0.00 / 0.00",
-  },
-];
+const display = (v: number | null | undefined) => (v == null ? "—" : String(v));
+
+const GRADE_STYLE: Record<string, string> = {
+  A: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  B: "bg-blue-50 text-blue-700 border-blue-200",
+  C: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  D: "bg-amber-50 text-amber-700 border-amber-200",
+  F: "bg-red-50 text-red-700 border-red-200",
+};
 
 export default function GradeBook() {
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [results, setResults] = useState<PublishedResult[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [selected, setSelected] = useState<PublishedResult | null>(null);
+
+  useEffect(() => {
+    request<{ results: PublishedResult[] }>("/results/my-published")
+      .then((data) => setResults(data.results || []))
+      .catch((err) => setError((err as Error).message))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="w-full space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-slate-800">
-          My Grade Book
-        </h2>
-
+        <h2 className="text-2xl font-bold text-slate-800">My Grade Book</h2>
         <div className="mt-4 text-sm text-slate-500">
           <span>Home</span>
           <span className="mx-2">/</span>
-          <span className="text-slate-700">Pick a course</span>
+          <span className="text-slate-700">{selected ? "See grade breakdown" : "Pick a course"}</span>
         </div>
       </div>
 
       {/* Progress Steps */}
       <div className="relative px-4 pt-8 pb-5">
-        {/* Horizontal line */}
         <div className="absolute left-[12%] right-[12%] top-[42px] h-px bg-slate-300" />
-
         <div className="relative z-10 flex items-start justify-between">
-          {/* Step 1 */}
           <div className="flex w-1/2 flex-col items-center">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-600 text-xs font-semibold text-white">
               1
             </div>
-
-            <span className="mt-2 text-xs font-medium text-slate-700">
-              Pick a course
-            </span>
+            <span className="mt-2 text-xs font-medium text-slate-700">Pick a course</span>
           </div>
-
-          {/* Step 2 */}
           <div className="flex w-1/2 flex-col items-center">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 bg-white text-xs font-medium text-slate-500">
+            <div
+              className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
+                selected
+                  ? "bg-green-600 text-white"
+                  : "border border-slate-300 bg-white font-medium text-slate-500"
+              }`}
+            >
               2
             </div>
-
-            <span className="mt-2 text-xs text-slate-500">
+            <span className={`mt-2 text-xs ${selected ? "font-medium text-slate-700" : "text-slate-500"}`}>
               See grade breakdown
             </span>
           </div>
         </div>
       </div>
 
-      {/* Courses */}
-      {!selectedCourse ? (
+      {loading ? (
+        <p className="py-10 text-center text-sm text-slate-500">Loading your results...</p>
+      ) : error ? (
+        <p className="py-10 text-center text-sm text-red-600">{error}</p>
+      ) : !selected ? (
         <Card className="border-none shadow-none">
           <CardContent className="p-0">
             <div className="mb-4">
               <h3 className="text-xl font-semibold text-slate-800">
-                Courses ({courses.length})
+                Courses ({results.length})
               </h3>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <div className="min-w-[850px] overflow-hidden rounded-md border border-slate-200 bg-white">
-                {/* Table Header */}
-                <div className="grid grid-cols-[70px_minmax(300px,1fr)_150px_150px_150px_140px] border-b border-slate-200 bg-white px-4 py-4 text-sm font-semibold text-slate-700">
-                  <div></div>
+            {results.length === 0 ? (
+              <div className="rounded-md border border-dashed border-slate-300 p-10 text-center">
+                <p className="text-sm font-semibold text-slate-500">No published results yet</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Your results will appear here once the administrator publishes them.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <div className="min-w-[760px] overflow-hidden rounded-md border border-slate-200 bg-white">
+                  <div className="grid grid-cols-[1fr_110px_110px_110px_90px_140px] border-b border-slate-200 px-4 py-4 text-sm font-semibold text-slate-700">
+                    <div>Course</div>
+                    <div>CA / 30</div>
+                    <div>Exam / 70</div>
+                    <div>Total</div>
+                    <div>Grade</div>
+                    <div>Action</div>
+                  </div>
 
-                  <div>Course</div>
-
-                  <div>Assignment</div>
-
-                  <div>Quiz</div>
-
-                  <div>Forum</div>
-
-                  <div>Action</div>
-                </div>
-
-                {/* Table Rows */}
-                {courses.map((course) => (
-                  <div
-                    key={course.id}
-                    className="grid grid-cols-[70px_minmax(300px,1fr)_150px_150px_150px_140px] items-center border-b border-slate-100 px-4 py-3 last:border-b-0 hover:bg-slate-50"
-                  >
-                    {/* Number */}
-                    <div>
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-xs text-slate-600">
-                        {course.id}
+                  {results.map((r) => (
+                    <div
+                      key={r.id}
+                      className="grid grid-cols-[1fr_110px_110px_110px_90px_140px] items-center border-b border-slate-100 px-4 py-3 last:border-b-0 hover:bg-slate-50"
+                    >
+                      <div className="pr-4">
+                        <p className="text-sm font-medium text-slate-700">
+                          {r.courseTitle}
+                          <span className="ml-1 text-slate-500">- {r.courseCode}</span>
+                        </p>
+                      </div>
+                      <div className="text-sm text-slate-700">{display(r.caScore)}</div>
+                      <div className="text-sm text-slate-700">{display(r.examScore)}</div>
+                      <div className="text-sm font-semibold text-slate-800">{display(r.total)}</div>
+                      <div>
+                        {r.grade ? (
+                          <span
+                            className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-bold ${
+                              GRADE_STYLE[r.grade] ?? "bg-slate-100 text-slate-700 border-slate-200"
+                            }`}
+                          >
+                            {r.grade}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-slate-400">—</span>
+                        )}
+                      </div>
+                      <div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelected(r)}
+                          className="border-slate-200 bg-white text-xs font-normal text-slate-600 hover:bg-slate-50"
+                        >
+                          See Breakdown
+                        </Button>
                       </div>
                     </div>
-
-                    {/* Course */}
-                    <div className="pr-4">
-                      <p className="text-sm font-medium text-slate-700">
-                        {course.name}
-                        <span className="ml-1 text-slate-500">
-                          - {course.code}
-                        </span>
-                      </p>
-                    </div>
-
-                    {/* Assignment */}
-                    <div className="text-sm">
-                      <span
-                        className={
-                          course.assignment !== "0.00 / 0.00"
-                            ? "text-red-500"
-                            : "text-red-400"
-                        }
-                      >
-                        {course.assignment}
-                      </span>
-                    </div>
-
-                    {/* Quiz */}
-                    <div className="text-sm">
-                      <span className="text-red-400">
-                        {course.quiz}
-                      </span>
-                    </div>
-
-                    {/* Forum */}
-                    <div className="text-sm">
-                      <span className="text-red-400">
-                        {course.forum}
-                      </span>
-                    </div>
-
-                    {/* Action */}
-                    <div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedCourse(course)}
-                        className="border-slate-200 bg-white text-xs font-normal text-slate-600 hover:bg-slate-50"
-                      >
-                        See Breakdown
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       ) : (
-        /* Grade Breakdown */
         <Card className="border-none shadow-none">
           <CardContent className="p-0">
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-semibold text-slate-800">
-                  Grade Breakdown
-                </h3>
-
+                <h3 className="text-xl font-semibold text-slate-800">Grade Breakdown</h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  {selectedCourse.name} - {selectedCourse.code}
+                  {selected.courseTitle} - {selected.courseCode}
                 </p>
               </div>
-
-              <Button
-                variant="outline"
-                onClick={() => setSelectedCourse(null)}
-              >
+              <Button variant="outline" onClick={() => setSelected(null)}>
                 Back to Courses
               </Button>
             </div>
@@ -252,34 +193,35 @@ export default function GradeBook() {
               </div>
 
               <div className="grid grid-cols-3 border-b border-slate-100 px-5 py-4 text-sm">
-                <div>Assignment</div>
-                <div className="text-red-500">
-                  {selectedCourse.assignment.split("/")[0]}
-                </div>
-                <div>
-                  {selectedCourse.assignment.split("/")[1]}
-                </div>
+                <div>Continuous Assessment</div>
+                <div className="text-slate-800">{display(selected.caScore)}</div>
+                <div>30</div>
               </div>
 
               <div className="grid grid-cols-3 border-b border-slate-100 px-5 py-4 text-sm">
-                <div>Quiz</div>
-                <div className="text-red-500">
-                  {selectedCourse.quiz.split("/")[0]}
-                </div>
-                <div>
-                  {selectedCourse.quiz.split("/")[1]}
-                </div>
+                <div>Examination</div>
+                <div className="text-slate-800">{display(selected.examScore)}</div>
+                <div>70</div>
               </div>
 
-              <div className="grid grid-cols-3 px-5 py-4 text-sm">
-                <div>Forum</div>
-                <div className="text-red-500">
-                  {selectedCourse.forum.split("/")[0]}
-                </div>
-                <div>
-                  {selectedCourse.forum.split("/")[1]}
-                </div>
+              <div className="grid grid-cols-3 border-b border-slate-100 px-5 py-4 text-sm font-semibold">
+                <div>Total</div>
+                <div className="text-slate-800">{display(selected.total)}</div>
+                <div>100</div>
               </div>
+
+              <div className="grid grid-cols-3 border-b border-slate-100 px-5 py-4 text-sm">
+                <div>Grade</div>
+                <div className="text-slate-800">{selected.grade ?? "—"}</div>
+                <div>Point: {display(selected.gradePoint)}</div>
+              </div>
+
+              {selected.comment && (
+                <div className="px-5 py-4 text-sm">
+                  <p className="font-semibold text-slate-700">Lecturer's remark</p>
+                  <p className="mt-1 text-slate-600">{selected.comment}</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

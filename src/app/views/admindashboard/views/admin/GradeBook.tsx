@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
   Search,
   Filter,
@@ -8,21 +8,26 @@ import {
   Clock3,
   Eye,
   Download,
-  ChevronDown,
   X,
   GraduationCap,
-  FileCheck2,
+  Loader2,
+  RefreshCw,
+  Send,
+  RotateCcw,
   AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { SessionContext } from "@/contexts/SessionContext";
+import { API_BASE_URL, getToken } from "@/lib/api";
 
-type GradeStatus =
-  | "Approved"
-  | "Pending"
-  | "Returned"
-  | "Draft";
+/* ------------------------------------------------------------------ */
+/* TYPES                                                               */
+/* ------------------------------------------------------------------ */
+
+type GradeStatus = "Not started" | "Draft" | "Pending approval" | "Approved" | "Published";
 
 interface GradeBookRecord {
   id: string;
@@ -35,115 +40,68 @@ interface GradeBookRecord {
   students: number;
   graded: number;
   status: GradeStatus;
-  lastUpdated: string;
+  lastUpdated: string | null;
 }
 
-/*
-|--------------------------------------------------------------------------
-| TEMPORARY DATA
-|--------------------------------------------------------------------------
-|
-| Replace this with your API data when the grade book backend is connected.
-|
-*/
+interface DetailStudent {
+  resultId: string;
+  name: string;
+  matricNumber: string;
+  caScore: number | null;
+  examScore: number | null;
+  total: number | null;
+  grade: string | null;
+  comment: string;
+  status: string;
+}
 
-const gradeBooks: GradeBookRecord[] = [
-  {
-    id: "1",
-    courseCode: "CSC 201",
-    courseTitle: "Data Structures",
-    lecturer: "Dr. Michael Anderson",
-    department: "Computing & Technology",
-    level: "200 Level",
-    semester: "First Semester",
-    students: 84,
-    graded: 84,
-    status: "Approved",
-    lastUpdated: "25 Aug 2026",
-  },
-  {
-    id: "2",
-    courseCode: "CSC 305",
-    courseTitle: "Database Management Systems",
-    lecturer: "Prof. James Okoro",
-    department: "Computing & Technology",
-    level: "300 Level",
-    semester: "First Semester",
-    students: 72,
-    graded: 68,
-    status: "Pending",
-    lastUpdated: "24 Aug 2026",
-  },
-  {
-    id: "3",
-    courseCode: "BUS 202",
-    courseTitle: "Principles of Marketing",
-    lecturer: "Dr. Sarah Thompson",
-    department: "Business Studies",
-    level: "200 Level",
-    semester: "First Semester",
-    students: 96,
-    graded: 96,
-    status: "Approved",
-    lastUpdated: "23 Aug 2026",
-  },
-  {
-    id: "4",
-    courseCode: "ENG 101",
-    courseTitle: "Engineering Mathematics I",
-    lecturer: "Dr. Robert Mensah",
-    department: "Engineering",
-    level: "100 Level",
-    semester: "First Semester",
-    students: 118,
-    graded: 110,
-    status: "Pending",
-    lastUpdated: "22 Aug 2026",
-  },
-  {
-    id: "5",
-    courseCode: "ACC 301",
-    courseTitle: "Financial Accounting",
-    lecturer: "Mrs. Grace Mensima",
-    department: "Business Studies",
-    level: "300 Level",
-    semester: "Second Semester",
-    students: 64,
-    graded: 0,
-    status: "Draft",
-    lastUpdated: "20 Aug 2026",
-  },
-  {
-    id: "6",
-    courseCode: "CVE 401",
-    courseTitle: "Structural Analysis",
-    lecturer: "Engr. Samuel Okoro",
-    department: "Engineering",
-    level: "400 Level",
-    semester: "Second Semester",
-    students: 51,
-    graded: 51,
-    status: "Returned",
-    lastUpdated: "19 Aug 2026",
-  },
-];
+interface Detail {
+  allocation: Omit<GradeBookRecord, "students" | "graded" | "lastUpdated"> & { session: string };
+  students: DetailStudent[];
+  counts: { total: number; graded: number; draft: number; submitted: number; approved: number; published: number };
+}
 
-/*
-|--------------------------------------------------------------------------
-| STATUS BADGE
-|--------------------------------------------------------------------------
-*/
+/* ------------------------------------------------------------------ */
+/* HELPERS                                                             */
+/* ------------------------------------------------------------------ */
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+      ...(init?.headers || {}),
+    },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.message || "Request failed.");
+  return data as T;
+}
+
+const semesterKey = (v: string) => {
+  const s = v.toLowerCase();
+  if (s.startsWith("first")) return "First";
+  if (s.startsWith("second")) return "Second";
+  return "";
+};
+
+const formatDate = (date: string | null) => {
+  if (!date) return "—";
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+};
+
+const STATUSES: GradeStatus[] = ["Pending approval", "Approved", "Published", "Draft", "Not started"];
 
 function StatusBadge({ status }: { status: GradeStatus }) {
   const styles: Record<GradeStatus, string> = {
-    Approved:
-      "bg-emerald-50 text-emerald-700 border-emerald-200",
-    Pending:
-      "bg-amber-50 text-amber-700 border-amber-200",
-    Returned:
-      "bg-red-50 text-red-700 border-red-200",
-    Draft:
-      "bg-slate-100 text-slate-600 border-slate-200",
+    "Pending approval": "bg-amber-50 text-amber-700 border-amber-200",
+    Approved: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    Published: "bg-blue-50 text-blue-700 border-blue-200",
+    Draft: "bg-slate-100 text-slate-600 border-slate-200",
+    "Not started": "bg-slate-50 text-slate-400 border-slate-200",
   };
 
   return (
@@ -155,536 +113,366 @@ function StatusBadge({ status }: { status: GradeStatus }) {
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| PAGE
-|--------------------------------------------------------------------------
-*/
+const TH = "px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500";
+const selectClass =
+  "h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006dcc]";
+
+/* ------------------------------------------------------------------ */
+/* PAGE                                                                */
+/* ------------------------------------------------------------------ */
 
 export default function GradeBook() {
+  const { currentSession } = useContext(SessionContext);
+  const sessionId = currentSession?._id;
+
+  const [records, setRecords] = useState<GradeBookRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
+
   const [search, setSearch] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [levelFilter, setLevelFilter] = useState("All");
+  const [semesterFilter, setSemesterFilter] = useState("All");
 
-  const [departmentFilter, setDepartmentFilter] =
-    useState("All");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<Detail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [busy, setBusy] = useState<"approve" | "return" | "publish" | null>(null);
+  const [returning, setReturning] = useState(false);
+  const [note, setNote] = useState("");
 
-  const [statusFilter, setStatusFilter] =
-    useState("All");
+  /* ----------------------------- LOAD ----------------------------- */
 
-  const [levelFilter, setLevelFilter] =
-    useState("All");
+  const loadOverview = useCallback(
+    async (silent = false) => {
+      if (!sessionId) return;
+      try {
+        if (silent) setRefreshing(true);
+        else setLoading(true);
+        setError("");
 
-  const [selectedCourse, setSelectedCourse] =
-    useState<GradeBookRecord | null>(null);
-
-  /*
-  |--------------------------------------------------------------------------
-  | COUNTS
-  |--------------------------------------------------------------------------
-  */
-
-  const totalCourses = gradeBooks.length;
-
-  const totalStudents = gradeBooks.reduce(
-    (total, course) => total + course.students,
-    0
+        const data = await request<{ records: GradeBookRecord[] }>(
+          `/results/admin/overview?sessionId=${sessionId}`
+        );
+        setRecords(data.records || []);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [sessionId]
   );
 
-  const pendingCourses = gradeBooks.filter(
-    (course) => course.status === "Pending"
-  ).length;
+  useEffect(() => {
+    loadOverview();
+  }, [loadOverview]);
 
-  const approvedCourses = gradeBooks.filter(
-    (course) => course.status === "Approved"
-  ).length;
+  const loadDetail = useCallback(async (id: string) => {
+    try {
+      setDetailLoading(true);
+      setDetail(await request<Detail>(`/results/admin/allocation/${id}`));
+    } catch (err) {
+      toast.error((err as Error).message);
+      setSelectedId(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  }, []);
 
-  /*
-  |--------------------------------------------------------------------------
-  | FILTER OPTIONS
-  |--------------------------------------------------------------------------
-  */
+  useEffect(() => {
+    setReturning(false);
+    setNote("");
+    if (selectedId) loadDetail(selectedId);
+    else setDetail(null);
+  }, [selectedId, loadDetail]);
+
+  /* ----------------------------- ACTIONS -------------------------- */
+
+  const act = async (kind: "approve" | "return" | "publish", body?: object) => {
+    if (!selectedId) return;
+    try {
+      setBusy(kind);
+      const res = await request<{ message: string }>(
+        `/results/admin/allocation/${selectedId}/${kind}`,
+        { method: "POST", body: JSON.stringify(body ?? {}) }
+      );
+      toast.success(res.message);
+      setReturning(false);
+      setNote("");
+      await Promise.all([loadDetail(selectedId), loadOverview(true)]);
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleApprove = () => {
+    if (!detail) return;
+    const ok = window.confirm(
+      `Approve all submitted results for ${detail.allocation.courseCode}? Students will not see them until you publish.`
+    );
+    if (ok) act("approve");
+  };
+
+  const handleReturn = () => {
+    if (!note.trim()) {
+      toast.error("Add a note telling the lecturer what to correct.");
+      return;
+    }
+    act("return", { note: note.trim() });
+  };
+
+  const handlePublish = () => {
+    if (!detail) return;
+    const ok = window.confirm(
+      `Publish results for ${detail.allocation.courseCode}? Students will be able to see them.`
+    );
+    if (ok) act("publish");
+  };
+
+  /* ----------------------------- DERIVED -------------------------- */
+
+  const totalCourses = records.length;
+  const totalStudents = records.reduce((sum, r) => sum + r.students, 0);
+  const pendingCourses = records.filter((r) => r.status === "Pending approval").length;
+  const approvedCourses = records.filter(
+    (r) => r.status === "Approved" || r.status === "Published"
+  ).length;
 
   const departments = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          gradeBooks.map(
-            (course) => course.department
-          )
-        )
-      ),
-    []
+    () => Array.from(new Set(records.map((r) => r.department))).sort(),
+    [records]
   );
-
   const levels = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          gradeBooks.map(
-            (course) => course.level
-          )
-        )
-      ),
-    []
+    () => Array.from(new Set(records.map((r) => r.level))).sort(),
+    [records]
   );
 
-  /*
-  |--------------------------------------------------------------------------
-  | FILTERING
-  |--------------------------------------------------------------------------
-  */
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
 
-  const filteredGradeBooks = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    return gradeBooks.filter((course) => {
+    return records.filter((r) => {
       const matchesSearch =
-        !query ||
-        course.courseCode
-          .toLowerCase()
-          .includes(query) ||
-        course.courseTitle
-          .toLowerCase()
-          .includes(query) ||
-        course.lecturer
-          .toLowerCase()
-          .includes(query);
-
-      const matchesDepartment =
-        departmentFilter === "All" ||
-        course.department === departmentFilter;
-
-      const matchesStatus =
-        statusFilter === "All" ||
-        course.status === statusFilter;
-
-      const matchesLevel =
-        levelFilter === "All" ||
-        course.level === levelFilter;
+        !q ||
+        r.courseCode.toLowerCase().includes(q) ||
+        r.courseTitle.toLowerCase().includes(q) ||
+        r.lecturer.toLowerCase().includes(q);
 
       return (
         matchesSearch &&
-        matchesDepartment &&
-        matchesStatus &&
-        matchesLevel
+        (departmentFilter === "All" || r.department === departmentFilter) &&
+        (statusFilter === "All" || r.status === statusFilter) &&
+        (levelFilter === "All" || r.level === levelFilter) &&
+        (semesterFilter === "All" || semesterKey(r.semester) === semesterFilter)
       );
     });
-  }, [
-    search,
-    departmentFilter,
-    statusFilter,
-    levelFilter,
-  ]);
+  }, [records, search, departmentFilter, statusFilter, levelFilter, semesterFilter]);
 
-  /*
-  |--------------------------------------------------------------------------
-  | EXPORT
-  |--------------------------------------------------------------------------
-  */
-
-  const handleExport = () => {
-    const headers = [
-      "Course Code",
-      "Course Title",
-      "Lecturer",
-      "Department",
-      "Level",
-      "Semester",
-      "Students",
-      "Graded",
-      "Status",
-      "Last Updated",
-    ];
-
-    const rows = filteredGradeBooks.map((course) => [
-      course.courseCode,
-      course.courseTitle,
-      course.lecturer,
-      course.department,
-      course.level,
-      course.semester,
-      course.students,
-      course.graded,
-      course.status,
-      course.lastUpdated,
-    ]);
-
-    const csv = [
-      headers.join(","),
-      ...rows.map((row) =>
-        row
-          .map((value) =>
-            `"${String(value).replace(/"/g, '""')}"`
-          )
-          .join(",")
-      ),
-    ].join("\n");
-
-    const blob = new Blob([csv], {
-      type: "text/csv;charset=utf-8;",
-    });
-
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = "grade-book.csv";
-
-    link.click();
-
-    URL.revokeObjectURL(url);
-  };
-
-  /*
-  |--------------------------------------------------------------------------
-  | CLEAR FILTERS
-  |--------------------------------------------------------------------------
-  */
+  const hasFilters =
+    Boolean(search) ||
+    departmentFilter !== "All" ||
+    statusFilter !== "All" ||
+    levelFilter !== "All" ||
+    semesterFilter !== "All";
 
   const clearFilters = () => {
     setSearch("");
     setDepartmentFilter("All");
     setStatusFilter("All");
     setLevelFilter("All");
+    setSemesterFilter("All");
   };
+
+  const handleExport = () => {
+    const headers = [
+      "Course Code", "Course Title", "Lecturer", "Department", "Level",
+      "Semester", "Students", "Graded", "Status", "Last Updated",
+    ];
+
+    const rows = filtered.map((r) => [
+      r.courseCode, r.courseTitle, r.lecturer, r.department, r.level,
+      r.semester, r.students, r.graded, r.status, formatDate(r.lastUpdated),
+    ]);
+
+    const csv = [
+      headers.join(","),
+      ...rows.map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "grade-book.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  /* ----------------------------- STATES --------------------------- */
+
+  if (!sessionId) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center bg-slate-50 p-6">
+        <div className="text-center">
+          <AlertCircle className="mx-auto h-8 w-8 text-slate-300" />
+          <p className="mt-3 text-sm font-semibold text-slate-500">No session selected</p>
+          <p className="mt-1 text-xs text-slate-400">Select an academic session to view the grade book.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center bg-slate-50 p-6">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="mt-3 text-sm text-slate-500">Loading grade book...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const detailStatus = detail?.allocation.status;
+  const progress = (r: GradeBookRecord) =>
+    r.students > 0 ? Math.min(100, Math.round((r.graded / r.students) * 100)) : 0;
 
   return (
     <div className="min-h-full space-y-6 bg-slate-50 p-4 md:p-6">
-
-      {/* ============================================================
-          HEADER
-      ============================================================ */}
-
+      {/* HEADER */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-
         <div className="flex items-center gap-3">
-
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#081022] text-white">
             <BookOpen className="h-5 w-5" />
           </div>
-
           <div>
-
-            <h1 className="text-xl font-bold text-[#081022] md:text-2xl">
-              Grade Book
-            </h1>
-
+            <h1 className="text-xl font-bold text-[#081022] md:text-2xl">Grade Book</h1>
             <p className="mt-1 text-xs text-slate-500">
-              Monitor course grades, submissions and academic
-              result approval across the institution.
+              Review lecturer submissions, approve results and publish them
+              {currentSession?.name ? ` — ${currentSession.name}` : ""}.
             </p>
-
           </div>
-
         </div>
 
-        <Button
-          variant="outline"
-          onClick={handleExport}
-          className="gap-2 border-slate-300 bg-white"
-        >
-          <Download className="h-4 w-4" />
-          Export Grade Book
-        </Button>
-
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => loadOverview(true)}
+            disabled={refreshing}
+            className="gap-2 border-slate-300 bg-white"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          <Button variant="outline" onClick={handleExport} className="gap-2 border-slate-300 bg-white">
+            <Download className="h-4 w-4" />
+            Export Grade Book
+          </Button>
+        </div>
       </div>
 
-      {/* ============================================================
-          STATISTICS
-      ============================================================ */}
+      {error && (
+        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+          <div className="flex-1">
+            <p className="text-sm font-bold text-red-700">Unable to load the grade book</p>
+            <p className="mt-1 text-xs text-red-600">{error}</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => loadOverview()}>
+            Retry
+          </Button>
+        </div>
+      )}
 
+      {/* STATISTICS */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
-        {/* Courses */}
-
-        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
-
-          <CardContent className="p-5">
-
-            <div className="flex items-center justify-between">
-
-              <div>
-
-                <p className="text-xs font-medium text-slate-500">
-                  Courses
-                </p>
-
-                <p className="mt-2 text-3xl font-black text-[#081022]">
-                  {totalCourses}
-                </p>
-
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Grade books available
-                </p>
-
+        {[
+          { label: "Courses", value: totalCourses, note: "Allocated this session", icon: BookOpen, tone: "bg-blue-50 text-blue-700" },
+          { label: "Students", value: totalStudents, note: "Registered across courses", icon: Users, tone: "bg-purple-50 text-purple-700" },
+          { label: "Pending Approval", value: pendingCourses, note: "Awaiting your review", icon: Clock3, tone: "bg-amber-50 text-amber-700" },
+          { label: "Approved", value: approvedCourses, note: "Approved or published", icon: CheckCircle2, tone: "bg-emerald-50 text-emerald-700" },
+        ].map((card) => (
+          <Card key={card.label} className="border-none bg-white shadow-sm ring-1 ring-slate-200">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-slate-500">{card.label}</p>
+                  <p className="mt-2 text-3xl font-black text-[#081022]">{card.value}</p>
+                  <p className="mt-1 text-[11px] text-slate-400">{card.note}</p>
+                </div>
+                <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${card.tone}`}>
+                  <card.icon className="h-5 w-5" />
+                </div>
               </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                <BookOpen className="h-5 w-5" />
-              </div>
-
-            </div>
-
-          </CardContent>
-
-        </Card>
-
-        {/* Students */}
-
-        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
-
-          <CardContent className="p-5">
-
-            <div className="flex items-center justify-between">
-
-              <div>
-
-                <p className="text-xs font-medium text-slate-500">
-                  Students
-                </p>
-
-                <p className="mt-2 text-3xl font-black text-[#081022]">
-                  {totalStudents}
-                </p>
-
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Across listed courses
-                </p>
-
-              </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50 text-purple-700">
-                <Users className="h-5 w-5" />
-              </div>
-
-            </div>
-
-          </CardContent>
-
-        </Card>
-
-        {/* Pending */}
-
-        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
-
-          <CardContent className="p-5">
-
-            <div className="flex items-center justify-between">
-
-              <div>
-
-                <p className="text-xs font-medium text-slate-500">
-                  Pending Approval
-                </p>
-
-                <p className="mt-2 text-3xl font-black text-[#081022]">
-                  {pendingCourses}
-                </p>
-
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Awaiting admin review
-                </p>
-
-              </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
-                <Clock3 className="h-5 w-5" />
-              </div>
-
-            </div>
-
-          </CardContent>
-
-        </Card>
-
-        {/* Approved */}
-
-        <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
-
-          <CardContent className="p-5">
-
-            <div className="flex items-center justify-between">
-
-              <div>
-
-                <p className="text-xs font-medium text-slate-500">
-                  Approved
-                </p>
-
-                <p className="mt-2 text-3xl font-black text-[#081022]">
-                  {approvedCourses}
-                </p>
-
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Ready for publication
-                </p>
-
-              </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-
-            </div>
-
-          </CardContent>
-
-        </Card>
-
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* ============================================================
-          SEARCH + FILTERS
-      ============================================================ */}
-
+      {/* SEARCH + FILTERS */}
       <Card className="border-none bg-white shadow-sm ring-1 ring-slate-200">
-
         <CardContent className="p-4">
-
           <div className="flex flex-col gap-3 xl:flex-row">
-
-            {/* Search */}
-
             <div className="relative flex-1">
-
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
               <input
                 value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
+                onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search course code, course title or lecturer..."
                 className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-[#006dcc] focus:bg-white focus:ring-2 focus:ring-blue-100"
               />
-
             </div>
 
-            {/* Department */}
-
-            <select
-              value={departmentFilter}
-              onChange={(event) =>
-                setDepartmentFilter(event.target.value)
-              }
-              className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006dcc]"
-            >
-
-              <option value="All">
-                All Departments
-              </option>
-
-              {departments.map((department) => (
-                <option
-                  key={department}
-                  value={department}
-                >
-                  {department}
-                </option>
+            <select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)} className={selectClass}>
+              <option value="All">All Departments</option>
+              {departments.map((d) => (
+                <option key={d} value={d}>{d}</option>
               ))}
-
             </select>
 
-            {/* Level */}
-
-            <select
-              value={levelFilter}
-              onChange={(event) =>
-                setLevelFilter(event.target.value)
-              }
-              className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006dcc]"
-            >
-
-              <option value="All">
-                All Levels
-              </option>
-
-              {levels.map((level) => (
-                <option
-                  key={level}
-                  value={level}
-                >
-                  {level}
-                </option>
+            <select value={levelFilter} onChange={(e) => setLevelFilter(e.target.value)} className={selectClass}>
+              <option value="All">All Levels</option>
+              {levels.map((l) => (
+                <option key={l} value={l}>{l}</option>
               ))}
-
             </select>
 
-            {/* Status */}
+            <select value={semesterFilter} onChange={(e) => setSemesterFilter(e.target.value)} className={selectClass}>
+              <option value="All">All Semesters</option>
+              <option value="First">First Semester</option>
+              <option value="Second">Second Semester</option>
+            </select>
 
             <div className="flex items-center gap-2">
-
               <Filter className="h-4 w-4 text-slate-400" />
-
-              <select
-                value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(event.target.value)
-                }
-                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006dcc]"
-              >
-
-                <option value="All">
-                  All Status
-                </option>
-
-                <option value="Approved">
-                  Approved
-                </option>
-
-                <option value="Pending">
-                  Pending
-                </option>
-
-                <option value="Returned">
-                  Returned
-                </option>
-
-                <option value="Draft">
-                  Draft
-                </option>
-
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={selectClass}>
+                <option value="All">All Status</option>
+                {STATUSES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
               </select>
-
             </div>
-
           </div>
-
         </CardContent>
-
       </Card>
 
-      {/* ============================================================
-          GRADE BOOK TABLE
-      ============================================================ */}
-
+      {/* TABLE */}
       <Card className="overflow-hidden border-none bg-white shadow-sm ring-1 ring-slate-200">
-
         <div className="border-b border-slate-200 px-5 py-4">
-
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-
             <div>
-
-              <h2 className="text-sm font-bold text-[#081022]">
-                Course Grade Books
-              </h2>
-
+              <h2 className="text-sm font-bold text-[#081022]">Course Grade Books</h2>
               <p className="text-xs text-slate-500">
-                {filteredGradeBooks.length} grade book
-                {filteredGradeBooks.length !== 1
-                  ? "s"
-                  : ""}{" "}
-                displayed
+                {filtered.length} grade book{filtered.length !== 1 ? "s" : ""} displayed
               </p>
-
             </div>
 
-            {(search ||
-              departmentFilter !== "All" ||
-              statusFilter !== "All" ||
-              levelFilter !== "All") && (
-
+            {hasFilters && (
               <button
                 type="button"
                 onClick={clearFilters}
@@ -693,551 +481,294 @@ export default function GradeBook() {
                 <X className="h-3 w-3" />
                 Clear filters
               </button>
-
             )}
-
           </div>
-
         </div>
 
         <div className="overflow-x-auto">
-
           <table className="w-full min-w-[1100px]">
-
             <thead className="bg-slate-50">
-
               <tr className="border-b border-slate-200">
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Course
-                </th>
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Lecturer
-                </th>
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Department
-                </th>
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Level
-                </th>
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Students
-                </th>
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Graded
-                </th>
-
-                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Status
-                </th>
-
-                <th className="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Action
-                </th>
-
+                <th className={TH}>Course</th>
+                <th className={TH}>Lecturer</th>
+                <th className={TH}>Department</th>
+                <th className={TH}>Level</th>
+                <th className={TH}>Students</th>
+                <th className={TH}>Graded</th>
+                <th className={TH}>Status</th>
+                <th className={`${TH} text-right`}>Action</th>
               </tr>
-
             </thead>
 
             <tbody className="divide-y divide-slate-100">
-
-              {filteredGradeBooks.length === 0 ? (
-
+              {filtered.length === 0 ? (
                 <tr>
-
-                  <td
-                    colSpan={8}
-                    className="px-5 py-16 text-center"
-                  >
-
+                  <td colSpan={8} className="px-5 py-16 text-center">
                     <BookOpen className="mx-auto h-8 w-8 text-slate-300" />
-
-                    <p className="mt-3 text-sm font-semibold text-slate-500">
-                      No grade books found
-                    </p>
-
+                    <p className="mt-3 text-sm font-semibold text-slate-500">No grade books found</p>
                     <p className="mt-1 text-xs text-slate-400">
-                      Try changing your search or filters.
+                      {records.length === 0
+                        ? "No courses have been allocated for this session yet."
+                        : "Try changing your search or filters."}
                     </p>
-
                   </td>
-
                 </tr>
-
               ) : (
+                filtered.map((r) => (
+                  <tr key={r.id} className="transition hover:bg-slate-50">
+                    <td className="px-5 py-4">
+                      <p className="text-sm font-bold text-[#081022]">{r.courseCode}</p>
+                      <p className="mt-0.5 max-w-[230px] text-xs text-slate-500">{r.courseTitle}</p>
+                    </td>
 
-                filteredGradeBooks.map((course) => {
+                    <td className="px-5 py-4">
+                      <p className="text-xs font-semibold text-slate-700">{r.lecturer}</p>
+                    </td>
 
-                  const completion =
-                    course.students > 0
-                      ? Math.round(
-                          (course.graded /
-                            course.students) *
-                            100
-                        )
-                      : 0;
+                    <td className="px-5 py-4">
+                      <p className="max-w-[170px] text-xs text-slate-600">{r.department}</p>
+                    </td>
 
-                  return (
+                    <td className="px-5 py-4">
+                      <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                        {r.level}
+                      </span>
+                    </td>
 
-                    <tr
-                      key={course.id}
-                      className="transition hover:bg-slate-50"
-                    >
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-3.5 w-3.5 text-slate-400" />
+                        <span className="text-xs font-semibold text-slate-700">{r.students}</span>
+                      </div>
+                    </td>
 
-                      {/* Course */}
-
-                      <td className="px-5 py-4">
-
-                        <div>
-
-                          <p className="text-sm font-bold text-[#081022]">
-                            {course.courseCode}
-                          </p>
-
-                          <p className="mt-0.5 max-w-[230px] text-xs text-slate-500">
-                            {course.courseTitle}
-                          </p>
-
-                        </div>
-
-                      </td>
-
-                      {/* Lecturer */}
-
-                      <td className="px-5 py-4">
-
-                        <p className="text-xs font-semibold text-slate-700">
-                          {course.lecturer}
-                        </p>
-
-                      </td>
-
-                      {/* Department */}
-
-                      <td className="px-5 py-4">
-
-                        <p className="max-w-[170px] text-xs text-slate-600">
-                          {course.department}
-                        </p>
-
-                      </td>
-
-                      {/* Level */}
-
-                      <td className="px-5 py-4">
-
-                        <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                          {course.level}
-                        </span>
-
-                      </td>
-
-                      {/* Students */}
-
-                      <td className="px-5 py-4">
-
-                        <div className="flex items-center gap-2">
-
-                          <Users className="h-3.5 w-3.5 text-slate-400" />
-
+                    <td className="px-5 py-4">
+                      <div className="min-w-[100px]">
+                        <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-slate-700">
-                            {course.students}
+                            {r.graded}/{r.students}
                           </span>
-
+                          <span className="text-[10px] text-slate-400">{progress(r)}%</span>
                         </div>
-
-                      </td>
-
-                      {/* Graded */}
-
-                      <td className="px-5 py-4">
-
-                        <div className="min-w-[100px]">
-
-                          <div className="flex items-center justify-between">
-
-                            <span className="text-xs font-semibold text-slate-700">
-                              {course.graded}/
-                              {course.students}
-                            </span>
-
-                            <span className="text-[10px] text-slate-400">
-                              {completion}%
-                            </span>
-
-                          </div>
-
-                          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
-
-                            <div
-                              className="h-full rounded-full bg-[#006dcc]"
-                              style={{
-                                width: `${completion}%`,
-                              }}
-                            />
-
-                          </div>
-
+                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className="h-full rounded-full bg-[#006dcc]"
+                            style={{ width: `${progress(r)}%` }}
+                          />
                         </div>
+                      </div>
+                    </td>
 
-                      </td>
+                    <td className="px-5 py-4">
+                      <StatusBadge status={r.status} />
+                    </td>
 
-                      {/* Status */}
-
-                      <td className="px-5 py-4">
-
-                        <StatusBadge
-                          status={course.status}
-                        />
-
-                      </td>
-
-                      {/* Action */}
-
-                      <td className="px-5 py-4">
-
-                        <div className="flex justify-end">
-
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              setSelectedCourse(course)
-                            }
-                            className="h-8 gap-1.5 border-slate-200 text-xs"
-                          >
-
-                            <Eye className="h-3.5 w-3.5" />
-
-                            View Grade Book
-
-                          </Button>
-
-                        </div>
-
-                      </td>
-
-                    </tr>
-
-                  );
-                })
-
+                    <td className="px-5 py-4">
+                      <div className="flex justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedId(r.id)}
+                          className="h-8 gap-1.5 border-slate-200 text-xs"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          {r.status === "Pending approval" ? "Review" : "View"}
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
-
             </tbody>
-
           </table>
-
         </div>
-
-        {/* Footer */}
 
         <div className="border-t border-slate-200 px-5 py-3">
-
           <p className="text-xs text-slate-500">
-
-            Showing{" "}
-
-            <strong className="text-slate-700">
-              {filteredGradeBooks.length}
-            </strong>{" "}
-
-            of{" "}
-
-            <strong className="text-slate-700">
-              {totalCourses}
-            </strong>{" "}
-
-            grade books
-
+            Showing <strong className="text-slate-700">{filtered.length}</strong> of{" "}
+            <strong className="text-slate-700">{totalCourses}</strong> grade books
           </p>
-
         </div>
-
       </Card>
 
-      {/* ============================================================
-          GRADE BOOK DETAILS MODAL
-      ============================================================ */}
-
-      {selectedCourse && (
-
+      {/* DETAIL / REVIEW MODAL */}
+      {selectedId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-
-            {/* Modal Header */}
-
+          <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            {/* Header */}
             <div className="flex items-start justify-between bg-[#081022] p-6 text-white">
-
-              <div>
-
-                <div className="flex items-center gap-2">
-
-                  <span className="rounded-md bg-white/10 px-2 py-1 text-xs font-bold">
-                    {selectedCourse.courseCode}
-                  </span>
-
-                  <StatusBadge
-                    status={selectedCourse.status}
-                  />
-
+              {detail ? (
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-md bg-white/10 px-2 py-1 text-xs font-bold">
+                      {detail.allocation.courseCode}
+                    </span>
+                    <StatusBadge status={detail.allocation.status} />
+                  </div>
+                  <h2 className="mt-3 text-xl font-bold">{detail.allocation.courseTitle}</h2>
+                  <p className="mt-1 text-xs text-slate-300">
+                    {detail.allocation.lecturer} • {detail.allocation.department} •{" "}
+                    {detail.allocation.level} • {detail.allocation.semester}
+                  </p>
                 </div>
-
-                <h2 className="mt-3 text-xl font-bold">
-                  {selectedCourse.courseTitle}
-                </h2>
-
-                <p className="mt-1 text-xs text-slate-300">
-                  {selectedCourse.lecturer} •{" "}
-                  {selectedCourse.department}
-                </p>
-
-              </div>
+              ) : (
+                <div className="h-16" />
+              )}
 
               <button
                 type="button"
-                onClick={() =>
-                  setSelectedCourse(null)
-                }
+                onClick={() => setSelectedId(null)}
                 className="rounded-lg p-2 text-slate-300 hover:bg-white/10 hover:text-white"
               >
                 <X className="h-5 w-5" />
               </button>
-
             </div>
 
-            {/* Modal Content */}
-
-            <div className="max-h-[65vh] space-y-5 overflow-y-auto p-6">
-
-              {/* Course Information */}
-
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-                <div className="rounded-xl bg-slate-50 p-4">
-
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Level
-                  </p>
-
-                  <p className="mt-2 text-sm font-bold text-[#081022]">
-                    {selectedCourse.level}
-                  </p>
-
+            {/* Body */}
+            <div className="flex-1 space-y-5 overflow-y-auto p-6">
+              {detailLoading && !detail ? (
+                <div className="flex min-h-[200px] items-center justify-center">
+                  <Loader2 className="h-7 w-7 animate-spin text-[#006dcc]" />
                 </div>
-
-                <div className="rounded-xl bg-slate-50 p-4">
-
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Semester
-                  </p>
-
-                  <p className="mt-2 text-sm font-bold text-[#081022]">
-                    {selectedCourse.semester}
-                  </p>
-
-                </div>
-
-                <div className="rounded-xl bg-slate-50 p-4">
-
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Students
-                  </p>
-
-                  <p className="mt-2 text-sm font-bold text-[#081022]">
-                    {selectedCourse.students}
-                  </p>
-
-                </div>
-
-                <div className="rounded-xl bg-slate-50 p-4">
-
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Last Updated
-                  </p>
-
-                  <p className="mt-2 text-sm font-bold text-[#081022]">
-                    {selectedCourse.lastUpdated}
-                  </p>
-
-                </div>
-
-              </div>
-
-              {/* Grade Progress */}
-
-              <div className="rounded-xl border border-slate-200 p-5">
-
-                <div className="flex items-center justify-between">
-
-                  <div>
-
-                    <p className="text-sm font-bold text-[#081022]">
-                      Grade Submission Progress
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      {selectedCourse.graded} of{" "}
-                      {selectedCourse.students} students
-                      have grades recorded.
-                    </p>
-
+              ) : detail ? (
+                <>
+                  <div className="grid gap-4 sm:grid-cols-4">
+                    {[
+                      ["Saved", detail.counts.total],
+                      ["Drafts", detail.counts.draft],
+                      ["Submitted", detail.counts.submitted],
+                      ["Approved / Published", detail.counts.approved + detail.counts.published],
+                    ].map(([label, value]) => (
+                      <div key={String(label)} className="rounded-xl bg-slate-50 p-4">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
+                        <p className="mt-2 text-lg font-bold text-[#081022]">{value}</p>
+                      </div>
+                    ))}
                   </div>
 
-                  <GraduationCap className="h-5 w-5 text-slate-400" />
+                  {detail.students.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center">
+                      <GraduationCap className="mx-auto h-8 w-8 text-slate-300" />
+                      <p className="mt-3 text-sm font-semibold text-slate-500">
+                        The lecturer has not entered any scores yet.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-xl border border-slate-200">
+                      <table className="w-full min-w-[700px]">
+                        <thead className="bg-slate-50">
+                          <tr className="border-b border-slate-200">
+                            <th className={TH}>#</th>
+                            <th className={TH}>Matric No.</th>
+                            <th className={TH}>Student</th>
+                            <th className={TH}>CA</th>
+                            <th className={TH}>Exam</th>
+                            <th className={TH}>Total</th>
+                            <th className={TH}>Grade</th>
+                            <th className={TH}>Comment</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {detail.students.map((s, i) => (
+                            <tr key={s.resultId}>
+                              <td className="px-5 py-3 text-xs text-slate-500">{i + 1}</td>
+                              <td className="px-5 py-3 text-xs font-semibold text-slate-700">{s.matricNumber}</td>
+                              <td className="px-5 py-3 text-xs text-slate-700">{s.name}</td>
+                              <td className="px-5 py-3 text-xs text-slate-700">{s.caScore ?? "—"}</td>
+                              <td className="px-5 py-3 text-xs text-slate-700">{s.examScore ?? "—"}</td>
+                              <td className="px-5 py-3 text-xs font-bold text-[#081022]">{s.total ?? "—"}</td>
+                              <td className="px-5 py-3 text-xs font-bold text-[#081022]">{s.grade ?? "—"}</td>
+                              <td className="px-5 py-3 text-xs text-slate-500">{s.comment || "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
 
-                </div>
-
-                <div className="mt-4">
-
-                  <div className="flex items-center justify-between text-xs">
-
-                    <span className="font-semibold text-slate-600">
-                      Completion
-                    </span>
-
-                    <span className="font-bold text-[#081022]">
-                      {Math.round(
-                        (selectedCourse.graded /
-                          selectedCourse.students) *
-                          100
-                      )}
-                      %
-                    </span>
-
-                  </div>
-
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
-
-                    <div
-                      className="h-full rounded-full bg-[#006dcc]"
-                      style={{
-                        width: `${Math.round(
-                          (selectedCourse.graded /
-                            selectedCourse.students) *
-                            100
-                        )}%`,
-                      }}
-                    />
-
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* Administrative Review */}
-
-              <div>
-
-                <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Administrative Review
-                </p>
-
-                <div className="grid gap-3 sm:grid-cols-3">
-
-                  <div className="rounded-xl border border-slate-200 p-4">
-
-                    <FileCheck2 className="h-5 w-5 text-emerald-600" />
-
-                    <p className="mt-3 text-sm font-bold text-[#081022]">
-                      Grade Records
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Review individual student scores and
-                      final grades.
-                    </p>
-
-                  </div>
-
-                  <div className="rounded-xl border border-slate-200 p-4">
-
-                    <CheckCircle2 className="h-5 w-5 text-blue-600" />
-
-                    <p className="mt-3 text-sm font-bold text-[#081022]">
-                      Approval
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Approve or return submitted grades.
-                    </p>
-
-                  </div>
-
-                  <div className="rounded-xl border border-slate-200 p-4">
-
-                    <AlertCircle className="h-5 w-5 text-amber-600" />
-
-                    <p className="mt-3 text-sm font-bold text-[#081022]">
-                      Exceptions
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Identify incomplete or unusual grade
-                      records.
-                    </p>
-
-                  </div>
-
-                </div>
-
-              </div>
-
+                  {returning && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                      <p className="text-sm font-bold text-amber-800">Return to lecturer</p>
+                      <p className="mt-1 text-xs text-amber-700">
+                        The results become editable again. Tell the lecturer what to correct.
+                      </p>
+                      <textarea
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                        rows={3}
+                        placeholder="e.g. Exam scores for three students look wrong. Please recheck."
+                        className="mt-3 w-full rounded-lg border border-amber-200 bg-white p-3 text-sm outline-none focus:border-amber-400"
+                      />
+                    </div>
+                  )}
+                </>
+              ) : null}
             </div>
 
-            {/* Modal Footer */}
-
+            {/* Footer */}
             <div className="flex flex-col gap-2 border-t border-slate-200 bg-slate-50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-
               <div className="text-xs text-slate-500">
-                Status:{" "}
-                <strong className="text-slate-700">
-                  {selectedCourse.status}
-                </strong>
+                Status: <strong className="text-slate-700">{detailStatus ?? "—"}</strong>
               </div>
 
-              <div className="flex gap-2">
-
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    setSelectedCourse(null)
-                  }
-                >
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => setSelectedId(null)} disabled={busy !== null}>
                   Close
                 </Button>
 
-                {selectedCourse.status === "Pending" && (
-                  <Button className="gap-2 bg-[#006dcc] hover:bg-[#005ca8]">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Review Grades
-                  </Button>
+                {detailStatus === "Pending approval" && !returning && (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => setReturning(true)}
+                      disabled={busy !== null}
+                      className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      Return to Lecturer
+                    </Button>
+                    <Button
+                      onClick={handleApprove}
+                      disabled={busy !== null}
+                      className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      {busy === "approve" ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                      Approve Results
+                    </Button>
+                  </>
                 )}
 
-                {selectedCourse.status === "Approved" && (
-                  <Button className="gap-2 bg-[#006dcc] hover:bg-[#005ca8]">
-                    <Eye className="h-4 w-4" />
-                    View Grades
-                  </Button>
+                {detailStatus === "Pending approval" && returning && (
+                  <>
+                    <Button variant="outline" onClick={() => setReturning(false)} disabled={busy !== null}>
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleReturn}
+                      disabled={busy !== null}
+                      className="gap-2 bg-amber-600 hover:bg-amber-700"
+                    >
+                      {busy === "return" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                      Confirm Return
+                    </Button>
+                  </>
                 )}
 
+                {detailStatus === "Approved" && (
+                  <Button
+                    onClick={handlePublish}
+                    disabled={busy !== null}
+                    className="gap-2 bg-[#006dcc] hover:bg-[#005ca8]"
+                  >
+                    {busy === "publish" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    Publish Results
+                  </Button>
+                )}
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       )}
-
     </div>
   );
 }
