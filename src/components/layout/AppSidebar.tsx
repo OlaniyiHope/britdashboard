@@ -595,53 +595,105 @@ const classes = useMemo(
 const [staffCourses, setStaffCourses] = useState<any[]>([]);
 const [coursesLoading, setCoursesLoading] = useState(false);
 
+// useEffect(() => {
+//   if (user?.role !== "staff") return;
+
+//   const fetchStaffCourses = async () => {
+//     try {
+//       setCoursesLoading(true);
+
+//       const token = localStorage.getItem("jwtToken");
+
+//       if (!token) {
+//         console.error("jwtToken not found");
+//         return;
+//       }
+
+//       const response = await fetch(
+//         `${import.meta.env.VITE_API_URL || "http://localhost:5001/api"}/course-allocations/my`,
+//         {
+//           method: "GET",
+//           headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${token}`,
+//           },
+//         }
+//       );
+
+//       const data = await response.json();
+
+//       if (!response.ok) {
+//         throw new Error(
+//           data?.message || "Failed to load staff courses"
+//         );
+//       }
+
+//       setStaffCourses(
+//         Array.isArray(data?.allocations)
+//           ? data.allocations.filter(
+//               (allocation: any) =>
+//                 allocation.status === "Active"
+//             )
+//           : []
+//       );
+//     } catch (error) {
+//       console.error(
+//         "Failed to load staff course allocations:",
+//         error
+//       );
+
+//       setStaffCourses([]);
+//     } finally {
+//       setCoursesLoading(false);
+//     }
+//   };
+
+//   fetchStaffCourses();
+// }, [user?.role]);
 useEffect(() => {
   if (user?.role !== "staff") return;
 
   const fetchStaffCourses = async () => {
+    setCoursesLoading(true);
     try {
-      setCoursesLoading(true);
-
       const token = localStorage.getItem("jwtToken");
-
       if (!token) {
         console.error("jwtToken not found");
         return;
       }
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || "http://localhost:5001/api"}/course-allocations/my`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const API_BASE = import.meta.env.VITE_API_URL;
+      if (!API_BASE) throw new Error("VITE_API_URL is not set");
 
-      const data = await response.json();
+      const url = `${API_BASE}/course-allocations/my`;
+      const res = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      if (!response.ok) {
+      const text = await res.text();
+      let data: any = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        // Response wasn't JSON (for example, an HTML 404 page)
+      }
+
+      if (!res.ok) {
         throw new Error(
-          data?.message || "Failed to load staff courses"
+          `${res.status} from ${url}: ${data?.message ?? "non-JSON response"}`
         );
       }
 
       setStaffCourses(
         Array.isArray(data?.allocations)
-          ? data.allocations.filter(
-              (allocation: any) =>
-                allocation.status === "Active"
-            )
+          ? data.allocations.filter((a: any) => a.status === "Active")
           : []
       );
     } catch (error) {
-      console.error(
-        "Failed to load staff course allocations:",
-        error
-      );
-
+      console.error("Failed to load staff course allocations:", error);
       setStaffCourses([]);
     } finally {
       setCoursesLoading(false);
@@ -650,7 +702,6 @@ useEffect(() => {
 
   fetchStaffCourses();
 }, [user?.role]);
-
 const nav = useMemo(() => {
   switch (user?.role) {
     case "staff":
