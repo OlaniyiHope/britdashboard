@@ -609,19 +609,16 @@ useEffect(() => {
         return;
       }
 
-    const API_BASE = import.meta.env.VITE_API_URL;
-
-if (!API_BASE) {
-  throw new Error("VITE_API_URL is not set");
-}
-
-const response = await fetch(`${API_BASE}/course-allocations/my`, {
-  method: "GET",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  },
-});
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5001/api"}/course-allocations/my`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await response.json();
 
