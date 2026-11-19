@@ -64,7 +64,7 @@ import { toast } from "sonner";
 import { SessionContext } from "@/contexts/SessionContext";
 
 const API_URL =
-  import.meta.env.VITE_NODE_API_URL || "http://localhost:5001";
+  import.meta.env.VITE_API_URL || "http://localhost:5001";
 
 type Course = {
   _id: string;
