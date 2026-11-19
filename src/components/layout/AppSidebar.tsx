@@ -665,7 +665,7 @@ useEffect(() => {
       const API_BASE = import.meta.env.VITE_API_URL;
       if (!API_BASE) throw new Error("VITE_API_URL is not set");
 
-      const url = `${API_BASE}/course-allocations/my`;
+      const url = `${API_BASE}/api/course-allocations/my`;
       const res = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
